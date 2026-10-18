@@ -312,88 +312,303 @@ export function scrubText(value: string): string {
  * provide one (e.g. when reading the board's "last week" firehose).
  * First matching bucket wins; order matters.
  */
+/**
+ * Classify a listing into the site's industry taxonomy.
+ *
+ * Rules run in order, most specific first. Ordering *is* the design: "Frontend
+ * Engineer" has to reach the web rule before the generic "engineer" rule, and an
+ * HSE officer has to beat oil-and-gas, because both terms appear in the same
+ * advert. The first rule with a matching keyword wins.
+ */
 const CATEGORY_KEYWORDS: Array<{ category: string; words: string[] }> = [
   {
-    category: "Healthcare",
-    words: [
-      "nurse", "nursing", "medical", "doctor", "pharmac", "clinical", "hospital", "laboratory",
-      "lab scientist", "radiograph", "dentist", "midwif", "public health", "surgeon", "physician",
-      "optometr", "physiotherap", "health officer", "caregiver",
-    ],
+    category: "Military Jobs in Nigeria",
+    words: ["nigerian army", "nigerian navy", "nigerian air force", "air force", "airforce", "military", "soldier", "cadet", "navy"],
   },
   {
-    category: "Technology",
-    words: [
-      "software", "developer", "engineer, software", "frontend", "backend", "full stack", "fullstack",
-      "data analyst", "data scientist", "devops", "cloud", "cyber", "it support", "ict", "programmer",
-      "product designer", "ui/ux", "web", "android", "ios", "machine learning", "ai ", "database",
-      "network engineer", "systems administrator", "qa engineer", "scrum",
-    ],
+    category: "Law Enforcement / Security Jobs",
+    words: ["police", "immigration officer", "customs officer", "civil defence", "civil defense", "correctional", "law enforcement", "nscdc", "efcc", "fire service"],
   },
   {
-    category: "Banking & Finance",
-    words: [
-      "accountant", "accounting", "finance", "audit", "bank", "teller", "credit", "loan", "tax",
-      "treasury", "insurance", "investment", "microfinance", "actuar", "bookkeep", "cashier",
-    ],
+    category: "Security Jobs in Nigeria",
+    words: ["security guard", "security officer", "security supervisor", "security man", "manned security", "security personnel"],
   },
   {
-    category: "Oil & Gas",
-    words: [
-      "oil", "gas", "petroleum", "upstream", "downstream", "hse", "offshore", "refinery",
-      "drilling", "pipeline", "wellhead", "lng",
-    ],
+    category: "Physician / Medical Officer Jobs",
+    words: ["physician", "medical officer", "medical doctor", "general practitioner", "mbbs", "house officer", "surgeon"],
   },
   {
-    category: "Customer Service",
-    words: [
-      "customer service", "customer care", "call centre", "call center", "client service",
-      "front desk", "receptionist", "support officer", "customer experience", "help desk",
-    ],
+    category: "Medical & Healthcare Jobs",
+    words: ["nurse", "nursing", "midwife", "pharmac", "clinical", "hospital", "laboratory", "lab scientist", "radiograph", "physiotherap", "dental", "medical", "doctor", "health care", "healthcare", "optician", "psychiatr", "sonographer", "health worker"],
   },
   {
-    category: "Engineering",
-    words: [
-      "civil engineer", "mechanical engineer", "electrical engineer", "structural", "quantity surveyor",
-      "site engineer", "construction", "maintenance engineer", "project engineer", "technician",
-      "surveyor", "architect", "facility", "welder", "electrician", "plumber", "hvac",
-    ],
+    category: "Geology Jobs",
+    words: ["geolog", "geophysic", "geoscientist", "hydrolog"],
   },
   {
-    category: "Agriculture",
-    words: [
-      "agricultur", "agro", "farm", "livestock", "poultry", "horticultur", "crop", "agronom",
-      "veterinar", "fishery", "forestry",
-    ],
+    category: "Safety & Health Jobs",
+    words: ["hse", "ehs", "health and safety", "safety officer", "safety supervisor", "safety", "fire safety", "first aid"],
   },
   {
-    category: "Education",
-    words: [
-      "teacher", "lecturer", "tutor", "instructor", "school", "education", "academic", "professor",
-      "head of school", "curriculum", "exam", "librarian", "trainer",
-    ],
+    category: "Oil & Gas Jobs in Nigeria",
+    words: ["oil and gas", "oil & gas", "oil/gas", "petroleum", "upstream", "downstream", "offshore", "refinery", "drilling", "lng", "gas engineer"],
   },
   {
-    category: "Sales & Marketing",
-    words: [
-      "sales", "marketing", "brand", "business development", "digital marketing", "social media",
-      "seo", "growth", "customer acquisition", "merchandis", "retail", "relationship officer",
-      "business development officer", "communications", "public relations",
-    ],
+    category: "Aviation Jobs in Nigeria",
+    words: ["pilot", "aviation", "airline", "aircraft", "cabin crew", "air hostess", "flight attendant", "airport", "aerospace"],
+  },
+  {
+    category: "Maritime & Shipping Jobs",
+    words: ["maritime", "marine engineer", "shipping", "vessel", "stevedor", "port operations", "seafarer", "dock worker"],
+  },
+  {
+    category: "Automobile Jobs in Nigeria",
+    words: ["automobile", "auto mechanic", "automotive", "vehicle", "motor mechanic", "car dealer", "panel beater", "auto electrician"],
+  },
+  {
+    category: "Driving / Dispatch Rider Jobs",
+    words: ["driver", "dispatch", "rider", "chauffeur", "truck"],
+  },
+  {
+    category: "Civil Engineering Jobs",
+    words: ["civil engineer", "structural engineer", "quantity surveyor", "site engineer", "highway engineer", "building engineer"],
+  },
+  {
+    category: "Architecture Jobs in Nigeria",
+    words: ["architect"],
+  },
+  {
+    category: "Marketing & Sales Jobs",
+    words: ["business development", "sales and marketing", "digital marketing", "brand manager"],
+  },
+  {
+    category: "Web Designer / Frontend / UI Jobs",
+    words: ["frontend", "front-end", "front end", "ui designer", "ux designer", "ui/ux", "user interface", "user experience", "web designer"],
+  },
+  {
+    category: "Android / IOS Developer Jobs",
+    words: ["android", "ios developer", "flutter", "react native", "mobile app", "mobile developer"],
+  },
+  {
+    category: "Web Developer Jobs Nigeria",
+    words: ["web developer", "web development", "wordpress", "full stack", "fullstack", "shopify"],
+  },
+  {
+    category: "Oracle Jobs in Nigeria",
+    words: ["oracle"],
+  },
+  {
+    category: "PHP & MySQL Jobs in Nigeria",
+    words: ["php", "laravel"],
+  },
+  {
+    category: "Linux & Unix Jobs Nigeria",
+    words: ["linux", "unix", "devops", "kubernetes"],
+  },
+  {
+    category: "Database Jobs in Nigeria",
+    words: ["database", "dba", "sql", "postgres", "mongodb"],
+  },
+  {
+    category: "System Admin Jobs in Nigeria",
+    words: ["system admin", "systems admin", "system administrator", "server admin", "it administrator"],
+  },
+  {
+    category: "Computer Networking Jobs",
+    words: ["network engineer", "networking", "ccna", "cisco", "network administrator", "network"],
+  },
+  {
+    category: "Computer / IT Support Jobs",
+    words: ["it support", "ict support", "technical support", "desktop support"],
+  },
+  {
+    category: "Software Developer Jobs",
+    words: ["software developer", "software engineer", "programmer", "developer"],
+  },
+  {
+    category: "Computer & InfoTech Jobs",
+    words: ["ict", "information technology", "computer", "it officer", "it manager", "information system", "software"],
+  },
+  {
+    category: "Electrical/Electronics Jobs",
+    words: ["electrical", "electronics", "electrician", "instrumentation", "power plant", "solar", "transformer"],
+  },
+  {
+    category: "Engineering Jobs in Nigeria",
+    words: ["engineer", "engineering", "mechanical", "welder", "fabricator", "plumber", "hvac", "technician", "maintenance", "machinist"],
+  },
+  {
+    category: "Real Estate Jobs",
+    words: ["real estate", "realtor", "property", "estate manager", "letting", "land officer"],
+  },
+  {
+    category: "Facility Mgt Jobs in Nigeria",
+    words: ["facility", "facilities", "janitor", "cleaner", "pest control"],
+  },
+  {
+    category: "Accounting Jobs in Nigeria",
+    words: ["accountant", "accounting", "bookkeep", "ledger", "chartered accountant", "icanz", "acca"],
+  },
+  {
+    category: "Auditing Jobs in Nigeria",
+    words: ["audit", "internal control", "auditor"],
+  },
+  {
+    category: "Banking Jobs in Nigeria",
+    words: ["bank", "teller", "microfinance", "banking"],
+  },
+  {
+    category: "Finance Jobs in Nigeria",
+    words: ["finance", "financial", "treasury", "investment", "credit analyst", "loan officer", "bursar", "economist", "taxation"],
+  },
+  {
+    category: "Insurance Jobs in Nigeria",
+    words: ["insurance", "underwrit", "actuar", "claims officer"],
+  },
+  {
+    category: "HR Jobs in Nigeria",
+    words: ["human resource", "human resources", "recruitment officer", "talent acquisition", "personnel", "industrial relations", "hr officer", "hr manager", "hr assistant", "hr "],
+  },
+  {
+    category: "Personal Assistant Jobs",
+    words: ["personal assistant", "executive assistant", "assistant to the", "pa to"],
+  },
+  {
+    category: "Secretarial Jobs in Nigeria",
+    words: ["secretary", "secretarial", "stenograph"],
+  },
+  {
+    category: "Front Desk Jobs in Nigeria",
+    words: ["front desk", "receptionist", "reception"],
+  },
+  {
+    category: "Customer Service Jobs",
+    words: ["customer service", "customer care", "call centre", "call center", "client service", "customer support", "helpdesk", "help desk", "customer experience"],
+  },
+  {
+    category: "Telecommunication Jobs",
+    words: ["telecom", "telecommunication", "mtn", "airtel", "glo mobile", "9mobile", "tower engineer"],
+  },
+  {
+    category: "Advertising Jobs Nigeria",
+    words: ["advertising", "advert", "media buying", "brand campaign"],
+  },
+  {
+    category: "Public Relation Jobs",
+    words: ["public relation", "public relations", "corporate communications", "communications officer", "press officer"],
+  },
+  {
+    category: "Journalism / Content Writing Jobs",
+    words: ["journalis", "content writ", "copywrit", "reporter", "proofread", "writer", "blog"],
+  },
+  {
+    category: "Graphics Design Jobs",
+    words: ["graphic", "visual design", "illustrator", "motion design", "animator"],
+  },
+  {
+    category: "Research Jobs in Nigeria",
+    words: ["research", "monitoring and evaluation", "meal officer", "data analyst", "statistician", "baseline survey"],
+  },
+  {
+    category: "NGO Jobs in Nigeria",
+    words: ["ngo", "non-governmental", "non governmental", "nonprofit", "non-profit", "humanitarian", "foundation", "charity"],
+  },
+  {
+    category: "Volunteer Jobs Nigeria",
+    words: ["volunteer"],
+  },
+  {
+    category: "Government Jobs in Nigeria",
+    words: ["federal government", "state government", "civil service", "ministry", "government agency", "public service"],
+  },
+  {
+    category: "Pri/Sec Sch Teaching Jobs",
+    words: ["primary school", "secondary school", "class teacher", "pry school", "sec sch"],
+  },
+  {
+    category: "Lecturing Jobs in Nigeria",
+    words: ["lecturer", "professor", "academic staff", "polytechnic"],
+  },
+  {
+    category: "Teaching Jobs in Nigeria",
+    words: ["teacher", "teaching", "tutor", "educator", "instructor"],
+  },
+  {
+    category: "Education Jobs for Nigerians",
+    words: ["education", "school administrator", "curriculum", "exams officer", "head of school", "librarian"],
+  },
+  {
+    category: "Trainee / Graduate Jobs",
+    words: ["graduate trainee", "management trainee", "trainee", "nysc", "graduate"],
+  },
+  {
+    category: "Industrial Attachment (Internship)",
+    words: ["intern", "internship", "siwes", "industrial attachment", "industrial training"],
+  },
+  {
+    category: "Student Jobs in Nigeria",
+    words: ["student"],
+  },
+  {
+    category: "Law / Legal Jobs in Nigeria",
+    words: ["lawyer", "legal", "attorney", "advocate", "paralegal", "solicitor", "counsel", "llb", "litigation"],
+  },
+  {
+    category: "Arts Jobs in Nigeria",
+    words: ["artist", "creative", "music", "theatre", "drama", "fine art", "art gallery"],
+  },
+  {
+    category: "Hotel Jobs in Nigeria",
+    words: ["hotel", "resort", "concierge", "waiter", "waitress", "housekeeping"],
+  },
+  {
+    category: "Cook / Chef Jobs",
+    words: ["chef", "cook", "kitchen", "baker", "confectioner"],
+  },
+  {
+    category: "Hospitality Jobs in Nigeria",
+    words: ["hospitality", "catering", "banquet", "bartender", "bar tender", "event"],
+  },
+  {
+    category: "Semi-skilled / Factory Work",
+    words: ["factory", "production worker", "machine operator", "packer", "assembly line", "artisan", "manpower"],
+  },
+  {
+    category: "Marketing & Sales Jobs",
+    words: ["marketing", "brand", "merchandis", "retail", "customer acquisition"],
+  },
+  {
+    category: "Sales Jobs",
+    words: ["sales"],
+  },
+  {
+    category: "Administrative Jobs in Nigeria",
+    words: ["administrative", "admin officer", "administration", "office assistant", "office clerk", "records officer", "clerk", "administrator"],
+  },
+  {
+    category: "Remote / Work-at-home Jobs",
+    words: ["remote", "work from home", "work-at-home", "virtual assistant", "telecommute"],
   },
 ];
 
+const REMOTE_RULE = CATEGORY_KEYWORDS.pop()!;
+
 export function detectCategory(text: string): string {
-  const lower = text.toLowerCase();
+  const lower = ` ${text.toLowerCase()} `;
 
   for (const bucket of CATEGORY_KEYWORDS) {
     if (bucket.words.some((word) => lower.includes(word))) return bucket.category;
   }
 
-  return "Customer Service";
+  // Remote describes how a job is done, not what it is, so it is only consulted
+  // once nothing else matched — a remote software role stays a software role.
+  if (REMOTE_RULE.words.some((word) => lower.includes(word))) return REMOTE_RULE.category;
+
+  // Nothing matched: file it with the broadest office bucket rather than piling
+  // every unknown listing into one misleading industry.
+  return "Administrative Jobs in Nigeria";
 }
 
-/** "Fri 09th Oct, 2026" -> Date. */
 export function parsePostedDate(value: string, fallbackDaysAgo = 0): Date {
   if (value) {
     const parsed = parseDeadline(value);

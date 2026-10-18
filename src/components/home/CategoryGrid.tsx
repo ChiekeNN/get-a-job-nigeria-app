@@ -1,5 +1,6 @@
 import {
   ArrowUpRight,
+  Briefcase,
   Flame,
   GraduationCap,
   HardHat,
@@ -9,23 +10,40 @@ import {
   Megaphone,
   Sprout,
   Stethoscope,
+  UtensilsCrossed,
+  Wrench,
 } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
-import { CATEGORY_INFO } from "@/data/site";
+import { CATEGORIES } from "@/types";
 
+/**
+ * Icons for the industries most likely to be populated. Anything else falls back
+ * to a briefcase — with sixty-odd industries, hand-picking an icon for each would
+ * be false precision.
+ */
 const ICONS: Record<string, LucideIcon> = {
-  Technology: Laptop,
-  "Banking & Finance": Landmark,
-  "Oil & Gas": Flame,
-  Healthcare: Stethoscope,
-  "Customer Service": Headset,
-  Engineering: HardHat,
-  Agriculture: Sprout,
-  Education: GraduationCap,
-  "Sales & Marketing": Megaphone,
+  "Programming / Software Jobs": Laptop,
+  "Software Developer Jobs": Laptop,
+  "Web Developer Jobs Nigeria": Laptop,
+  "Banking Jobs in Nigeria": Landmark,
+  "Finance Jobs in Nigeria": Landmark,
+  "Accounting Jobs in Nigeria": Landmark,
+  "Oil & Gas Jobs in Nigeria": Flame,
+  "Medical & Healthcare Jobs": Stethoscope,
+  "Customer Service Jobs": Headset,
+  "Engineering Jobs in Nigeria": HardHat,
+  "Civil Engineering Jobs": Wrench,
+  "Agriculture Jobs in Nigeria": Sprout,
+  "Teaching Jobs in Nigeria": GraduationCap,
+  "Marketing & Sales Jobs": Megaphone,
+  "Sales Jobs": Megaphone,
+  "Cook / Chef Jobs": UtensilsCrossed,
 };
+
+/** How many industries the homepage shows before sending people to /jobs. */
+const VISIBLE_INDUSTRIES = 12;
 
 interface Props {
   counts: Record<string, number>;
@@ -33,6 +51,15 @@ interface Props {
 
 export function CategoryGrid({ counts }: Props) {
   const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
+
+  // Only industries that actually hold listings, busiest first. With a large
+  // taxonomy most buckets are empty at any moment, and a wall of "0 open" cards
+  // reads as a broken site.
+  const populated = CATEGORIES.map((name) => ({ name, count: counts[name] ?? 0 }))
+    .filter((entry) => entry.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  const visible = populated.slice(0, VISIBLE_INDUSTRIES);
 
   return (
     <section id="categories" className="wrap mt-16 scroll-mt-24">
@@ -46,8 +73,8 @@ export function CategoryGrid({ counts }: Props) {
             Find work in the field you know best
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-500 sm:text-[15px]">
-            {total} verified roles across nine sectors, with salary bands disclosed before you
-            apply — no more guessing what a job pays.
+            {total} verified roles across {populated.length} industries, with salary bands disclosed
+            before you apply — no more guessing what a job pays.
           </p>
         </div>
         <Link href="/jobs" className="btn btn-outline self-start sm:self-auto">
@@ -57,31 +84,37 @@ export function CategoryGrid({ counts }: Props) {
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {CATEGORY_INFO.map((category) => {
-          const Icon = ICONS[category.name] ?? Laptop;
-          const count = counts[category.name] ?? 0;
+        {visible.map((entry) => {
+          const Icon = ICONS[entry.name] ?? Briefcase;
           return (
             <Link
-              key={category.slug}
-              href={`/jobs?category=${encodeURIComponent(category.name)}`}
-              className="group card flex items-start gap-3 p-4 transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-[0_18px_40px_-32px_rgba(5,20,15,0.5)]"
+              key={entry.name}
+              href={`/jobs?category=${encodeURIComponent(entry.name)}`}
+              className="group card flex items-center gap-3 p-4 transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-[0_18px_40px_-32px_rgba(5,20,15,0.5)]"
             >
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 transition group-hover:bg-brand-600 group-hover:text-white">
                 <Icon className="size-5" aria-hidden="true" />
               </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-bold text-ink-900">{category.name}</h3>
-                  <span className="chip shrink-0 !bg-ink-50 !px-2 !text-[10.5px]">
-                    {count} open
-                  </span>
-                </div>
-                <p className="mt-1 text-xs leading-relaxed text-ink-500">{category.blurb}</p>
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                <h3 className="truncate text-sm font-bold text-ink-900">{entry.name}</h3>
+                <span className="chip shrink-0 !bg-ink-50 !px-2 !text-[10.5px]">
+                  {entry.count} open
+                </span>
               </div>
             </Link>
           );
         })}
       </div>
+
+      {populated.length > VISIBLE_INDUSTRIES ? (
+        <Link
+          href="/jobs"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"
+        >
+          See all {populated.length} industries
+          <ArrowUpRight className="size-4" aria-hidden="true" />
+        </Link>
+      ) : null}
     </section>
   );
 }
