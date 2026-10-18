@@ -13,8 +13,13 @@ export const BRAND = {
   tagline: "Nigeria job network",
   domain: "getajob.com.ng",
   url: "https://getajob.com.ng",
-  legalName: "GetAJob Technologies Ltd",
-  legalRegistration: "RC 1782945",
+  /** Trading name used in the copyright line. */
+  tradingName: "GetAJob Nigeria",
+  /** The company that owns and operates the site. */
+  legalName: "Jojuni Technologies Ltd",
+  legalRegistration: "RC 8430792",
+  /** Single source of truth for the footer copyright. */
+  copyrightHolder: "Jojuni Technologies Ltd",
   /** Used in <title> defaults and social cards. */
   metaTitle: "GetAJob — Jobs in Nigeria, verified and recruiter-backed",
   metaDescription:

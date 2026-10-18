@@ -2,6 +2,7 @@ import { FileCheck2, Lock, Scale } from "lucide-react";
 import type { Metadata } from "next";
 
 import { CONTACT } from "@/data/contact";
+import { BRAND } from "@/data/site";
 
 export const metadata: Metadata = {
   title: "Legal, privacy and candidate policies",
@@ -20,8 +21,9 @@ export default function LegalPage() {
         Policies written in plain language
       </h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-500">
-        GetAJob Technologies Ltd is registered in Nigeria (RC 1782945). These policies explain how
-        we handle candidate data, employer listings and payments in Naira. Last updated January 2026.
+        {BRAND.tradingName} is owned and operated by {BRAND.legalName}, registered in Nigeria (
+        {BRAND.legalRegistration}). These policies explain how we handle candidate data, employer
+        listings and payments in Naira. Last updated January 2026.
       </p>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
