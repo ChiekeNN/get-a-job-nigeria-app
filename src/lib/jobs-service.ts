@@ -1,92 +1,52 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, like, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { applications, jobs, subscribers } from "@/db/schema";
-import { SEED_JOBS, type SeedJob } from "@/data/jobs";
 import type { ApplicationInput, Job, JobStats, NewJobInput, SubscriptionInput } from "@/types";
 import { slugify } from "@/lib/format";
 
 const DAY = 86_400_000;
 
-function seedToJob(seed: SeedJob, index: number): Job {
-  const postedAt = new Date(Date.now() - seed.postedDaysAgo * DAY);
-  const deadline = new Date(Date.now() + seed.deadlineDaysFromNow * DAY);
-  return {
-    id: index + 1,
-    slug: seed.slug,
-    title: seed.title,
-    company: seed.company,
-    companyInitials: seed.companyInitials,
-    companyColor: seed.companyColor,
-    state: seed.state,
-    city: seed.city,
-    category: seed.category,
-    jobType: seed.jobType,
-    salaryMin: seed.salaryMin,
-    salaryMax: seed.salaryMax,
-    description: seed.description,
-    requirements: seed.requirements,
-    responsibilities: seed.responsibilities,
-    benefits: seed.benefits,
-    experienceLevel: seed.experienceLevel,
-    isFeatured: seed.isFeatured,
-    isRemote: seed.isRemote,
-    postedAt: postedAt.toISOString(),
-    deadline: deadline.toISOString(),
-    applicants: seed.applicants,
-    employerEmail: seed.employerEmail,
-    status: "published",
-  };
+/**
+ * The demo listings that shipped with this project (real company names, invented
+ * vacancies, every contact address on the reserved `.example` TLD) are gone.
+ * They are never inserted again, and any database still holding them has them
+ * deleted on the first request after deploy.
+ *
+ * That TLD is the marker: it can never belong to a real employer, so the filter
+ * cannot touch imported listings or anything posted through the site.
+ */
+let cleanupPromise: Promise<void> | null = null;
+
+async function purgeDemoJobs(): Promise<void> {
+  const removed = await db
+    .delete(jobs)
+    .where(like(jobs.employerEmail, "%.example"))
+    .returning({ id: jobs.id });
+
+  if (removed.length > 0) {
+    console.log(`[jobs] removed ${removed.length} demo listing(s)`);
+  }
 }
 
-export function fallbackJobs(): Job[] {
-  return SEED_JOBS.map(seedToJob);
-}
-
-let seedPromise: Promise<void> | null = null;
-
-async function runSeed(): Promise<void> {
-  const existing = await db.select({ id: jobs.id }).from(jobs).limit(1);
-  if (existing.length > 0) return;
-
-  const now = Date.now();
-  const values = SEED_JOBS.map((seed) => ({
-    slug: seed.slug,
-    title: seed.title,
-    company: seed.company,
-    companyInitials: seed.companyInitials,
-    companyColor: seed.companyColor,
-    state: seed.state,
-    city: seed.city,
-    category: seed.category,
-    jobType: seed.jobType,
-    salaryMin: seed.salaryMin,
-    salaryMax: seed.salaryMax,
-    description: seed.description,
-    requirements: seed.requirements,
-    responsibilities: seed.responsibilities,
-    benefits: seed.benefits,
-    experienceLevel: seed.experienceLevel,
-    isFeatured: seed.isFeatured,
-    isRemote: seed.isRemote,
-    postedAt: new Date(now - seed.postedDaysAgo * DAY),
-    deadline: new Date(now + seed.deadlineDaysFromNow * DAY),
-    applicants: seed.applicants,
-    employerEmail: seed.employerEmail,
-    status: "published",
-  }));
-
-  await db.insert(jobs).values(values).onConflictDoNothing();
-}
-
-export async function ensureSeeded(): Promise<void> {
-  if (!seedPromise) {
-    seedPromise = runSeed().catch((error) => {
-      seedPromise = null;
+export async function ensureDemoJobsRemoved(): Promise<void> {
+  if (!cleanupPromise) {
+    cleanupPromise = purgeDemoJobs().catch((error) => {
+      // Let the next request try again rather than caching the failure forever.
+      cleanupPromise = null;
       throw error;
     });
   }
-  return seedPromise;
+  return cleanupPromise;
+}
+
+/**
+ * Used only when the database cannot be reached. It returns nothing on purpose:
+ * showing invented vacancies is worse than showing an empty board, and the old
+ * behaviour is what put fake openings under real company names.
+ */
+export function fallbackJobs(): Job[] {
+  return [];
 }
 
 function mapRow(row: typeof jobs.$inferSelect): Job {
@@ -120,7 +80,7 @@ function mapRow(row: typeof jobs.$inferSelect): Job {
 
 export async function listJobs(): Promise<Job[]> {
   try {
-    await ensureSeeded();
+    await ensureDemoJobsRemoved();
     const rows = await db
       .select()
       .from(jobs)
@@ -135,7 +95,7 @@ export async function listJobs(): Promise<Job[]> {
 
 export async function getJobBySlug(slug: string): Promise<Job | null> {
   try {
-    await ensureSeeded();
+    await ensureDemoJobsRemoved();
     const rows = await db.select().from(jobs).where(eq(jobs.slug, slug)).limit(1);
     if (rows.length === 0) return null;
     return mapRow(rows[0]);
@@ -153,7 +113,7 @@ function uniqueSlug(base: string, taken: Set<string>): string {
 }
 
 export async function createJob(input: NewJobInput): Promise<Job> {
-  await ensureSeeded();
+  await ensureDemoJobsRemoved();
   const existing = await db.select({ slug: jobs.slug }).from(jobs);
   const taken = new Set(existing.map((row) => row.slug));
   const slug = uniqueSlug(`${input.title}-${input.city}`, taken);
@@ -196,7 +156,7 @@ export async function createJob(input: NewJobInput): Promise<Job> {
 }
 
 export async function applyToJob(input: ApplicationInput): Promise<void> {
-  await ensureSeeded();
+  await ensureDemoJobsRemoved();
   await db.insert(applications).values({
     jobId: input.jobId,
     fullName: input.fullName,
