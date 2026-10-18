@@ -68,12 +68,28 @@ export async function GET() {
     );
     const total = Number(rows.rows?.[0]?.count ?? 0);
 
+    // The importer keeps its sweep cursor in import_state. If that table is
+    // missing (usually a stale local checkout when the migration ran), each run
+    // would restart from page 1 and never reach the rest of the listing, so it
+    // is worth reporting separately rather than letting it fail quietly.
+    let cursorTableReady = true;
+    try {
+      await db.execute(sql`select 1 from import_state limit 1`);
+    } catch {
+      cursorTableReady = false;
+    }
+
     return Response.json({
       ok: true,
       ...base,
       tablesReady: true,
+      cursorTableReady,
       jobs: total,
-      message: total === 0 ? "Connected, but no jobs are stored yet. Run the import." : "Connected.",
+      message: cursorTableReady
+        ? total === 0
+          ? "Connected, but no jobs are stored yet. Run the import."
+          : "Connected."
+        : "Connected, but the import_state table is missing. Pull the latest code and run `npx drizzle-kit push` again, otherwise the importer restarts from page 1 on every run.",
     });
   } catch (error) {
     return Response.json(
