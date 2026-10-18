@@ -130,7 +130,7 @@ export function CvUploadModal({ open, onClose }: Props) {
           <label className="label" htmlFor="cv-category">
             Field of interest
           </label>
-          <select id="cv-category" name="category" className="field" defaultValue="Technology">
+          <select id="cv-category" name="category" className="field" defaultValue={CATEGORIES[0]}>
             {CATEGORIES.map((category) => (
               <option key={category} value={category}>
                 {category}

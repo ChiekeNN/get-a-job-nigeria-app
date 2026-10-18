@@ -1,4 +1,4 @@
-import type { CategoryInfo, JobStats, Testimonial } from "@/types";
+import type { JobStats, Testimonial } from "@/types";
 
 /**
  * Brand identity. Change a value here and the whole site follows — the wordmark,
@@ -78,63 +78,6 @@ export const SALARY_BRACKETS = [
   { label: "₦500,000+", value: 500000 },
   { label: "₦1,000,000+", value: 1000000 },
 ] as const;
-
-export const CATEGORY_INFO: CategoryInfo[] = [
-  {
-    name: "Technology",
-    slug: "technology",
-    blurb: "Software, data, product & IT support roles",
-    openings: 4,
-  },
-  {
-    name: "Banking & Finance",
-    slug: "banking-finance",
-    blurb: "Fintech, commercial banks & microfinance",
-    openings: 3,
-  },
-  {
-    name: "Oil & Gas",
-    slug: "oil-gas",
-    blurb: "Upstream, downstream & HSE opportunities",
-    openings: 2,
-  },
-  {
-    name: "Healthcare",
-    slug: "healthcare",
-    blurb: "Nursing, pharmacy, lab & hospital admin",
-    openings: 2,
-  },
-  {
-    name: "Customer Service",
-    slug: "customer-service",
-    blurb: "Support, call centre & client experience",
-    openings: 2,
-  },
-  {
-    name: "Engineering",
-    slug: "engineering",
-    blurb: "Civil, mechanical, electrical & projects",
-    openings: 2,
-  },
-  {
-    name: "Agriculture",
-    slug: "agriculture",
-    blurb: "Agribusiness, extension & agro-processing",
-    openings: 2,
-  },
-  {
-    name: "Education",
-    slug: "education",
-    blurb: "Teaching, school leadership & EdTech",
-    openings: 2,
-  },
-  {
-    name: "Sales & Marketing",
-    slug: "sales-marketing",
-    blurb: "Field sales, digital marketing & growth",
-    openings: 2,
-  },
-];
 
 export const STATS: JobStats = {
   liveJobs: 1842,

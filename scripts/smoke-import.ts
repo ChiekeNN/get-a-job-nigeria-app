@@ -20,6 +20,7 @@ import {
 } from "../src/lib/importer/extract";
 import { detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle, detectCategory, parsePostedDate } from "../src/lib/importer/normalize";
 import { SOURCE_FEED } from "../src/lib/importer/config";
+import { CATEGORIES } from "../src/types";
 import { advanceCursor, pageUrl } from "../src/lib/importer/run";
 import { IMPORT_CONFIG } from "../src/lib/importer/config";
 
@@ -108,12 +109,33 @@ check("summary has no Apply Now", /Apply Now/.test(cards[0].summary), false);
 check("posted date parsed", parsePostedDate("Fri 09th Oct, 2026").getFullYear(), 2026);
 
 // ---- auto categorisation for the firehose ----
-check("category: auditor", detectCategory("Internal Auditor at Domeo"), "Banking & Finance");
-check("category: engineer", detectCategory("Senior Frontend Engineer at Paystack"), "Technology");
-check("category: nurse", detectCategory("Registered Nurse at Lagoon Hospital"), "Healthcare");
-check("category: teacher", detectCategory("Mathematics Teacher at YGF Academy"), "Education");
-check("category: hse", detectCategory("HSE Officer (Upstream Operations)"), "Oil & Gas");
-check("category: sales", detectCategory("Sales Manager - Generator at P.Petrop"), "Sales & Marketing");
+check("category: auditor", detectCategory("Internal Auditor at Domeo"), "Auditing Jobs in Nigeria");
+check("category: frontend", detectCategory("Senior Frontend Engineer at Paystack"), "Web Designer / Frontend / UI Jobs");
+check("category: backend", detectCategory("Backend Software Engineer at Paystack"), "Software Developer Jobs");
+check("category: business dev", detectCategory("Business Development Officer"), "Marketing & Sales Jobs");
+check("category: nurse", detectCategory("Registered Nurse at Lagoon Hospital"), "Medical & Healthcare Jobs");
+check("category: teacher", detectCategory("Mathematics Teacher at YGF Academy"), "Teaching Jobs in Nigeria");
+check("category: hse", detectCategory("HSE Officer (Upstream Operations)"), "Safety & Health Jobs");
+check("category: sparky", detectCategory("Electrical Technician"), "Electrical/Electronics Jobs");
+check("category: unknown falls back", detectCategory("Something Unclassifiable"), "Administrative Jobs in Nigeria");
+check("category: sales", detectCategory("Sales Manager - Generator at P.Petrop"), "Sales Jobs");
+
+// Every detected category must exist in the taxonomy the filters and forms use.
+for (const sample of [
+  "Registered Nurse",
+  "Senior Frontend Engineer",
+  "Sales Manager",
+  "HSE Officer",
+  "Internal Auditor",
+  "Dispatch Rider",
+  "Oracle DBA",
+  "Hotel Manager",
+  "Chef",
+  "Mathematics Teacher",
+  "Something Unclassifiable",
+]) {
+  check(`category in taxonomy: ${sample}`, CATEGORIES.includes(detectCategory(sample) as (typeof CATEGORIES)[number]), true);
+}
 
 // ---- paging: the board is 1-indexed oddly ----
 const lastweek = { url: "https://www.hotnigerianjobs.com/jobs/lastweek/", pagination: "path-indexed" };

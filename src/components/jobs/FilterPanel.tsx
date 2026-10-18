@@ -109,7 +109,9 @@ export function FilterPanel({
                 {total}
               </span>
             </button>
-            {CATEGORIES.map((category) => {
+            {CATEGORIES.filter((category) => (categoryCounts[category] ?? 0) > 0)
+              .sort((a, b) => (categoryCounts[b] ?? 0) - (categoryCounts[a] ?? 0))
+              .map((category) => {
               const count = categoryCounts[category] ?? 0;
               const active = filters.category === category;
               return (
@@ -131,7 +133,7 @@ export function FilterPanel({
                   </span>
                 </button>
               );
-            })}
+              })}
           </div>
         </div>
 

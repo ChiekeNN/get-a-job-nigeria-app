@@ -294,7 +294,7 @@ export function ProSection() {
                   <label className="label" htmlFor="alert-category">
                     Field
                   </label>
-                  <select id="alert-category" name="category" className="field" defaultValue="Technology">
+                  <select id="alert-category" name="category" className="field" defaultValue={CATEGORIES[0]}>
                     {CATEGORIES.map((category) => (
                       <option key={category} value={category}>
                         {category}
@@ -380,7 +380,7 @@ export function ProSection() {
               <label className="label" htmlFor="pro-category">
                 Field
               </label>
-              <select id="pro-category" name="category" className="field" defaultValue="Technology">
+              <select id="pro-category" name="category" className="field" defaultValue={CATEGORIES[0]}>
                 {CATEGORIES.map((category) => (
                   <option key={category} value={category}>
                     {category}

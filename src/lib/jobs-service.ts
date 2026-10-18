@@ -1,4 +1,4 @@
-import { desc, eq, like, sql } from "drizzle-orm";
+import { desc, eq, inArray, like, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { applications, jobs, subscribers } from "@/db/schema";
@@ -21,6 +21,40 @@ const DAY = 86_400_000;
  * Neither filter can touch a genuine listing, and both are idempotent.
  */
 let cleanupPromise: Promise<void> | null = null;
+
+/**
+ * The board used to classify listings into nine broad industries. It now follows
+ * the full industry list, so rows stored under the old names are re-filed once.
+ * New imports are classified at fetch time and never hit this path.
+ */
+const LEGACY_CATEGORY_MAP: Record<string, string> = {
+  Technology: "Programming / Software Jobs",
+  "Banking & Finance": "Banking Jobs in Nigeria",
+  "Oil & Gas": "Oil & Gas Jobs in Nigeria",
+  Healthcare: "Medical & Healthcare Jobs",
+  "Customer Service": "Customer Service Jobs",
+  Engineering: "Engineering Jobs in Nigeria",
+  Agriculture: "Agriculture Jobs in Nigeria",
+  Education: "Teaching Jobs in Nigeria",
+  "Sales & Marketing": "Marketing & Sales Jobs",
+};
+
+async function refileLegacyCategories(): Promise<void> {
+  const legacyNames = Object.keys(LEGACY_CATEGORY_MAP);
+  const present = await db
+    .select({ id: jobs.id })
+    .from(jobs)
+    .where(inArray(jobs.category, legacyNames))
+    .limit(1);
+
+  if (present.length === 0) return;
+
+  for (const [from, to] of Object.entries(LEGACY_CATEGORY_MAP)) {
+    await db.update(jobs).set({ category: to }).where(eq(jobs.category, from));
+  }
+
+  console.log("[jobs] re-filed listings from the previous industry taxonomy");
+}
 
 async function purgeLegacyRows(): Promise<void> {
   const demo = await db
@@ -45,6 +79,8 @@ async function purgeLegacyRows(): Promise<void> {
   if (removed > 0) {
     console.log(`[jobs] removed ${removed} legacy listing(s)`);
   }
+
+  await refileLegacyCategories();
 }
 
 export async function ensureCleanBoard(): Promise<void> {

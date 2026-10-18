@@ -275,7 +275,10 @@ async function collectCandidates(
           sourceId: item.sourceId,
           url: item.link,
           title: item.title,
-          category: config.sources[0]?.category ?? "Technology",
+          category:
+            config.sources[0]?.category && config.sources[0].category !== "auto"
+              ? config.sources[0].category
+              : detectCategory(item.title),
           summary: item.summary,
           postedText: "",
         });

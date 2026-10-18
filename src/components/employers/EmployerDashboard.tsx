@@ -60,7 +60,7 @@ const DEFAULT_FORM: FormState = {
   contactName: "",
   state: "Lagos",
   city: "",
-  category: "Technology",
+  category: CATEGORIES[0],
   jobType: "Full-Time",
   experienceLevel: "Mid level",
   salaryMin: "250000",
