@@ -46,8 +46,20 @@ export interface ImportConfig {
   expireAfterDays: number;
   /** Polite pause between requests, in milliseconds. */
   requestDelayMs: number;
-  /** How many pages of each listing to walk (about 50 jobs per page). */
+  /**
+   * How many pages of each listing to walk (about 50 jobs per page).
+   * 5000 jobs needs ~100 pages; leave headroom because some are skipped.
+   */
   maxPagesPerSource: number;
+  /**
+   * Stop starting new work after this many milliseconds and return cleanly.
+   * Vercel kills a function at its maxDuration, which would lose the whole run;
+   * stopping early means the next run simply resumes, because listings already
+   * stored are skipped.
+   */
+  timeBudgetMs: number;
+  /** Rows per INSERT statement. 5000 jobs one-at-a-time would exceed any timeout. */
+  insertBatchSize: number;
   /**
    * "auto" uses the summary printed on the listing page when it is detailed
    * enough, and only fetches the job page when it is not. Far fewer requests,
@@ -76,14 +88,18 @@ export interface ImportConfig {
 export const IMPORT_CONFIG: ImportConfig = {
   enabled: true,
 
-  // 100/day ceiling. If the board only publishes 30 matching jobs, you get 30.
-  maxJobsPerRun: 100,
+  // 5000/day ceiling. The board's last-week window holds ~4000, so in practice
+  // a full run takes everything available and stops.
+  maxJobsPerRun: 5000,
 
   publishImmediately: true,
   expireAfterDays: 21,
   requestDelayMs: 350,
-  // 3 pages ≈ 150 candidates, trimmed to maxJobsPerRun.
-  maxPagesPerSource: 3,
+  // ~100 pages of 50 covers the whole last-week window.
+  maxPagesPerSource: 110,
+  // 240s: safely under the route's 300s maxDuration.
+  timeBudgetMs: 240_000,
+  insertBatchSize: 250,
   detailPage: "auto",
   useRssFeed: false,
 

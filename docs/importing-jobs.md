@@ -18,7 +18,9 @@ Everything you can vary lives in **`src/lib/importer/config.ts`**.
 | Which states to keep | `filters.states` (empty = all) |
 | Keyword include / exclude | `filters.includeKeywords`, `filters.excludeKeywords` |
 | Minimum advertised salary | `filters.minSalary` |
-| How many new jobs per day | `maxJobsPerRun` (default 100) |
+| How many new jobs per day | `maxJobsPerRun` (default 5000) |
+| Pages walked per source | `maxPagesPerSource` (default 110, ~50 jobs/page) |
+| Stop before the function timeout | `timeBudgetMs` (default 240s) |
 | Publish immediately or review first | `publishImmediately` (false = saved as `draft`) |
 | How long before an unseen job is unpublished | `expireAfterDays` |
 | **Which parts of each listing to copy** | `fields` |
@@ -176,9 +178,43 @@ curl -X POST "https://<your-domain>/api/admin/import?limit=10" \
 ```
 
 On Vercel's Hobby plan crons may run at most once per day, which matches the
-100-jobs-per-day target. Set `CRON_SECRET` in the project environment and Vercel
+daily run. Set `CRON_SECRET` in the project environment and Vercel
 signs the cron request automatically; `IMPORT_SECRET` covers manual and external
 callers (GitHub Actions, cron-job.org, your laptop).
+
+## 4b. Running at 5,000 jobs a day
+
+The ceiling is `maxJobsPerRun: 5000`, but three things have to line up for a run
+to actually finish that many:
+
+- **Pages.** 5000 jobs is ~100 pages at 50 per page, so `maxPagesPerSource` is
+  110. The last-week window holds roughly 4,000 listings, so in practice a full
+  run takes everything available and stops.
+- **Writes are batched.** 5000 individual `INSERT`s would never finish inside a
+  function timeout, so rows are collected and written 250 at a time — 20
+  statements instead of 5000.
+- **The run is time-budgeted.** `timeBudgetMs` (240s) stops the run before
+  Vercel terminates the function at 300s. Because listings already stored are
+  skipped, the next run simply resumes. A truncated run says so in its response
+  (`"truncated": true`).
+
+### Plan limits to be aware of
+
+| Plan | Function limit | Crons |
+| --- | --- | --- |
+| Hobby | 60s | once per day |
+| Pro | 300s | unlimited |
+
+On **Hobby**, `maxDuration = 300` is not honoured — the function is cut at 60s.
+A 5000-job run will not finish in one invocation there. Either run it manually a
+few times (each resumes), lower `maxPagesPerSource`, or move to Pro. On **Pro**
+the full run fits comfortably: ~80s of paging plus ~20 batched writes.
+
+### Watching a big run
+
+The response reports `counts.inserted`, `counts.failed` and `counts.expired`.
+`preview[]` is capped at 50 entries on purpose — a 5000-row preview would be a
+multi-megabyte response.
 
 ## 5. How sync behaves
 
