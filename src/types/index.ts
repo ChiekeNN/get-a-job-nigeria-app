@@ -29,6 +29,7 @@ export const CATEGORIES = [
   "Media, Arts & Design",
   "Security & Defence",
   "Agriculture",
+  "General Vacancies",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
