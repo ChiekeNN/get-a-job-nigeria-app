@@ -46,7 +46,7 @@ export function Navbar() {
         <div className="wrap flex h-9 items-center justify-between text-[11.5px]">
           <p className="flex items-center gap-2 text-white/80">
             <span aria-hidden="true">🇳🇬</span>
-            Nigeria&apos;s placement-first job network — 1,800+ verified roles across 37 states
+            Nigeria&apos;s placement-first job network — verified roles across the 36 states and FCT
           </p>
           <div className="flex items-center gap-5 text-white/75">
             <span>WhatsApp: +234 803 000 4421</span>

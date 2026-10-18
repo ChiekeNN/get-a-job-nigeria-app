@@ -209,7 +209,7 @@ export default async function EmployersPage() {
             {
               icon: BadgeCheck,
               title: "Salary benchmarking",
-              body: "Real Naira benchmarks from 1,800+ live roles help you make offers that get accepted first time.",
+              body: "Real Naira benchmarks from live roles help you make offers that get accepted first time.",
             },
           ].map((item) => (
             <div key={item.title}>
