@@ -17,16 +17,41 @@ const globalForDb = globalThis as typeof globalThis & {
  * route is `force-dynamic`; throwing on first use keeps the failure at runtime
  * with a clear message instead.
  */
-function getDatabaseUrl(): string {
-  const databaseUrl = process.env.DATABASE_URL;
+/**
+ * Vercel database integrations do not all name the variable the same way.
+ * Neon and Vercel Postgres usually set DATABASE_URL, while Supabase and others
+ * set POSTGRES_URL / POSTGRES_PRISMA_URL. Accept any of them so attaching a
+ * database works without hand-copying a connection string.
+ */
+export const DATABASE_URL_VARS = [
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "POSTGRES_PRISMA_URL",
+  "POSTGRES_URL_NON_POOLING",
+  "NEON_DATABASE_URL",
+] as const;
 
-  if (!databaseUrl) {
+/** Which recognised variable holds a connection string, if any. */
+export function findDatabaseUrlVar(): { name: string; value: string } | null {
+  for (const name of DATABASE_URL_VARS) {
+    const value = process.env[name];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return { name, value: value.trim() };
+    }
+  }
+  return null;
+}
+
+function getDatabaseUrl(): string {
+  const found = findDatabaseUrlVar();
+
+  if (!found) {
     throw new Error(
-      "DATABASE_URL is required. Set it in the runtime environment before starting the app.",
+      `No database connection string. Set one of: ${DATABASE_URL_VARS.join(", ")}.`,
     );
   }
 
-  return databaseUrl;
+  return found.value;
 }
 
 export function getPool(): Pool {

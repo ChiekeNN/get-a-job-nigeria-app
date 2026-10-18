@@ -1,3 +1,4 @@
+import { findDatabaseUrlVar } from "@/db";
 import { runImport } from "@/lib/importer/run";
 
 /**
@@ -33,6 +34,20 @@ function authorised(request: Request): boolean {
 async function handle(request: Request) {
   if (!authorised(request)) {
     return Response.json({ ok: false, message: "Not authorised" }, { status: 401 });
+  }
+
+  // Fail with a usable message instead of a raw 500 when no database is attached.
+  const database = findDatabaseUrlVar();
+  if (!database) {
+    return Response.json(
+      {
+        ok: false,
+        reason: "no_connection_string",
+        message:
+          "Cannot import: no database is configured. Add DATABASE_URL (or POSTGRES_URL) in Vercel, run the migration, then trigger the import again.",
+      },
+      { status: 503 },
+    );
   }
 
   const { searchParams } = new URL(request.url);
