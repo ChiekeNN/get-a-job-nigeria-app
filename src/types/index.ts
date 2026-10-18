@@ -48,6 +48,12 @@ export interface Job {
   applicants: number;
   employerEmail: string | null;
   status: string;
+  /** Set for listings imported from an external board (e.g. "hotnigerianjobs"). */
+  source?: string | null;
+  /** Stable upstream identifier, used to keep imports idempotent. */
+  sourceId?: string | null;
+  /** Canonical URL of the original listing. */
+  sourceUrl?: string | null;
 }
 
 export type SortOption = "newest" | "salary-high" | "salary-low" | "applicants";
