@@ -285,6 +285,102 @@ export function scrubText(value: string): string {
     .trim();
 }
 
+
+/**
+ * Classify a listing into one of the site's categories when the source does not
+ * provide one (e.g. when reading the board's "last week" firehose).
+ * First matching bucket wins; order matters.
+ */
+const CATEGORY_KEYWORDS: Array<{ category: string; words: string[] }> = [
+  {
+    category: "Healthcare",
+    words: [
+      "nurse", "nursing", "medical", "doctor", "pharmac", "clinical", "hospital", "laboratory",
+      "lab scientist", "radiograph", "dentist", "midwif", "public health", "surgeon", "physician",
+      "optometr", "physiotherap", "health officer", "caregiver",
+    ],
+  },
+  {
+    category: "Technology",
+    words: [
+      "software", "developer", "engineer, software", "frontend", "backend", "full stack", "fullstack",
+      "data analyst", "data scientist", "devops", "cloud", "cyber", "it support", "ict", "programmer",
+      "product designer", "ui/ux", "web", "android", "ios", "machine learning", "ai ", "database",
+      "network engineer", "systems administrator", "qa engineer", "scrum",
+    ],
+  },
+  {
+    category: "Banking & Finance",
+    words: [
+      "accountant", "accounting", "finance", "audit", "bank", "teller", "credit", "loan", "tax",
+      "treasury", "insurance", "investment", "microfinance", "actuar", "bookkeep", "cashier",
+    ],
+  },
+  {
+    category: "Oil & Gas",
+    words: [
+      "oil", "gas", "petroleum", "upstream", "downstream", "hse", "offshore", "refinery",
+      "drilling", "pipeline", "wellhead", "lng",
+    ],
+  },
+  {
+    category: "Customer Service",
+    words: [
+      "customer service", "customer care", "call centre", "call center", "client service",
+      "front desk", "receptionist", "support officer", "customer experience", "help desk",
+    ],
+  },
+  {
+    category: "Engineering",
+    words: [
+      "civil engineer", "mechanical engineer", "electrical engineer", "structural", "quantity surveyor",
+      "site engineer", "construction", "maintenance engineer", "project engineer", "technician",
+      "surveyor", "architect", "facility", "welder", "electrician", "plumber", "hvac",
+    ],
+  },
+  {
+    category: "Agriculture",
+    words: [
+      "agricultur", "agro", "farm", "livestock", "poultry", "horticultur", "crop", "agronom",
+      "veterinar", "fishery", "forestry",
+    ],
+  },
+  {
+    category: "Education",
+    words: [
+      "teacher", "lecturer", "tutor", "instructor", "school", "education", "academic", "professor",
+      "head of school", "curriculum", "exam", "librarian", "trainer",
+    ],
+  },
+  {
+    category: "Sales & Marketing",
+    words: [
+      "sales", "marketing", "brand", "business development", "digital marketing", "social media",
+      "seo", "growth", "customer acquisition", "merchandis", "retail", "relationship officer",
+      "business development officer", "communications", "public relations",
+    ],
+  },
+];
+
+export function detectCategory(text: string): string {
+  const lower = text.toLowerCase();
+
+  for (const bucket of CATEGORY_KEYWORDS) {
+    if (bucket.words.some((word) => lower.includes(word))) return bucket.category;
+  }
+
+  return "Customer Service";
+}
+
+/** "Fri 09th Oct, 2026" -> Date. */
+export function parsePostedDate(value: string, fallbackDaysAgo = 0): Date {
+  if (value) {
+    const parsed = parseDeadline(value);
+    if (parsed && !Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return new Date(Date.now() - fallbackDaysAgo * 86_400_000);
+}
+
 export function parseDeadline(value: string): Date | null {
   if (!value) return null;
   const cleaned = value.replace(/(\d)(st|nd|rd|th)/i, "$1").replace(/,/g, " ").replace(/\s+/g, " ").trim();

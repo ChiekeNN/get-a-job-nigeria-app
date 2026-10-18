@@ -86,6 +86,82 @@ export function extractJobLinks(html: string, baseUrl: string = SOURCE_FEED.base
   return listings;
 }
 
+
+export interface ListingCard extends RawListing {
+  /** Summary printed on the listing page (location, salary, requirements). */
+  summary: string;
+  /** "Fri 09th Oct, 2026" style date, verbatim. */
+  postedText: string;
+}
+
+/**
+ * Parse whole listing cards from a category page.
+ *
+ * The board prints, under each job title: the posting date, a summary that
+ * usually carries the location, salary and qualification, and an "Apply Now"
+ * link. Reading those means one request per 50 jobs instead of 50 requests.
+ */
+export function extractListingCards(
+  html: string,
+  baseUrl: string = SOURCE_FEED.baseUrl,
+): ListingCard[] {
+  const anchorRe = /<a\b[^>]*href=["']((?:https?:\/\/[^"']+)?\/hotjobs\/(\d+)\/[^"']+\.html)["'][^>]*>([\s\S]*?)<\/a>/gi;
+
+  // Record every job anchor with its position so we can slice the text between them.
+  const anchors: Array<{ id: string; url: string; title: string; start: number; end: number }> = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = anchorRe.exec(html)) !== null) {
+    const [, href, id, inner] = match;
+    const title = stripTagsFlat(inner)
+      .replace(/^\d+\.\s*/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!title || title.length < 3) continue;
+
+    anchors.push({
+      id,
+      url: new URL(href, baseUrl).toString(),
+      title,
+      start: match.index,
+      end: match.index + match[0].length,
+    });
+  }
+
+  const seen = new Set<string>();
+  const cards: ListingCard[] = [];
+
+  anchors.forEach((anchor, index) => {
+    if (seen.has(anchor.id)) return;
+    seen.add(anchor.id);
+
+    // Text after this anchor, up to the next job anchor, is this listing's card.
+    const next = anchors[index + 1];
+    const segmentHtml = html.slice(anchor.end, next ? next.start : anchor.end + 1500);
+    const segment = stripTagsFlat(segmentHtml);
+
+    const postedText =
+      /Posted on\s+([A-Za-z]{3}\s+\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3},?\s*\d{4})/i.exec(segment)?.[1] ?? "";
+
+    const summary = segment
+      .replace(/^Posted on[\s\S]*?\(\d+\s+comments?\)\s*/i, "")
+      .replace(/^Posted on[^-]*-\s*hotnigerianjobs\.com[\s\S]*?\d+\s+comments?\)\s*/i, "")
+      .replace(/Apply Now[\s\S]*$/i, "")
+      .trim();
+
+    cards.push({
+      sourceId: anchor.id,
+      url: anchor.url,
+      title: anchor.title,
+      summary,
+      postedText,
+    });
+  });
+
+  return cards;
+}
+
 function readJsonLdBlocks(html: string): unknown[] {
   const blocks: unknown[] = [];
   const script = /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;

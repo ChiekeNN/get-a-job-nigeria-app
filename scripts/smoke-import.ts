@@ -8,6 +8,7 @@
 import {
   extractDescriptionText,
   extractJobLinks,
+  extractListingCards,
   findFirst,
   splitSentences,
   DEADLINE_PATTERNS,
@@ -16,8 +17,9 @@ import {
   SALARY_PATTERNS,
   stripTags,
 } from "../src/lib/importer/extract";
-import { detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle } from "../src/lib/importer/normalize";
+import { detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle, detectCategory, parsePostedDate } from "../src/lib/importer/normalize";
 import { SOURCE_FEED } from "../src/lib/importer/config";
+import { pageUrl } from "../src/lib/importer/run";
 
 const brand = SOURCE_FEED.stripFromTitles[0];
 
@@ -78,6 +80,46 @@ check("bare domain removed", scrubText(`See ${host} for more`), "See for more");
 check("brand removed from body", scrubText(`Send CV to jobs@example.com. Source: ${brand}`), "Send CV to jobs@example.com. Source:");
 check("clean text untouched", scrubText("A normal description"), "A normal description");
 check("recruitment suffix stripped", cleanJobTitle(`Acme Ltd Job Recruitment (3 Positions) | ${brand}`), "Acme Ltd Recruitment");
+
+
+// ---- category-page cards (the "last week" listing format) ----
+const categoryPage = `
+<h1>4040 Jobs Listed Last Week - pg 1</h1>
+<h1><a href="/hotjobs/975604/internal-auditor-at-domeo.html" title="Permanent Link">Internal Auditor at Domeo Resources International</a></h1>
+Posted on Fri 09th Oct, 2026 - hotnigerianjobs.com --- (0 comments)
+<p>Domeo Resources International is recruiting to fill the position of: Internal Auditor. The position is located in Aba, Abia State. Salary: N400,000 - N600,000 / month. Interested candidates should possess a BSc/HND in Accounting.</p>
+<a href="/hotjobs/975604/internal-auditor-at-domeo.html">Apply Now</a>
+<h1><a href="/hotjobs/975610/senior-meal-officer.html" title="Permanent Link">Senior MEAL and Innovation Officer at Lindii Peace Foundation</a></h1>
+Posted on Fri 09th Oct, 2026 - hotnigerianjobs.com --- (1 comments)
+<p>Lindii Peace Foundation is recruiting to fill the position of: Senior MEAL and Innovation Officer. The position is located in Maiduguri, Borno State. Interested candidates should possess a Bachelor's Degree with a minimum of three years experience.</p>
+<a href="/hotjobs/975610/senior-meal-officer.html">Apply Now</a>
+`;
+
+const cards = extractListingCards(categoryPage);
+check("cards parsed from category page", cards.length, 2);
+check("card id", cards[0].sourceId, "975604");
+check("card posted date", cards[0].postedText, "Fri 09th Oct, 2026");
+check("card summary has location", cards[0].summary.includes("Aba, Abia State"), true);
+check("card summary has salary", cards[0].summary.includes("N400,000 - N600,000"), true);
+check("summary has no comment noise", /comments/.test(cards[0].summary), false);
+check("summary has no Apply Now", /Apply Now/.test(cards[0].summary), false);
+check("posted date parsed", parsePostedDate("Fri 09th Oct, 2026").getFullYear(), 2026);
+
+// ---- auto categorisation for the firehose ----
+check("category: auditor", detectCategory("Internal Auditor at Domeo"), "Banking & Finance");
+check("category: engineer", detectCategory("Senior Frontend Engineer at Paystack"), "Technology");
+check("category: nurse", detectCategory("Registered Nurse at Lagoon Hospital"), "Healthcare");
+check("category: teacher", detectCategory("Mathematics Teacher at YGF Academy"), "Education");
+check("category: hse", detectCategory("HSE Officer (Upstream Operations)"), "Oil & Gas");
+check("category: sales", detectCategory("Sales Manager - Generator at P.Petrop"), "Sales & Marketing");
+
+// ---- paging: the board is 1-indexed oddly ----
+const lastweek = { url: "https://www.hotnigerianjobs.com/jobs/lastweek/", pagination: "path-indexed" };
+check("page 1 is the bare URL", pageUrl(lastweek, 1), "https://www.hotnigerianjobs.com/jobs/lastweek/");
+check("page 2 is /1/", pageUrl(lastweek, 2), "https://www.hotnigerianjobs.com/jobs/lastweek/1/");
+check("page 3 is /2/", pageUrl(lastweek, 3), "https://www.hotnigerianjobs.com/jobs/lastweek/2/");
+check("query style", pageUrl({ url: "https://x.test/a/", pagination: "query" }, 2), "https://x.test/a/?page=2");
+check("single page", pageUrl({ url: "https://x.test/a/", pagination: "none" }, 2), null);
 
 console.log(`\n${failures === 0 ? "All checks passed" : `${failures} check(s) failed`}`);
 process.exit(failures === 0 ? 0 : 1);

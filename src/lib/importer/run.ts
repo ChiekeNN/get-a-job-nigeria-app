@@ -5,7 +5,7 @@ import { jobs } from "@/db/schema";
 import { IMPORT_CONFIG, SOURCE_FEED, type ImportConfig } from "@/lib/importer/config";
 import {
   extractDescriptionText,
-  extractJobLinks,
+  extractListingCards,
   extractJobPosting,
   findFirst,
   DEADLINE_PATTERNS,
@@ -31,9 +31,11 @@ import {
   detectExperienceLevel,
   detectJobType,
   detectState,
+  detectCategory,
   isRemoteText,
   makeSlug,
   parseDeadline,
+  parsePostedDate,
   parseSalary,
   tintFor,
 } from "@/lib/importer/normalize";
@@ -44,6 +46,7 @@ export interface ImportCandidate {
   title: string;
   category: string;
   summary: string;
+  postedText: string;
 }
 
 export interface ImportPreview {
@@ -95,7 +98,13 @@ function containsAny(text: string, keywords: string[]): boolean {
 
 function passesTitleFilters(candidate: ImportCandidate, config: ImportConfig): boolean {
   const { filters } = config;
-  if (filters.categories.length > 0 && !filters.categories.includes(candidate.category)) return false;
+  if (
+    filters.categories.length > 0 &&
+    candidate.category !== "auto" &&
+    !filters.categories.includes(candidate.category)
+  ) {
+    return false;
+  }
   const blob = `${candidate.title} ${candidate.summary}`;
   if (!matchesKeywords(blob, filters.includeKeywords)) return false;
   if (containsAny(blob, filters.excludeKeywords)) return false;
@@ -107,28 +116,50 @@ function passesTitleFilters(candidate: ImportCandidate, config: ImportConfig): b
 }
 
 /** Walk the configured source pages and the RSS feed, newest first, de-duplicated. */
+export function pageUrl(source: { url: string; pagination?: string }, page: number): string | null {
+  const style = source.pagination ?? "path-indexed";
+  if (page === 1) return source.url;
+  if (style === "none") return null;
+
+  const base = source.url.replace(/\/$/, "");
+  if (style === "query") return `${base}/?page=${page}`;
+
+  // The board is 1-indexed oddly: /jobs/lastweek/ is page 1, /jobs/lastweek/1/ is page 2.
+  return `${base}/${page - 1}/`;
+}
+
+/** Walk the configured source pages, newest first, de-duplicated. */
 async function collectCandidates(config: ImportConfig, errors: string[]): Promise<ImportCandidate[]> {
   const byId = new Map<string, ImportCandidate>();
 
   for (const source of config.sources) {
     for (let page = 1; page <= config.maxPagesPerSource; page += 1) {
-      const url = page === 1 ? source.url : `${source.url.replace(/\/$/, "")}/?page=${page}`;
+      const url = pageUrl(source, page);
+      if (!url) break;
+
       try {
         const html = await fetchText(url);
-        const listings: RawListing[] = extractJobLinks(html);
-        for (const listing of listings) {
-          if (byId.has(listing.sourceId)) continue;
-          byId.set(listing.sourceId, {
-            sourceId: listing.sourceId,
-            url: listing.url,
-            title: listing.title,
+        const cards = extractListingCards(html);
+
+        for (const card of cards) {
+          if (byId.has(card.sourceId)) continue;
+          byId.set(card.sourceId, {
+            sourceId: card.sourceId,
+            url: card.url,
+            title: card.title,
             category: source.category,
-            summary: "",
+            summary: card.summary,
+            postedText: card.postedText,
           });
         }
+
+        // Stop early once a page comes back empty — no point walking further.
+        if (cards.length === 0) break;
       } catch (error) {
         errors.push(`${source.name} (${url}): ${error instanceof Error ? error.message : String(error)}`);
+        break;
       }
+
       if (config.requestDelayMs > 0) await sleep(config.requestDelayMs);
     }
   }
@@ -137,11 +168,10 @@ async function collectCandidates(config: ImportConfig, errors: string[]): Promis
     try {
       const items = await fetchRssItems(SOURCE_FEED.rss);
       for (const item of items) {
-        if (!item.sourceId || byId.has(item.sourceId)) {
-          if (item.sourceId && byId.has(item.sourceId)) {
-            const existing = byId.get(item.sourceId);
-            if (existing && !existing.summary) existing.summary = item.summary;
-          }
+        if (!item.sourceId) continue;
+        const existing = byId.get(item.sourceId);
+        if (existing) {
+          if (!existing.summary) existing.summary = item.summary;
           continue;
         }
         byId.set(item.sourceId, {
@@ -150,6 +180,7 @@ async function collectCandidates(config: ImportConfig, errors: string[]): Promis
           title: item.title,
           category: config.sources[0]?.category ?? "Technology",
           summary: item.summary,
+          postedText: "",
         });
       }
     } catch (error) {
@@ -227,6 +258,29 @@ function extractFromHtml(html: string, fallbackTitle: string, fallbackSummary: s
   };
 }
 
+/**
+ * Build a listing from the summary printed on the category page. Used when the
+ * summary already carries location, salary and requirements, so no extra request
+ * is needed.
+ */
+function extractFromText(text: string, fallbackTitle: string, summary: string): ExtractedJob {
+  const company =
+    companyFromTitle(fallbackTitle) ||
+    companyFromRecruitmentTitle(fallbackTitle) ||
+    /^([A-Z][\w&'().,\- ]{2,60}?)\s+is (?:recruiting|currently recruiting|seeking)/m.exec(text)?.[1]?.trim() ||
+    "Confidential Employer";
+
+  return {
+    title: cleanJobTitle(fallbackTitle),
+    company,
+    locationText: findFirst(text, LOCATION_PATTERNS),
+    salaryText: findFirst(text, SALARY_PATTERNS),
+    description: (text || summary).trim().slice(0, 6000),
+    requirements: splitSentences(findFirst(text, REQUIREMENT_MARKERS), 8),
+    deadline: parseDeadline(findFirst(text, DEADLINE_PATTERNS)),
+  };
+}
+
 export interface RunOptions {
   dryRun?: boolean;
   limit?: number;
@@ -301,10 +355,24 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
   for (const candidate of selected) {
     const sourceId = `${SOURCE_FEED.key}:${candidate.sourceId}`;
     try {
-      const html = await fetchText(candidate.url);
-      result.counts.fetched += 1;
+      // The category page usually carries enough detail. Only pay for a second
+      // request when the summary is thin.
+      const summaryIsRich = candidate.summary.trim().length >= 180;
+      const needsDetail = config.detailPage === "always" || !summaryIsRich;
 
-      const extracted = extractFromHtml(html, candidate.title, candidate.summary);
+      let extracted: ExtractedJob;
+      if (needsDetail) {
+        const html = await fetchText(candidate.url);
+        result.counts.fetched += 1;
+        extracted = extractFromHtml(html, candidate.title, candidate.summary);
+      } else {
+        extracted = extractFromText(candidate.summary, candidate.title, candidate.summary);
+      }
+
+      const resolvedCategory =
+        candidate.category === "auto"
+          ? detectCategory(`${candidate.title} ${extracted.description}`)
+          : candidate.category;
       const salary = config.fields.salary ? parseSalary(extracted.salaryText) : { min: 0, max: 0 };
       if (config.filters.minSalary > 0 && salary.max > 0 && salary.max < config.filters.minSalary) {
         continue;
@@ -327,7 +395,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
         company,
         state,
         city,
-        category: candidate.category,
+        category: resolvedCategory,
         jobType: detectJobType(`${title} ${description}`),
         salaryMin: salary.min,
         salaryMax: salary.max,
@@ -352,7 +420,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
             companyColor: tintFor(company),
             state,
             city,
-            category: candidate.category,
+            category: resolvedCategory,
             jobType: detectJobType(`${title} ${description}`),
             salaryMin: salary.min,
             salaryMax: salary.max,
@@ -363,7 +431,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
             experienceLevel: detectExperienceLevel(title, description),
             isFeatured: false,
             isRemote: isRemoteText(`${title} ${extracted.locationText} ${description}`),
-            postedAt: new Date(),
+            postedAt: parsePostedDate(candidate.postedText),
             deadline: config.fields.deadline ? (extracted.deadline ?? new Date(Date.now() + 30 * 86_400_000)) : null,
             applicants: 0,
             employerEmail: null,

@@ -11,6 +11,9 @@ Everything you can vary lives in **`src/lib/importer/config.ts`**.
 | What you want to control | Where |
 | --- | --- |
 | Which slices of the board to read | `sources[]` — one entry per listing page URL |
+| Which time window | `/jobs/today/`, `/jobs/1day/`, `/jobs/lastweek/` |
+| How paging works | `sources[].pagination` — `"path-indexed"`, `"query"` or `"none"` |
+| Fetch every job page or reuse summaries | `detailPage` — `"auto"` or `"always"` |
 | Which category each slice files under | `sources[].category` |
 | Which states to keep | `filters.states` (empty = all) |
 | Keyword include / exclude | `filters.includeKeywords`, `filters.excludeKeywords` |
@@ -36,16 +39,38 @@ fields: {
 
 `applyUrl` is reserved and ignored. Listings never link out.
 
-Slides of the board you may point at:
+### The "last week" listings
+
+Slices of the board you may point at:
 
 ```
-/industry/119/  Computer and AI          /industry/105/  Banking & Finance
-/industry/128/  Oil and Gas             /industry/118/  Medical
-/industry/112/  Engineering             /industry/135/  Telecommunication
-/field/233/     Human Resources         /field/215/     Customer Service
-/location/901/  Abuja                   /location/902/  Lagos
-/jobs/featured/ Latest featured          /alljobs/0/     Everything
+/jobs/today/     posted today            /jobs/1day/     yesterday
+/jobs/2days/     Friday's jobs           /jobs/lastweek/ the last seven days
+/industry/119/   Computer and AI         /industry/105/  Banking & Finance
+/industry/128/   Oil and Gas             /industry/118/  Medical
+/field/233/      Human Resources         /field/215/     Customer Service
+/location/901/   Abuja                   /location/902/  Lagos
+/alljobs/0/      Everything, paginated
 ```
+
+`/jobs/lastweek/` is the default. It listed **4,040 jobs** in the week of 05–12 Oct
+2026, about 50 per page, newest first.
+
+Two things worth knowing about it:
+
+- **Paging is off by one.** `/jobs/lastweek/` is page 1, `/jobs/lastweek/1/` is page 2,
+  `/jobs/lastweek/2/` is page 3. `pagination: "path-indexed"` handles this.
+- **Every card carries its own summary** — location, salary and qualifications are
+  printed on the listing page itself. With `detailPage: "auto"`, the importer uses
+  that summary and only fetches the individual job page when the summary is thin
+  (under ~180 characters). That turns ~150 requests into ~3.
+
+Because the firehose has no industry labels, set `category: "auto"` and each listing
+is classified from its title and description into your nine categories.
+
+The board also has daily recap posts ("HNJobs (Recap): …"). These are newsletter
+roundups rather than single roles; add `"recap"` to `filters.excludeKeywords` if you
+would rather not carry them.
 
 ## 2. One-time database migration
 
