@@ -268,6 +268,10 @@ export const LOCATION_PATTERNS: RegExp[] = [
 export const SALARY_PATTERNS: RegExp[] = [
   /salary\s*:\s*((?:n|₦|ngn)?\s?[\d,]{4,}(?:\s*(?:-|–|—|to)\s*(?:n|₦|ngn)?\s?[\d,]{4,})?[^.\n]{0,30})/i,
   /remuneration\s*:\s*((?:n|₦|ngn)?\s?[\d,]{4,}(?:\s*(?:-|–|—|to)\s*(?:n|₦|ngn)?\s?[\d,]{4,})?[^.\n]{0,30})/i,
+  // "Salary N500,000 monthly" and "Remuneration is N250,000" — no colon, which
+  // is how most Nigerian adverts phrase it. The currency prefix is required so
+  // a bare number elsewhere in the sentence cannot be mistaken for pay.
+  /(?:salary|remuneration|pay)\s*(?:of|is|:)?\s*((?:n|₦|ngn)\s?[\d,]{4,}(?:\s*(?:-|–|—|to)\s*(?:n|₦|ngn)?\s?[\d,]{4,})?[^.\n]{0,30})/i,
 ];
 
 export const REQUIREMENT_MARKERS: RegExp[] = [

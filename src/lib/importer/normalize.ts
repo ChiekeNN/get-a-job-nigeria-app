@@ -144,7 +144,11 @@ export function parseSalary(text: string): SalaryRange {
   const MIN_MONTHLY = 20_000;
   const MAX_MONTHLY = 50_000_000;
 
-  const numbers = [...text.matchAll(/(?:n|₦|ngn)?\s?(\d[\d,.]*\s?[km]?)/gi)]
+  // The multiplier must be attached and must not begin another word. Allowing an
+  // optional space before [km] made "N500,000 monthly" read as "500,000 m" —
+  // half a trillion naira — which the range filter then discarded, so almost
+  // every disclosed salary was silently dropped.
+  const numbers = [...text.matchAll(/(?:n|₦|ngn)?\s?(\d[\d,]*(?:\.\d+)?(?:[km](?![a-z]))?)/gi)]
     .map((match) => toNaira(match[1]))
     .filter((value) => value >= 10_000 && value <= MAX_RAW);
 

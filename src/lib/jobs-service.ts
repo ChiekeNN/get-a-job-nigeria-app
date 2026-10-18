@@ -4,7 +4,8 @@ import { db } from "@/db";
 import { applications, importState, jobs, subscribers } from "@/db/schema";
 import type { ApplicationInput, Job, JobStats, NewJobInput, SubscriptionInput } from "@/types";
 import { slugify } from "@/lib/format";
-import { classifyListing } from "@/lib/importer/normalize";
+import { findFirst, SALARY_PATTERNS } from "@/lib/importer/extract";
+import { classifyListing, parseSalary } from "@/lib/importer/normalize";
 
 const DAY = 86_400_000;
 
@@ -137,6 +138,50 @@ async function purgeThinListings(): Promise<void> {
     .onConflictDoNothing();
 }
 
+/**
+ * Backfill salaries from descriptions that already contain them.
+ *
+ * parseSalary used to read the "m" of "monthly" as a multiplier, turning
+ * "N500,000 monthly" into half a trillion naira and then discarding it as out of
+ * range. Every listing stored before that fix has salary 0 even though the
+ * figure is sitting in its own description. Re-read it rather than re-import.
+ */
+const SALARY_REPAIR_KEY = "maintenance:salary-v1";
+
+async function repairSalaries(): Promise<void> {
+  const done = await db
+    .select({ value: importState.value })
+    .from(importState)
+    .where(eq(importState.key, SALARY_REPAIR_KEY))
+    .limit(1);
+
+  if (done.length > 0) return;
+
+  const rows = await db
+    .select({ id: jobs.id, description: jobs.description })
+    .from(jobs)
+    .where(sql`${jobs.source} = 'feed' and ${jobs.salaryMax} = 0 and length(${jobs.description}) > 20`);
+
+  let updated = 0;
+  for (const row of rows) {
+    const salary = parseSalary(findFirst(row.description ?? "", SALARY_PATTERNS));
+    if (salary.max > 0) {
+      await db
+        .update(jobs)
+        .set({ salaryMin: salary.min, salaryMax: salary.max })
+        .where(eq(jobs.id, row.id));
+      updated += 1;
+    }
+  }
+
+  if (updated > 0) console.log(`[jobs] restored the disclosed salary on ${updated} listing(s)`);
+
+  await db
+    .insert(importState)
+    .values({ key: SALARY_REPAIR_KEY, value: new Date().toISOString() })
+    .onConflictDoNothing();
+}
+
 async function purgeLegacyRows(): Promise<void> {
   const demo = await db
     .delete(jobs)
@@ -163,6 +208,7 @@ async function purgeLegacyRows(): Promise<void> {
 
   await refileLegacyCategories();
   await purgeThinListings();
+  await repairSalaries();
 }
 
 export async function ensureCleanBoard(): Promise<void> {
