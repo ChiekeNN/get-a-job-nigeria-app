@@ -323,25 +323,34 @@ function extractFromHtml(html: string, fallbackTitle: string, fallbackSummary: s
   }
   if (!company) company = "Confidential Employer";
 
+  // Read the fields off the article body when we managed to isolate it, not off
+  // the whole page. Whole-page text carries the sidebar ("Remote Jobs", "Jobs in
+  // Nigeria") and footer counters, which is how every listing ended up typed as
+  // Remote with a city of "Nigeria".
+  const articleText = extractDescriptionText(text);
+  const scope = articleText.length >= 120 ? articleText : text;
+
   const locationText =
+    findFirst(scope, LOCATION_PATTERNS) ||
     findFirst(text, LOCATION_PATTERNS) ||
     (typeof posting?.jobLocation === "object" && posting.jobLocation !== null
       ? findFirst(JSON.stringify(posting.jobLocation), LOCATION_PATTERNS)
       : "") ||
     readMeta(html, "og:description").slice(0, 120);
 
-  const salaryText = findFirst(text, SALARY_PATTERNS);
+  const salaryText = findFirst(scope, SALARY_PATTERNS) || findFirst(text, SALARY_PATTERNS);
 
-  const requirementsBlock = findFirst(text, REQUIREMENT_MARKERS);
+  const requirementsBlock = findFirst(scope, REQUIREMENT_MARKERS);
   const requirements = splitSentences(requirementsBlock, 8);
 
-  const deadlineText = findFirst(text, DEADLINE_PATTERNS);
+  const deadlineText = findFirst(scope, DEADLINE_PATTERNS) || findFirst(text, DEADLINE_PATTERNS);
 
   let description = "";
   if (typeof posting?.description === "string" && posting.description.trim().length > 80) {
     description = stripTags(posting.description).slice(0, 6000);
   }
-  if (!description) description = extractDescriptionText(text);
+  if (!description) description = articleText;
+  // Prefer the listing's own card summary over an empty or page-wide blob.
   if (description.length < 80) description = fallbackSummary || description;
 
   return {

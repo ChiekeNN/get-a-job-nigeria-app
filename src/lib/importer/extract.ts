@@ -33,10 +33,20 @@ const NAMED_ENTITIES: Record<string, string> = {
 };
 
 export function decodeEntities(value: string): string {
-  return value
-    .replace(/&#(\d+);/g, (_match, code: string) => String.fromCodePoint(Number(code)))
-    .replace(/&#x([0-9a-f]+);/gi, (_match, code: string) => String.fromCodePoint(Number.parseInt(code, 16)))
-    .replace(/&([a-z]+);/gi, (match, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? match);
+  const pass = (input: string) =>
+    input
+      .replace(/&#(\d+);/g, (_match, code: string) => String.fromCodePoint(Number(code)))
+      .replace(/&#x([0-9a-f]+);/gi, (_match, code: string) =>
+        String.fromCodePoint(Number.parseInt(code, 16)),
+      )
+      .replace(/&([a-z]+);/gi, (match, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? match);
+
+  // Some listings arrive double-encoded ("&amp;amp;"). Decode until stable, but
+  // never more than twice, so escaped markup cannot become live tags.
+  let output = pass(value);
+  const onceMore = pass(output);
+  if (onceMore !== output) output = onceMore;
+  return output;
 }
 
 export function stripTags(html: string): string {
@@ -286,7 +296,11 @@ export function extractDescriptionText(text: string): string {
   if (!body) {
     // Fall back to the first paragraph that reads like a job summary.
     const summary = /([A-Z][^.\n]{3,120}\s+is (?:recruiting|currently recruiting|seeking|looking)[\s\S]*)/.exec(text);
-    body = summary ? summary[1] : text;
+    // Never return the whole page: it is mostly navigation and footer, and using
+    // it gives every listing the same description and poisons category, location
+    // and job-type detection. An empty result tells the caller to use the card
+    // summary instead.
+    body = summary ? summary[1] : "";
   }
 
   const end = DESCRIPTION_END_MARKERS.exec(body);
