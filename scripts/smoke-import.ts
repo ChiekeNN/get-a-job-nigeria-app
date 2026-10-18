@@ -16,7 +16,10 @@ import {
   SALARY_PATTERNS,
   stripTags,
 } from "../src/lib/importer/extract";
-import { detectJobType, detectState, deriveCity, parseSalary } from "../src/lib/importer/normalize";
+import { detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle } from "../src/lib/importer/normalize";
+import { SOURCE_FEED } from "../src/lib/importer/config";
+
+const brand = SOURCE_FEED.stripFromTitles[0];
 
 let failures = 0;
 
@@ -29,17 +32,18 @@ function check(label: string, actual: unknown, expected: unknown) {
 const listingHtml = `
 <div class="jobs">
   <a href="/hotjobs/975604/internal-auditor-at-domeo-resources-international.html">Internal Auditor at Domeo Resources International</a>
-  <a href="https://www.hotnigerianjobs.com/hotjobs/975599/construction-manager-at-peoplevantage-consul.html">Construction Manager at Peoplevantage Consulting Limited</a>
+  <a href="/hotjobs/975599/construction-manager-at-peoplevantage-consul.html">Construction Manager at Peoplevantage Consulting Limited</a>
   <a href="/hotjobs/975604/internal-auditor-at-domeo-resources-international.html">Duplicate link</a>
 </div>`;
 
 const links = extractJobLinks(listingHtml);
 check("listing links parsed", links.length, 2);
 check("dedupes same job id", links[0].sourceId, "975604");
-check("resolves relative url", links[0].url, "https://www.hotnigerianjobs.com/hotjobs/975604/internal-auditor-at-domeo-resources-international.html");
+check("resolves relative url", links[0].url, `${SOURCE_FEED.baseUrl}/hotjobs/975604/internal-auditor-at-domeo-resources-international.html`);
+check("strips source brand from title", stripBrand(`Internal Auditor | ${brand}`), "Internal Auditor");
 
 const detailHtml = `
-<html><head><title>Internal Auditor at Domeo Resources International | HotNigerianJobs</title></head>
+<html><head><title>Internal Auditor at Domeo Resources International | ${brand}</title></head>
 <body>
 <h1>Internal Auditor at Domeo Resources International</h1>
 <p>Domeo Resources International is recruiting to fill the position of: Internal Auditor. The position is located in Aba, Abia State. Salary: N400,000 - N600,000 / month.</p>
@@ -64,6 +68,16 @@ check("job type graduate", detectJobType("Graduate Trainee Programme"), "Graduat
 const reqBlock = findFirst(text, REQUIREMENT_MARKERS);
 check("requirements split", splitSentences(reqBlock).length >= 1, true);
 check("description has summary", extractDescriptionText(text).length > 40, true);
+
+// Nothing from the upstream board may survive into a listing.
+const host = new URL(SOURCE_FEED.baseUrl).hostname;
+check("brand removed from title", stripBrand(`Internal Auditor | ${brand}`), "Internal Auditor");
+check("brand removed mid-title", stripBrand(`${brand} - Internal Auditor`), "Internal Auditor");
+check("url removed from description", scrubText(`Apply via https://${host}/hotjobs/123/a.html now`), "Apply via now");
+check("bare domain removed", scrubText(`See ${host} for more`), "See for more");
+check("brand removed from body", scrubText(`Send CV to jobs@example.com. Source: ${brand}`), "Send CV to jobs@example.com. Source:");
+check("clean text untouched", scrubText("A normal description"), "A normal description");
+check("recruitment suffix stripped", cleanJobTitle(`Acme Ltd Job Recruitment (3 Positions) | ${brand}`), "Acme Ltd Recruitment");
 
 console.log(`\n${failures === 0 ? "All checks passed" : `${failures} check(s) failed`}`);
 process.exit(failures === 0 ? 0 : 1);

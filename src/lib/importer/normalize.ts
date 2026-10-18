@@ -1,4 +1,5 @@
 import { NIGERIAN_STATES } from "@/data/site";
+import { SOURCE_FEED } from "@/lib/importer/config";
 import { JOB_TYPES } from "@/types";
 import { initialsFor, slugify } from "@/lib/format";
 
@@ -195,9 +196,30 @@ export function companyFromRecruitmentTitle(title: string): string {
   return match ? match[1].trim() : "";
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Remove the source's brand from a title so it can never surface on this site. */
+export function stripBrand(value: string): string {
+  let output = value;
+
+  for (const brand of SOURCE_FEED.stripFromTitles) {
+    const escaped = escapeRegExp(brand);
+    // "Title | Brand", "Title - Brand", "Title: Brand"
+    output = output.replace(new RegExp(`\\s*[|\\-\\u2013\\u2014:]\\s*${escaped}[^|]*$`, "gi"), "");
+    output = output.replace(new RegExp(escaped, "gi"), "");
+  }
+
+  return output
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[\s|\-\u2013\u2014:]+/, "")
+    .replace(/\s*[|\-\u2013\u2014:]\s*$/, "")
+    .trim();
+}
+
 export function cleanJobTitle(title: string): string {
-  return title
-    .replace(/\s*\|\s*HotNigerianJobs.*$/i, "")
+  return stripBrand(title)
     .replace(/\s+Job Recruitment\s*\(\d+\s*Positions?\)/i, " Recruitment")
     .replace(/\s{2,}/g, " ")
     .trim();
@@ -220,6 +242,47 @@ export function companyInitials(company: string): string {
 
 export function makeSlug(title: string, company: string): string {
   return slugify(`${title}-${company}`) || slugify(title) || `job-${Date.now()}`;
+}
+
+
+/**
+ * Strip every trace of the upstream board from imported text.
+ *
+ * Titles are handled separately, but descriptions and requirement lists are free
+ * text copied from the source and can mention the board by name or carry its URL.
+ * Anything matching the configured brand or host is removed here, so no listing
+ * can surface a reference even inside its body copy.
+ */
+export function scrubText(value: string): string {
+  if (!value) return "";
+
+  let output = value;
+
+  const host = (() => {
+    try {
+      return new URL(SOURCE_FEED.baseUrl).hostname.replace(/^www\./, "");
+    } catch {
+      return "";
+    }
+  })();
+
+  // URLs first: the host itself contains the brand, so removing names before
+  // links would leave broken fragments like "www..com" behind.
+  if (host) {
+    const hostPattern = escapeRegExp(host);
+    output = output.replace(new RegExp(`(?:https?:)?//(?:[\\w-]+\\.)*${hostPattern}[^\\s)"'<>]*`, "gi"), "");
+    output = output.replace(new RegExp(`\\b(?:[\\w-]+\\.)*${hostPattern}\\b`, "gi"), "");
+  }
+
+  for (const brand of SOURCE_FEED.stripFromTitles) {
+    output = output.replace(new RegExp(escapeRegExp(brand), "gi"), "");
+  }
+
+  return output
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([,.;:])/g, "$1")
+    .replace(/^[\s,;:.\-\u2013\u2014]+/, "")
+    .trim();
 }
 
 export function parseDeadline(value: string): Date | null {

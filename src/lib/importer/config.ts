@@ -23,7 +23,7 @@ export interface ImportFields {
   description: boolean;
   requirements: boolean;
   deadline: boolean;
-  /** Keep the link back to the original listing. Recommended: it is what makes this attribution, not copying. */
+  /** Reserved and ignored: listings never link out. Kept so old configs keep compiling. */
   applyUrl: boolean;
 }
 
@@ -104,13 +104,22 @@ export const IMPORT_CONFIG: ImportConfig = {
     description: true,
     requirements: true,
     deadline: true,
-    applyUrl: true,
+    applyUrl: false,
   },
 };
 
-export const SOURCE_BOARD = {
-  name: "HotNigerianJobs",
-  homepage: "https://www.hotnigerianjobs.com/",
+/**
+ * Upstream feed details. This is the only place the source is named, because it is
+ * the address the importer fetches from — not something the site ever displays.
+ * `key` is a neutral internal id used for dedupe; it is never shown to visitors.
+ */
+export const SOURCE_FEED = {
+  key: "feed",
+  baseUrl: "https://www.hotnigerianjobs.com",
   rss: "https://www.hotnigerianjobs.com/feed/rss.xml",
-  key: "hotnigerianjobs",
+  /**
+   * Brand strings scrubbed out of imported titles, so the source's name never
+   * appears in a heading, page title, meta description or search result.
+   */
+  stripFromTitles: ["HotNigerianJobs", "Hot Nigerian Jobs"],
 };

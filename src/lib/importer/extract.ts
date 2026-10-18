@@ -6,6 +6,8 @@
  * copy. Class names change on redesign; URL shapes and sentences do not.
  */
 
+import { SOURCE_FEED } from "@/lib/importer/config";
+
 export interface RawListing {
   sourceId: string;
   url: string;
@@ -55,11 +57,11 @@ export function stripTagsFlat(html: string): string {
   return stripTags(html).replace(/\s+/g, " ").trim();
 }
 
-/** Pull every /hotjobs/{id}/{slug}.html link on a page, in document order. */
-export function extractJobLinks(html: string): RawListing[] {
+/** Pull every listing link on a page, in document order. Host-agnostic by design. */
+export function extractJobLinks(html: string, baseUrl: string = SOURCE_FEED.baseUrl): RawListing[] {
   const seen = new Set<string>();
   const listings: RawListing[] = [];
-  const anchor = /<a\b[^>]*href=["']((?:https?:\/\/(?:www\.)?hotnigerianjobs\.com)?\/hotjobs\/(\d+)\/[^"']+\.html)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  const anchor = /<a\b[^>]*href=["']((?:https?:\/\/[^"']+)?\/hotjobs\/(\d+)\/[^"']+\.html)["'][^>]*>([\s\S]*?)<\/a>/gi;
 
   let match: RegExpExecArray | null;
   while ((match = anchor.exec(html)) !== null) {
@@ -76,7 +78,7 @@ export function extractJobLinks(html: string): RawListing[] {
     seen.add(id);
     listings.push({
       sourceId: id,
-      url: new URL(href, "https://www.hotnigerianjobs.com").toString(),
+      url: new URL(href, baseUrl).toString(),
       title,
     });
   }

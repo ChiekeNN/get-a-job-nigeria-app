@@ -1,6 +1,4 @@
-import { SOURCE_BOARD } from "@/lib/importer/config";
-
-const USER_AGENT = `${SOURCE_BOARD.name}Importer/1.0 (+job syndication; contact: support@naijahire.ng)`;
+const USER_AGENT = "NaijaHireBot/1.0 (+job listing sync; contact: support@naijahire.ng)";
 
 export class FetchError extends Error {
   readonly status?: number;

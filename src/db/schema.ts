@@ -36,11 +36,10 @@ export const jobs = pgTable(
     applicants: integer("applicants").notNull().default(0),
     employerEmail: text("employer_email"),
     status: text("status").notNull().default("published"),
-    // Import provenance. `sourceId` is the stable upstream key (e.g. "hotnigerianjobs:975604")
-    // and is what makes re-runs idempotent instead of creating duplicates.
+    // Internal sync bookkeeping only. Never surfaced to visitors: `sourceId` is the
+    // stable upstream key that makes re-runs idempotent instead of duplicating.
     source: text("source"),
     sourceId: text("source_id"),
-    sourceUrl: text("source_url"),
     importedAt: timestamp("imported_at", { withTimezone: true }),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

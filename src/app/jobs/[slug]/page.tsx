@@ -28,7 +28,6 @@ import { getJobBySlug, listJobs } from "@/lib/jobs-service";
 
 export const dynamic = "force-dynamic";
 
-const SOURCE_LABELS: Record<string, string> = { hotnigerianjobs: "HotNigerianJobs" };
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -60,7 +59,6 @@ export default async function JobDetailPage({ params }: Props) {
     .slice(0, 3);
 
   const closingIn = daysUntil(job.deadline);
-  const sourceLabel = job.source ? (SOURCE_LABELS[job.source] ?? "the original listing") : "";
   const salaryDisclosed = job.salaryMax > 0;
 
   return (
@@ -127,22 +125,10 @@ export default async function JobDetailPage({ params }: Props) {
                   ? `${formatNaira(job.salaryMin)} – ${formatNaira(job.salaryMax)}`
                   : "Not disclosed"}
               </p>
-              {job.sourceUrl ? (
-                <a
-                  href={job.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary mt-3 w-full"
-                >
-                  Apply on {sourceLabel}
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </a>
-              ) : (
-                <a href="#apply" className="btn btn-primary mt-3 w-full">
-                  Apply for this job
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </a>
-              )}
+              <a href="#apply" className="btn btn-primary mt-3 w-full">
+                Apply for this job
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </a>
               <p className="mt-2 flex items-center justify-center gap-1 text-[10.5px] text-brand-800/70">
                 <CalendarDays className="size-3" aria-hidden="true" />
                 {closingIn !== null && closingIn > 0
@@ -210,30 +196,9 @@ export default async function JobDetailPage({ params }: Props) {
           <section className="card p-5">
             <h2 className="font-display text-lg font-bold text-ink-900">How to apply</h2>
             <p className="mt-2 text-sm leading-relaxed text-ink-600">
-              {job.sourceUrl ? (
-                <>
-                  This listing is syndicated from {sourceLabel}. Applications are handled on{" "}
-                  {sourceLabel}&apos;s site, where the full instructions and any application form are
-                  published.
-                </>
-              ) : (
-                <>
-                  Apply directly on NaijaHire with your profile. {job.company} reviews applications on a
-                  rolling basis and contacts shortlisted candidates by email and phone.
-                </>
-              )}
+              Apply directly on NaijaHire with your profile. {job.company} reviews applications on a
+              rolling basis and contacts shortlisted candidates by email and phone.
             </p>
-            {job.sourceUrl ? (
-              <a
-                href={job.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary mt-3"
-              >
-                Continue on {sourceLabel}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </a>
-            ) : null}
             <div className="mt-3 grid gap-2 text-xs text-ink-600 sm:grid-cols-3">
               <div className="rounded-lg border border-ink-100 p-2.5">
                 <p className="font-semibold text-ink-900">Deadline</p>
@@ -294,29 +259,7 @@ export default async function JobDetailPage({ params }: Props) {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start" id="apply">
-          {job.sourceUrl ? (
-            <div className="card p-5">
-              <h2 className="font-display text-lg font-bold text-ink-900">Apply on {sourceLabel}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-ink-600">
-                This role is published by {sourceLabel}. Applications are submitted there, so your
-                details reach the employer directly.
-              </p>
-              <a
-                href={job.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary mt-3 w-full"
-              >
-                Open original listing
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </a>
-              <p className="mt-2 text-center text-[10.5px] text-ink-500">
-                Source: {sourceLabel}
-              </p>
-            </div>
-          ) : (
-            <ApplyForm job={job} />
-          )}
+          <ApplyForm job={job} />
 
           <div className="card p-4">
             <h3 className="text-xs font-bold uppercase tracking-wide text-ink-500">About the employer</h3>

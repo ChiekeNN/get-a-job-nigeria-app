@@ -2,7 +2,7 @@ import { and, eq, inArray, lt, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { jobs } from "@/db/schema";
-import { IMPORT_CONFIG, SOURCE_BOARD, type ImportConfig } from "@/lib/importer/config";
+import { IMPORT_CONFIG, SOURCE_FEED, type ImportConfig } from "@/lib/importer/config";
 import {
   extractDescriptionText,
   extractJobLinks,
@@ -23,6 +23,7 @@ import { FetchError, fetchText, sleep } from "@/lib/importer/http";
 import { fetchRssItems } from "@/lib/importer/rss";
 import {
   cleanJobTitle,
+  scrubText,
   companyFromRecruitmentTitle,
   companyFromTitle,
   companyInitials,
@@ -58,7 +59,6 @@ export interface ImportPreview {
   descriptionLength: number;
   requirements: number;
   deadline: string | null;
-  sourceUrl: string;
 }
 
 export interface ImportResult {
@@ -135,7 +135,7 @@ async function collectCandidates(config: ImportConfig, errors: string[]): Promis
 
   if (config.useRssFeed) {
     try {
-      const items = await fetchRssItems(SOURCE_BOARD.rss);
+      const items = await fetchRssItems(SOURCE_FEED.rss);
       for (const item of items) {
         if (!item.sourceId || byId.has(item.sourceId)) {
           if (item.sourceId && byId.has(item.sourceId)) {
@@ -270,7 +270,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
   result.counts.candidates = candidates.length;
 
   // Which upstream IDs do we already hold? One query keeps the run cheap.
-  const ids = candidates.map((candidate) => `${SOURCE_BOARD.key}:${candidate.sourceId}`);
+  const ids = candidates.map((candidate) => `${SOURCE_FEED.key}:${candidate.sourceId}`);
   const existingRows =
     ids.length > 0
       ? await db
@@ -280,7 +280,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       : [];
   const known = new Set(existingRows.map((row) => row.sourceId).filter(Boolean) as string[]);
 
-  const fresh = candidates.filter((candidate) => !known.has(`${SOURCE_BOARD.key}:${candidate.sourceId}`));
+  const fresh = candidates.filter((candidate) => !known.has(`${SOURCE_FEED.key}:${candidate.sourceId}`));
   result.counts.alreadyImported = candidates.length - fresh.length;
 
   // Re-seeing a listing keeps it alive; its expiry clock resets.
@@ -299,7 +299,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
   const takenSlugs = new Set(slugRows.map((row) => row.slug));
 
   for (const candidate of selected) {
-    const sourceId = `${SOURCE_BOARD.key}:${candidate.sourceId}`;
+    const sourceId = `${SOURCE_FEED.key}:${candidate.sourceId}`;
     try {
       const html = await fetchText(candidate.url);
       result.counts.fetched += 1;
@@ -312,10 +312,14 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
 
       const state = config.fields.location ? detectState(extracted.locationText, extracted.description) : "Lagos";
       const city = deriveCity(extracted.locationText, state);
-      const description = config.fields.description ? extracted.description : candidate.summary;
-      const requirements = config.fields.requirements ? extracted.requirements : [];
-      const title = config.fields.title ? extracted.title : candidate.title;
-      const company = config.fields.company ? extracted.company : "Confidential Employer";
+      const description = scrubText(
+        config.fields.description ? extracted.description : candidate.summary,
+      );
+      const requirements = config.fields.requirements
+        ? extracted.requirements.map((item) => scrubText(item)).filter(Boolean)
+        : [];
+      const title = scrubText(config.fields.title ? extracted.title : candidate.title);
+      const company = scrubText(config.fields.company ? extracted.company : "Confidential Employer");
 
       const preview: ImportPreview = {
         sourceId,
@@ -330,7 +334,6 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
         descriptionLength: description.length,
         requirements: requirements.length,
         deadline: extracted.deadline ? extracted.deadline.toISOString() : null,
-        sourceUrl: candidate.url,
       };
       result.preview.push(preview);
 
@@ -365,9 +368,8 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
             applicants: 0,
             employerEmail: null,
             status: config.publishImmediately ? "published" : "draft",
-            source: SOURCE_BOARD.key,
+            source: SOURCE_FEED.key,
             sourceId,
-            sourceUrl: config.fields.applyUrl ? candidate.url : null,
             importedAt: new Date(),
             lastSeenAt: new Date(),
           })
@@ -398,7 +400,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       .set({ status: "expired" })
       .where(
         and(
-          eq(jobs.source, SOURCE_BOARD.key),
+          eq(jobs.source, SOURCE_FEED.key),
           eq(jobs.status, "published"),
           lt(jobs.lastSeenAt, cutoff),
           sql`${jobs.lastSeenAt} is not null`,

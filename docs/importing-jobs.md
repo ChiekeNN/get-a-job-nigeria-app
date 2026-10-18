@@ -1,7 +1,7 @@
 # Importing listings from another board
 
-A scheduled importer pulls listings from HotNigerianJobs, normalises them into
-NaijaHire's schema, and keeps them in sync. It is idempotent: running it twice
+A scheduled importer pulls listings from the configured upstream feed, normalises
+them into NaijaHire's schema, and keeps them in sync. It is idempotent: running it twice
 does not create duplicates.
 
 ## 1. Choose your parts
@@ -31,9 +31,10 @@ fields: {
   description: true,   // false = only the short summary is kept
   requirements: true,  // false = empty requirements list
   deadline: true,
-  applyUrl: true,      // keep the link back to the original listing
 }
 ```
+
+`applyUrl` is reserved and ignored. Listings never link out.
 
 Slides of the board you may point at:
 
@@ -101,25 +102,28 @@ callers (GitHub Actions, cron-job.org, your laptop).
 
 ## 5. How sync behaves
 
-- **New jobs** are inserted with `source_id = "hotnigerianjobs:<id>"`.
+- **New jobs** are inserted with `source_id = "feed:<id>"` (internal key only).
 - **Already-imported jobs** are skipped for detail fetching, but their
   `last_seen_at` is refreshed, so they stay live cheaply.
+- **Brand scrubbing** — the source's name is stripped from titles and company
+  names at write time (`SOURCE_FEED.stripFromTitles`), so it cannot appear in a
+  heading, page title, meta description or search result.
 - **Expiry** — anything not seen on the source for `expireAfterDays` is set to
   `status = "expired"` and drops out of the public board. Applications already
   recorded are never deleted.
 - **Slugs** are globally unique; a collision gets a numeric suffix.
 
-## 6. Attribution and applying
+## 6. Everything happens on this site
 
-Imported listings carry `source_url`. The job page then:
+Imported listings are indistinguishable from native ones in the interface:
 
-- shows "Apply on HotNigerianJobs" instead of the local apply form,
-- states where the listing came from, and
-- keeps a link to the original.
+- no source name, badge or attribution anywhere,
+- no outbound link — the job page never points at the upstream board,
+- the local apply form handles every application, so candidates stay on
+  NaijaHire end to end.
 
-This matters beyond politeness: the local form writes applications into your
-own database, which no external employer is reading. Sending candidates to the
-original posting is the only version where their application actually lands.
+Applications land in your own `applications` table. Nothing forwards them
+upstream automatically, so delivery to employers is yours to operate.
 
 ## 7. Operational notes
 
@@ -128,10 +132,10 @@ original posting is the only version where their application actually lands.
   that happens the run returns HTTP `424` with a `blocked` message instead of
   silently importing nothing. If it persists, the durable fix is a feed or
   export from the source rather than heavier scraping.
-- **Feed first.** When `useRssFeed` is on, the newest items come from
-  `https://www.hotnigerianjobs.com/feed/rss.xml`, which is cheaper and more
-  stable than walking listing pages. Detail pages are only fetched for items
-  that are new to your database.
+- **Feed first.** When `useRssFeed` is on, the newest items come from the feed
+  URL in `SOURCE_FEED.rss`, which is cheaper and more stable than walking
+  listing pages. Detail pages are only fetched for items that are new to your
+  database.
 - **Politeness.** `requestDelayMs` (default 350 ms) spaces out requests. Leave
   it alone unless you have a reason.
 - **Logs.** Every run logs one line:

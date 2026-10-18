@@ -115,9 +115,6 @@ function mapRow(row: typeof jobs.$inferSelect): Job {
     applicants: row.applicants,
     employerEmail: row.employerEmail,
     status: row.status,
-    source: row.source,
-    sourceId: row.sourceId,
-    sourceUrl: row.sourceUrl,
   };
 }
 
