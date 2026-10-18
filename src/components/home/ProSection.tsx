@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
+import { CONTACT, mailto } from "@/data/contact";
 import { useToast } from "@/components/providers/Toaster";
 import { Modal } from "@/components/ui/Modal";
 import { PRO_FEATURES, NIGERIAN_STATES } from "@/data/site";
@@ -397,6 +398,17 @@ export function ProSection() {
           </button>
           <p className="text-center text-[10.5px] text-ink-400">
             No card needed for this demo. You can cancel before payment is collected.
+          </p>
+          <p className="text-center text-[10.5px] text-ink-400">
+            Plan questions:{" "}
+            <a href={mailto(CONTACT.jobSeekerPro, "Job Seeker Pro")} className="font-semibold text-brand-700 hover:text-brand-900">
+              {CONTACT.jobSeekerPro}
+            </a>
+            {" · "}
+            Billing:{" "}
+            <a href={mailto(CONTACT.billings, "Billing")} className="font-semibold text-brand-700 hover:text-brand-900">
+              {CONTACT.billings}
+            </a>
           </p>
         </form>
       </Modal>

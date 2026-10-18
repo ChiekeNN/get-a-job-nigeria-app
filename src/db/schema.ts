@@ -36,9 +36,19 @@ export const jobs = pgTable(
     applicants: integer("applicants").notNull().default(0),
     employerEmail: text("employer_email"),
     status: text("status").notNull().default("published"),
+    // Internal sync bookkeeping only. Never surfaced to visitors: `sourceId` is the
+    // stable upstream key that makes re-runs idempotent instead of duplicating.
+    source: text("source"),
+    sourceId: text("source_id"),
+    importedAt: timestamp("imported_at", { withTimezone: true }),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("jobs_slug_unique").on(table.slug)],
+  (table) => [
+    uniqueIndex("jobs_slug_unique").on(table.slug),
+    // Postgres allows many NULLs in a unique index, so manually-posted jobs are unaffected.
+    uniqueIndex("jobs_source_id_unique").on(table.sourceId),
+  ],
 );
 
 export const applications = pgTable("applications", {

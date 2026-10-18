@@ -43,7 +43,7 @@ export function HowItWorks() {
           <div>
             <p className="eyebrow">
               <Rocket className="size-3.5 text-brand-600" aria-hidden="true" />
-              How NaijaHire works
+              How GetAJob works
             </p>
             <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[30px]">
               Three steps to your next offer
@@ -111,7 +111,7 @@ export function Testimonials() {
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-ink-500">
           Candidates across Lagos, Port Harcourt and Enugu share what changed after using the
-          NaijaHire playbook.
+          GetAJob playbook.
         </p>
       </div>
 
@@ -245,7 +245,7 @@ export function EmployerCta() {
               Average time to hire
             </p>
             <p className="font-display text-lg font-extrabold text-ink-900">11 days</p>
-            <p className="text-[11px] text-ink-500">Across 326 employers on NaijaHire</p>
+            <p className="text-[11px] text-ink-500">Across 326 employers on GetAJob</p>
           </div>
         </div>
       </div>

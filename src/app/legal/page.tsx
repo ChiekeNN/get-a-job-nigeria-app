@@ -1,10 +1,13 @@
 import { FileCheck2, Lock, Scale } from "lucide-react";
 import type { Metadata } from "next";
 
+import { CONTACT } from "@/data/contact";
+import { BRAND } from "@/data/site";
+
 export const metadata: Metadata = {
   title: "Legal, privacy and candidate policies",
   description:
-    "NaijaHire privacy policy, terms of use and CV data policy for candidates and employers in Nigeria.",
+    "GetAJob privacy policy, terms of use and CV data policy for candidates and employers in Nigeria.",
 };
 
 export default function LegalPage() {
@@ -18,8 +21,9 @@ export default function LegalPage() {
         Policies written in plain language
       </h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-500">
-        NaijaHire Technologies Ltd is registered in Nigeria (RC 1782945). These policies explain how
-        we handle candidate data, employer listings and payments in Naira. Last updated January 2026.
+        {BRAND.tradingName} is owned and operated by {BRAND.legalName}, registered in Nigeria (
+        {BRAND.legalRegistration}). These policies explain how we handle candidate data, employer
+        listings and payments in Naira. Last updated January 2026.
       </p>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
@@ -40,7 +44,7 @@ export default function LegalPage() {
               opt in and can be stopped by replying STOP.
             </p>
             <p>
-              Request deletion of your data any time at support@naijahire.ng — we action verified
+              Request deletion of your data any time at {CONTACT.support} — we action verified
               requests within 7 working days.
             </p>
           </div>
@@ -51,7 +55,7 @@ export default function LegalPage() {
           <h2 className="mt-2 font-display text-lg font-bold text-ink-900">Terms of use</h2>
           <div className="mt-2 space-y-2 text-xs leading-relaxed text-ink-600">
             <p>
-              NaijaHire is a job discovery platform, not an employer or recruitment agency. Hiring
+              GetAJob is a job discovery platform, not an employer or recruitment agency. Hiring
               decisions and employment contracts are between you and the employer.
             </p>
             <p>
@@ -74,7 +78,7 @@ export default function LegalPage() {
           <h2 className="mt-2 font-display text-lg font-bold text-ink-900">CV & data policy</h2>
           <div className="mt-2 space-y-2 text-xs leading-relaxed text-ink-600">
             <p>
-              Uploaded CVs are stored securely, encrypted at rest, and reviewed only by NaijaHire
+              Uploaded CVs are stored securely, encrypted at rest, and reviewed only by GetAJob
               career advisers and the employers you apply to.
             </p>
             <p>
@@ -86,7 +90,7 @@ export default function LegalPage() {
               scanning is applied to every upload.
             </p>
             <p>
-              You may ask for the CV you uploaded to be removed by emailing support@naijahire.ng from
+              You may ask for the CV you uploaded to be removed by emailing {CONTACT.support} from
               the address on your profile.
             </p>
           </div>
@@ -96,7 +100,7 @@ export default function LegalPage() {
       <div className="mt-6 card p-5 text-sm leading-relaxed text-ink-600">
         <h2 className="font-display text-base font-bold text-ink-900">Contact our data protection team</h2>
         <p className="mt-1">
-          Email <span className="font-semibold text-brand-700">privacy@naijahire.ng</span> or call{" "}
+          Email <span className="font-semibold text-brand-700">{CONTACT.support}</span> or call{" "}
           <span className="font-semibold text-brand-700">+234 803 000 4421</span> (Mon–Fri, 9am–5pm
           WAT). Postal address: 14 Adeola Odeku Street, Victoria Island, Lagos.
         </p>

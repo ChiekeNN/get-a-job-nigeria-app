@@ -16,6 +16,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ApplyForm } from "@/components/jobs/ApplyForm";
+import { CONTACT } from "@/data/contact";
 import {
   companyTint,
   daysUntil,
@@ -28,6 +29,7 @@ import { getJobBySlug, listJobs } from "@/lib/jobs-service";
 
 export const dynamic = "force-dynamic";
 
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -38,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!job) return { title: "Job not found" };
   return {
     title: `${job.title} at ${job.company}`,
-    description: `${job.title} in ${job.city}, ${job.state}. ${salaryRange(job.salaryMin, job.salaryMax)} per month. Apply on NaijaHire.`,
+    description: `${job.title} in ${job.city}, ${job.state}. ${salaryRange(job.salaryMin, job.salaryMax)} per month. Apply on GetAJob.`,
   };
 }
 
@@ -58,6 +60,7 @@ export default async function JobDetailPage({ params }: Props) {
     .slice(0, 3);
 
   const closingIn = daysUntil(job.deadline);
+  const salaryDisclosed = job.salaryMax > 0;
 
   return (
     <div>
@@ -119,7 +122,9 @@ export default async function JobDetailPage({ params }: Props) {
                 Monthly salary (gross)
               </p>
               <p className="mt-1 font-display text-xl font-extrabold text-brand-800">
-                {formatNaira(job.salaryMin)} – {formatNaira(job.salaryMax)}
+                {salaryDisclosed
+                  ? `${formatNaira(job.salaryMin)} – ${formatNaira(job.salaryMax)}`
+                  : "Not disclosed"}
               </p>
               <a href="#apply" className="btn btn-primary mt-3 w-full">
                 Apply for this job
@@ -192,7 +197,7 @@ export default async function JobDetailPage({ params }: Props) {
           <section className="card p-5">
             <h2 className="font-display text-lg font-bold text-ink-900">How to apply</h2>
             <p className="mt-2 text-sm leading-relaxed text-ink-600">
-              Apply directly on NaijaHire with your profile. {job.company} reviews applications on a
+              Apply directly on GetAJob with your profile. {job.company} reviews applications on a
               rolling basis and contacts shortlisted candidates by email and phone.
             </p>
             <div className="mt-3 grid gap-2 text-xs text-ink-600 sm:grid-cols-3">
@@ -206,14 +211,16 @@ export default async function JobDetailPage({ params }: Props) {
               </div>
               <div className="rounded-lg border border-ink-100 p-2.5">
                 <p className="font-semibold text-ink-900">Salary</p>
-                <p className="mt-0.5">{salaryRange(job.salaryMin, job.salaryMax)} / month</p>
+                <p className="mt-0.5">
+                  {salaryDisclosed ? `${salaryRange(job.salaryMin, job.salaryMax)} / month` : "Not disclosed"}
+                </p>
               </div>
             </div>
             <div className="mt-4 flex items-start gap-2 rounded-xl bg-brand-50/70 p-3 text-[11.5px] leading-relaxed text-brand-900">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-600" aria-hidden="true" />
               <p>
                 <span className="font-semibold">Safety note:</span> this employer will never ask you
-                to pay a recruitment fee. Report any request for money to support@naijahire.ng.
+                to pay a recruitment fee. Report any request for money to {CONTACT.support}.
               </p>
             </div>
           </section>
@@ -272,7 +279,7 @@ export default async function JobDetailPage({ params }: Props) {
               </div>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-ink-500">
-              {job.company} hires through NaijaHire and has agreed to our transparent salary and
+              {job.company} hires through GetAJob and has agreed to our transparent salary and
               no-fee candidate policy.
             </p>
             <a

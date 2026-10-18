@@ -31,7 +31,7 @@ const ITEMS = [
 
 export function StatsBanner({ stats }: { stats: JobStats }) {
   return (
-    <section aria-label="NaijaHire platform statistics" className="wrap -mt-2">
+    <section aria-label="GetAJob platform statistics" className="wrap -mt-2">
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-ink-100 bg-ink-100 shadow-[0_24px_50px_-40px_rgba(5,20,15,0.5)] lg:grid-cols-4">
         {ITEMS.map(({ key, label, icon: Icon, note }) => (
           <div key={key} className="bg-white px-4 py-5 sm:px-5">

@@ -2,14 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const STORAGE_KEY = "naijahire:saved-jobs";
+import { BRAND } from "@/data/site";
+
+const STORAGE_KEY = BRAND.storageKey;
+const LEGACY_KEY = "naijahire:saved-jobs";
 
 export function useSavedJobs() {
   const [saved, setSaved] = useState<string[]>([]);
 
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      // Read the pre-rename key too, so existing visitors keep their saved jobs.
+      const raw =
+        window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_KEY);
       if (raw) {
         const parsed: unknown = JSON.parse(raw);
         if (Array.isArray(parsed)) {

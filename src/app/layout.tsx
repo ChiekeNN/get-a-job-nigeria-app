@@ -4,25 +4,27 @@ import type { ReactNode } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { ToastProvider } from "@/components/providers/Toaster";
+import { BRAND } from "@/data/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  // Absolute URLs for canonical links and social previews.
+  metadataBase: new URL(BRAND.url),
   title: {
-    default: "NaijaHire — Jobs in Nigeria, verified and recruiter-backed",
-    template: "%s | NaijaHire",
+    default: BRAND.metaTitle,
+    template: `%s | ${BRAND.name}`,
   },
-  description:
-    "Find verified jobs across all 36 Nigerian states and the FCT. Transparent Naira salaries, one-click applications, CV reviews and daily WhatsApp alerts.",
+  description: BRAND.metaDescription,
   keywords: [
     "jobs in Nigeria",
     "Lagos jobs",
     "Abuja jobs",
     "Port Harcourt jobs",
     "graduate trainee Nigeria",
-    "NaijaHire",
+    BRAND.name,
   ],
   openGraph: {
-    title: "NaijaHire — Stop applying without results",
+    title: `${BRAND.name} — Stop applying without results`,
     description:
       "1,800+ verified Nigerian job openings, real Naira salaries and referrals that get employers calling you.",
     type: "website",

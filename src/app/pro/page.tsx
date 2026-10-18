@@ -80,12 +80,12 @@ export default function ProPage() {
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-ink-500">
               We keep the process transparent — the same standard we ask employers to follow on
-              NaijaHire.
+              GetAJob.
             </p>
             <div className="mt-4 flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50/70 p-3.5 text-[11.5px] leading-relaxed text-brand-900">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-600" aria-hidden="true" />
               <p>
-                NaijaHire never asks candidates to pay for a job offer. Pro is an optional career
+                GetAJob never asks candidates to pay for a job offer. Pro is an optional career
                 service, not a placement fee.
               </p>
             </div>

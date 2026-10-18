@@ -119,7 +119,9 @@ export function JobCard({
             Monthly salary
           </p>
           <p className="text-sm font-bold text-brand-700">
-            {formatNaira(job.salaryMin)} – {formatNaira(job.salaryMax)}
+            {job.salaryMax > 0
+              ? `${formatNaira(job.salaryMin)} – ${formatNaira(job.salaryMax)}`
+              : "Salary not disclosed"}
           </p>
           <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-ink-400">
             <Users className="size-3" aria-hidden="true" />

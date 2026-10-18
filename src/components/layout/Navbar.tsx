@@ -14,6 +14,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { CvUploadModal } from "@/components/forms/CvUploadModal";
+import { BRAND } from "@/data/site";
 
 const LINKS = [
   { label: "Find Jobs", href: "/jobs" },
@@ -58,16 +59,17 @@ export function Navbar() {
 
       <header className="sticky top-0 z-50 border-b border-ink-100/80 bg-white/90 backdrop-blur-md">
         <div className="wrap flex h-16 items-center justify-between gap-3 sm:h-[68px]">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="NaijaHire home">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${BRAND.name} home`}>
             <span className="grid size-10 place-items-center rounded-xl bg-brand-600 text-white shadow-[0_8px_18px_-10px_rgba(7,142,88,0.9)]">
               <BriefcaseBusiness className="size-5" aria-hidden="true" />
             </span>
             <span className="leading-none">
               <span className="block font-display text-[19px] font-extrabold tracking-tight text-ink-900">
-                Naija<span className="text-brand-600">Hire</span>
+                {BRAND.wordmarkLead}
+                <span className="text-brand-600">{BRAND.wordmarkAccent}</span>
               </span>
               <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
-                Nigeria job network
+                {BRAND.tagline}
               </span>
             </span>
           </Link>
