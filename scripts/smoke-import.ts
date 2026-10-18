@@ -6,6 +6,7 @@
  * access and catches parser regressions before a real import.
  */
 import {
+  decodeEntities,
   extractDescriptionText,
   extractJobLinks,
   extractListingCards,
@@ -20,8 +21,6 @@ import {
 import { detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle, detectCategory, parsePostedDate } from "../src/lib/importer/normalize";
 import { SOURCE_FEED } from "../src/lib/importer/config";
 import { advanceCursor, pageUrl } from "../src/lib/importer/run";
-import { decodeEntities, extractDescriptionText } from "../src/lib/importer/extract";
-import { deriveCity, parseSalary } from "../src/lib/importer/normalize";
 import { IMPORT_CONFIG } from "../src/lib/importer/config";
 
 const brand = SOURCE_FEED.stripFromTitles[0];
