@@ -33,9 +33,68 @@ function authorised(request: Request): boolean {
   return secrets.includes(provided);
 }
 
+/**
+ * Explain *why* a request was rejected. "Not authorised" is useless when the
+ * real cause is usually one of two very different things: the deployment has no
+ * secret configured at all, or the caller sent the placeholder instead of the
+ * real value. The secret itself is never echoed.
+ */
+function authorisationFailure(request: Request) {
+  const secrets = [process.env.IMPORT_SECRET, process.env.CRON_SECRET].filter(
+    (value): value is string => typeof value === "string" && value.length > 0,
+  );
+
+  const provided =
+    request.headers.get("x-import-secret") ??
+    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
+    "";
+
+  if (secrets.length === 0) {
+    return {
+      ok: false,
+      reason: "no_secret_configured",
+      message:
+        "This deployment has no IMPORT_SECRET set, so only Vercel's own cron runner may call it. " +
+        "Add IMPORT_SECRET in Vercel → Settings → Environment Variables, then redeploy.",
+      secretConfigured: false,
+    };
+  }
+
+  if (!provided) {
+    return {
+      ok: false,
+      reason: "no_secret_sent",
+      message:
+        'No secret was sent. Add -H "x-import-secret: <value>" to the request.',
+      secretConfigured: true,
+    };
+  }
+
+  if (/^your[_-]?import[_-]?secret$/i.test(provided) || provided.toLowerCase() === "change-me") {
+    return {
+      ok: false,
+      reason: "placeholder_secret",
+      message:
+        'The value sent is the placeholder "YOUR_IMPORT_SECRET", not your real secret. ' +
+        "Copy the actual value from Vercel → Settings → Environment Variables → IMPORT_SECRET.",
+      secretConfigured: true,
+    };
+  }
+
+  return {
+    ok: false,
+    reason: "secret_mismatch",
+    message:
+      "The secret sent does not match IMPORT_SECRET or CRON_SECRET in this deployment. " +
+      "Check for stray spaces or quotes, and redeploy if you changed the variable recently.",
+    secretConfigured: true,
+    receivedLength: provided.length,
+  };
+}
+
 async function handle(request: Request) {
   if (!authorised(request)) {
-    return Response.json({ ok: false, message: "Not authorised" }, { status: 401 });
+    return Response.json(authorisationFailure(request), { status: 401 });
   }
 
   // Fail with a usable message instead of a raw 500 when no database is attached.
