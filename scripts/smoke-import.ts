@@ -20,6 +20,7 @@ import {
 import { detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle, detectCategory, parsePostedDate } from "../src/lib/importer/normalize";
 import { SOURCE_FEED } from "../src/lib/importer/config";
 import { pageUrl } from "../src/lib/importer/run";
+import { IMPORT_CONFIG } from "../src/lib/importer/config";
 
 const brand = SOURCE_FEED.stripFromTitles[0];
 
@@ -120,6 +121,27 @@ check("page 2 is /1/", pageUrl(lastweek, 2), "https://www.hotnigerianjobs.com/jo
 check("page 3 is /2/", pageUrl(lastweek, 3), "https://www.hotnigerianjobs.com/jobs/lastweek/2/");
 check("query style", pageUrl({ url: "https://x.test/a/", pagination: "query" }, 2), "https://x.test/a/?page=2");
 check("single page", pageUrl({ url: "https://x.test/a/", pagination: "none" }, 2), null);
+
+// ---- throughput sanity: the configured ceiling must actually be reachable ----
+const JOBS_PER_PAGE = 50;
+const COLUMNS = 21;
+
+check(
+  "page walk can supply maxJobsPerRun",
+  IMPORT_CONFIG.maxPagesPerSource * JOBS_PER_PAGE >= IMPORT_CONFIG.maxJobsPerRun,
+  true,
+);
+check("time budget stays under the 300s function limit", IMPORT_CONFIG.timeBudgetMs < 300_000, true);
+check(
+  "insert batch stays under Postgres parameter limit",
+  IMPORT_CONFIG.insertBatchSize * COLUMNS < 65_535,
+  true,
+);
+check(
+  "batches needed for a full run",
+  Math.ceil(IMPORT_CONFIG.maxJobsPerRun / IMPORT_CONFIG.insertBatchSize),
+  Math.ceil(5000 / 250),
+);
 
 console.log(`\n${failures === 0 ? "All checks passed" : `${failures} check(s) failed`}`);
 process.exit(failures === 0 ? 0 : 1);

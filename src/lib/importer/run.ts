@@ -80,6 +80,8 @@ export interface ImportResult {
     failed: number;
   };
   blocked?: string;
+  /** True when the run hit its time budget; the next run continues from here. */
+  truncated?: boolean;
   errors: string[];
   preview: ImportPreview[];
 }
@@ -129,13 +131,23 @@ export function pageUrl(source: { url: string; pagination?: string }, page: numb
 }
 
 /** Walk the configured source pages, newest first, de-duplicated. */
-async function collectCandidates(config: ImportConfig, errors: string[]): Promise<ImportCandidate[]> {
+async function collectCandidates(
+  config: ImportConfig,
+  errors: string[],
+  deadlineMs: number,
+): Promise<ImportCandidate[]> {
   const byId = new Map<string, ImportCandidate>();
 
   for (const source of config.sources) {
     for (let page = 1; page <= config.maxPagesPerSource; page += 1) {
       const url = pageUrl(source, page);
       if (!url) break;
+
+      // Leave time to actually store what has been collected.
+      if (Date.now() > deadlineMs) {
+        errors.push(`Stopped paging ${source.name} at page ${page} to stay inside the function limit.`);
+        break;
+      }
 
       try {
         const html = await fetchText(url);
@@ -320,7 +332,9 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
     return result;
   }
 
-  const candidates = await collectCandidates(config, errors);
+  // Reserve a slice of the budget for writing, so a slow crawl cannot consume it all.
+  const collectionDeadline = Date.now() + Math.round(config.timeBudgetMs * 0.6);
+  const candidates = await collectCandidates(config, errors, collectionDeadline);
   result.counts.candidates = candidates.length;
 
   // Which upstream IDs do we already hold? One query keeps the run cheap.
@@ -352,7 +366,37 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
   const slugRows = await db.select({ slug: jobs.slug }).from(jobs);
   const takenSlugs = new Set(slugRows.map((row) => row.slug));
 
+  const runStartedMs = Date.now();
+  type NewRow = typeof jobs.$inferInsert;
+  const bucket: NewRow[] = [];
+  let truncated = false;
+
+  // One INSERT per row cannot finish 5000 jobs inside a function timeout, so rows
+  // are accumulated and written in batches.
+  async function flush(): Promise<void> {
+    if (dryRun || bucket.length === 0) return;
+
+    for (let offset = 0; offset < bucket.length; offset += config.insertBatchSize) {
+      const chunk = bucket.slice(offset, offset + config.insertBatchSize);
+      const inserted = await db
+        .insert(jobs)
+        .values(chunk)
+        .onConflictDoNothing()
+        .returning({ id: jobs.id });
+      result.counts.inserted += inserted.length;
+    }
+
+    bucket.length = 0;
+  }
+
   for (const candidate of selected) {
+    // Stop before the platform terminates the function. Whatever was written stays,
+    // and the next run picks up from here because stored listings are skipped.
+    if (Date.now() - runStartedMs > config.timeBudgetMs) {
+      truncated = true;
+      break;
+    }
+
     const sourceId = `${SOURCE_FEED.key}:${candidate.sourceId}`;
     try {
       // The category page usually carries enough detail. Only pay for a second
@@ -378,7 +422,9 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
         continue;
       }
 
-      const state = config.fields.location ? detectState(extracted.locationText, extracted.description) : "Lagos";
+      const state = config.fields.location
+        ? detectState(extracted.locationText, extracted.description)
+        : "Lagos";
       const city = deriveCity(extracted.locationText, state);
       const description = scrubText(
         config.fields.description ? extracted.description : candidate.summary,
@@ -387,67 +433,71 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
         ? extracted.requirements.map((item) => scrubText(item)).filter(Boolean)
         : [];
       const title = scrubText(config.fields.title ? extracted.title : candidate.title);
-      const company = scrubText(config.fields.company ? extracted.company : "Confidential Employer");
+      const company = scrubText(
+        config.fields.company ? extracted.company : "Confidential Employer",
+      );
+      const jobType = detectJobType(`${title} ${description}`);
 
-      const preview: ImportPreview = {
-        sourceId,
-        title,
-        company,
-        state,
-        city,
-        category: resolvedCategory,
-        jobType: detectJobType(`${title} ${description}`),
-        salaryMin: salary.min,
-        salaryMax: salary.max,
-        descriptionLength: description.length,
-        requirements: requirements.length,
-        deadline: extracted.deadline ? extracted.deadline.toISOString() : null,
-      };
-      result.preview.push(preview);
+      // A full 5000-row preview would be a multi-megabyte response; keep it useful
+      // and small instead.
+      if (result.preview.length < 50) {
+        result.preview.push({
+          sourceId,
+          title,
+          company,
+          state,
+          city,
+          category: resolvedCategory,
+          jobType,
+          salaryMin: salary.min,
+          salaryMax: salary.max,
+          descriptionLength: description.length,
+          requirements: requirements.length,
+          deadline: extracted.deadline ? extracted.deadline.toISOString() : null,
+        });
+      }
 
       if (!dryRun) {
         let slug = makeSlug(title, company);
         if (takenSlugs.has(slug)) slug = `${slug}-${candidate.sourceId.slice(-5)}`;
         takenSlugs.add(slug);
 
-        const inserted = await db
-          .insert(jobs)
-          .values({
-            slug,
-            title,
-            company,
-            companyInitials: companyInitials(company),
-            companyColor: tintFor(company),
-            state,
-            city,
-            category: resolvedCategory,
-            jobType: detectJobType(`${title} ${description}`),
-            salaryMin: salary.min,
-            salaryMax: salary.max,
-            description,
-            requirements,
-            responsibilities: [],
-            benefits: [],
-            experienceLevel: detectExperienceLevel(title, description),
-            isFeatured: false,
-            isRemote: isRemoteText(`${title} ${extracted.locationText} ${description}`),
-            postedAt: parsePostedDate(candidate.postedText),
-            deadline: config.fields.deadline ? (extracted.deadline ?? new Date(Date.now() + 30 * 86_400_000)) : null,
-            applicants: 0,
-            employerEmail: null,
-            status: config.publishImmediately ? "published" : "draft",
-            source: SOURCE_FEED.key,
-            sourceId,
-            importedAt: new Date(),
-            lastSeenAt: new Date(),
-          })
-          .onConflictDoNothing()
-          .returning({ id: jobs.id });
+        bucket.push({
+          slug,
+          title,
+          company,
+          companyInitials: companyInitials(company),
+          companyColor: tintFor(company),
+          state,
+          city,
+          category: resolvedCategory,
+          jobType,
+          salaryMin: salary.min,
+          salaryMax: salary.max,
+          description,
+          requirements,
+          responsibilities: [],
+          benefits: [],
+          experienceLevel: detectExperienceLevel(title, description),
+          isFeatured: false,
+          isRemote: isRemoteText(`${title} ${extracted.locationText} ${description}`),
+          postedAt: parsePostedDate(candidate.postedText),
+          deadline: config.fields.deadline
+            ? (extracted.deadline ?? new Date(Date.now() + 30 * 86_400_000))
+            : null,
+          applicants: 0,
+          employerEmail: null,
+          status: config.publishImmediately ? "published" : "draft",
+          source: SOURCE_FEED.key,
+          sourceId,
+          importedAt: new Date(),
+          lastSeenAt: new Date(),
+        });
 
-        if (inserted.length > 0) result.counts.inserted += 1;
+        if (bucket.length >= config.insertBatchSize) await flush();
       }
 
-      if (config.requestDelayMs > 0) await sleep(config.requestDelayMs);
+      if (config.requestDelayMs > 0 && needsDetail) await sleep(config.requestDelayMs);
     } catch (error) {
       result.counts.failed += 1;
       if (error instanceof FetchError && error.blocked) {
@@ -458,6 +508,15 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       }
       errors.push(`${candidate.url}: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  await flush();
+  result.truncated = truncated;
+  if (truncated) {
+    errors.push(
+      `Stopped after ${Math.round(config.timeBudgetMs / 1000)}s to stay inside the function limit. ` +
+        "The next run resumes automatically because stored listings are skipped.",
+    );
   }
 
   // Anything we have not seen upstream for a while comes down.
