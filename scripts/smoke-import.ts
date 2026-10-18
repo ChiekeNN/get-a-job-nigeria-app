@@ -18,7 +18,7 @@ import {
   SALARY_PATTERNS,
   stripTags,
 } from "../src/lib/importer/extract";
-import { detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle, detectCategory, parsePostedDate } from "../src/lib/importer/normalize";
+import { classifyListing, detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle, detectCategory, parsePostedDate } from "../src/lib/importer/normalize";
 import { SOURCE_FEED } from "../src/lib/importer/config";
 import { CATEGORIES } from "../src/types";
 import { advanceCursor, pageUrl } from "../src/lib/importer/run";
@@ -109,16 +109,27 @@ check("summary has no Apply Now", /Apply Now/.test(cards[0].summary), false);
 check("posted date parsed", parsePostedDate("Fri 09th Oct, 2026").getFullYear(), 2026);
 
 // ---- auto categorisation for the firehose ----
-check("category: auditor", detectCategory("Internal Auditor at Domeo"), "Auditing Jobs in Nigeria");
-check("category: frontend", detectCategory("Senior Frontend Engineer at Paystack"), "Web Designer / Frontend / UI Jobs");
-check("category: backend", detectCategory("Backend Software Engineer at Paystack"), "Software Developer Jobs");
-check("category: business dev", detectCategory("Business Development Officer"), "Marketing & Sales Jobs");
-check("category: nurse", detectCategory("Registered Nurse at Lagoon Hospital"), "Medical & Healthcare Jobs");
-check("category: teacher", detectCategory("Mathematics Teacher at YGF Academy"), "Teaching Jobs in Nigeria");
-check("category: hse", detectCategory("HSE Officer (Upstream Operations)"), "Safety & Health Jobs");
-check("category: sparky", detectCategory("Electrical Technician"), "Electrical/Electronics Jobs");
-check("category: unknown falls back", detectCategory("Something Unclassifiable"), "Administrative Jobs in Nigeria");
-check("category: sales", detectCategory("Sales Manager - Generator at P.Petrop"), "Sales Jobs");
+check("category: auditor", detectCategory("Internal Auditor at Domeo"), "Banking & Finance");
+check("category: frontend", detectCategory("Senior Frontend Engineer at Paystack"), "Technology & IT");
+check("category: backend", detectCategory("Backend Software Engineer at Paystack"), "Technology & IT");
+check("category: business dev", detectCategory("Business Development Officer"), "Sales & Marketing");
+check("category: nurse", detectCategory("Registered Nurse at Lagoon Hospital"), "Healthcare");
+check("category: teacher", detectCategory("Mathematics Teacher at YGF Academy"), "Education & Teaching");
+check("category: hse", detectCategory("HSE Officer (Upstream Operations)"), "Oil, Gas & Energy");
+check("category: sparky", detectCategory("Electrical Technician"), "Engineering");
+check("category: unknown falls back", detectCategory("Something Unclassifiable"), "Administration & Office");
+check("category: sales", detectCategory("Sales Manager - Generator at P.Petrop"), "Sales & Marketing");
+check("category: oracle", detectCategory("Oracle Database Administrator"), "Technology & IT");
+check("category: php", detectCategory("PHP / MySQL Developer"), "Technology & IT");
+check("category: networking", detectCategory("Network Administrator"), "Technology & IT");
+check("category: it security beats security", detectCategory("IT Security Officer"), "Technology & IT");
+check("category: guard stays security", detectCategory("Security Guard"), "Security & Defence");
+check("category: nurse is not nursery", detectCategory("Nursery Teacher"), "Education & Teaching");
+check("category: driver", detectCategory("Dispatch Rider"), "Logistics & Transport");
+check("category: hr", detectCategory("Human Resource Officer"), "Human Resources");
+check("category: legal", detectCategory("Legal Officer"), "Legal & Compliance");
+check("category: agregate uses density", classifyListing("Workforce Group Recruitment", "recruiting 1.) Nurse 2.) Nurse 3.) Driver"), "Healthcare");
+check("category: title beats body", classifyListing("Registered Nurse", "we also need drivers and accountants"), "Healthcare");
 
 // Every detected category must exist in the taxonomy the filters and forms use.
 for (const sample of [
