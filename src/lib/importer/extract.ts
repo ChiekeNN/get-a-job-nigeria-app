@@ -130,6 +130,11 @@ export function extractListingCards(
 
     if (!title || title.length < 3) continue;
 
+    // "(0 comments)" is also a link to the same listing. Counting it as an
+    // anchor truncates the card at the comment link, which throws away the
+    // summary and leaves the description reading "Posted on ... ---".
+    if (/^\(?\s*\d+\s*comments?\s*\)?$/i.test(title)) continue;
+
     anchors.push({
       id,
       url: new URL(href, baseUrl).toString(),
@@ -157,6 +162,9 @@ export function extractListingCards(
     const summary = segment
       .replace(/^Posted on[\s\S]*?\(\d+\s+comments?\)\s*/i, "")
       .replace(/^Posted on[^-]*-\s*hotnigerianjobs\.com[\s\S]*?\d+\s+comments?\)\s*/i, "")
+      // A card whose comment link sat inside this segment leaves only the
+      // publication line behind; drop it rather than shipping it as a summary.
+      .replace(/^Posted on[\s\S]{0,160}$/i, "")
       .replace(/Apply Now[\s\S]*$/i, "")
       .trim();
 
@@ -315,4 +323,138 @@ export function splitSentences(value: string, limit = 10): string[] {
     .map((item) => item.replace(/^[-•*\u2022]\s*/, "").trim())
     .filter((item) => item.length > 12)
     .slice(0, limit);
+}
+
+/* ------------------------------------------------------------------ */
+/* Article body                                                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The publication line printed under the headline: "Posted on Thu 15th Oct, 2026".
+ * This is the only trustworthy source for `datePosted`, because it is the date
+ * the listing first appeared upstream. Falling back to `new Date()` stamps every
+ * card "Just now", which is both wrong and a Google for Jobs violation.
+ */
+export const POSTED_PATTERNS: RegExp[] = [
+  /Posted on\s+([A-Za-z]{3,9}\.?\s+\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3,9},?\s*\d{4})/i,
+  /Published(?:\s+on)?\s+([A-Za-z]{3,9}\s+\d{1,2}(?:st|nd|rd|th)?,?\s*\d{4})/i,
+];
+
+/** Where the listing's own copy stops and the page's furniture begins. */
+const ARTICLE_END =
+  /(Application Closing Date|Method of Application|How to Apply|Share this job|Related Jobs|Similar Jobs)/i;
+
+/**
+ * Cut the article out of the page.
+ *
+ * These pages are 90% navigation: a role directory, state lists, footer links.
+ * Reading `stripTags(wholePage)` therefore produces a wall of link text, which
+ * is why descriptions came out empty (the extractor refused the blobby page
+ * text) and why location detection kept landing on the wrong state. The article
+ * is the part between the headline and the closing-date block, so anchor to
+ * those two markers instead of guessing from sentences.
+ */
+export function extractArticleHtml(html: string): string {
+  const start = /<h1\b[^>]*>/i.exec(html);
+  if (!start) return "";
+
+  const rest = html.slice(start.index);
+  const end = rest.search(ARTICLE_END);
+  return end > 120 ? rest.slice(0, end) : rest.slice(0, 20_000);
+}
+
+/**
+ * Strip the "Posted on … (0 comments)" line so what remains is the job copy.
+ */
+export function extractArticleDescription(articleText: string): string {
+  let body = articleText;
+
+  const afterPosted = /Posted on[\s\S]{0,160}?comments?\)\s*/i.exec(body);
+  if (afterPosted) {
+    body = body.slice(afterPosted.index + afterPosted[0].length);
+  } else {
+    // No comment count (or a different template): drop just the line itself.
+    body = body.replace(/^[\s\S]*?Posted on[^\n]*\n/i, "");
+  }
+
+  const end = /(Apply Now|Application Closing Date|Share this job|Click here to see more)/i.exec(body);
+  if (end && end.index > 80) body = body.slice(0, end.index);
+
+  return body.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, 6000);
+}
+
+/* ------------------------------------------------------------------ */
+/* Aggregate posts ("Company Recruitment (N Positions)")                */
+/* ------------------------------------------------------------------ */
+
+export interface ChildListing {
+  sourceId: string;
+  url: string;
+  /** The role named next to the link, e.g. "Computer Studies Teacher". */
+  title: string;
+  /** The "Location: Osun" line printed beside the role. */
+  locationText: string;
+}
+
+/**
+ * Pull the individual roles out of an aggregate post.
+ *
+ * An advertisement like "YGF Academy Job Recruitment (5 Positions)" is not one
+ * vacancy — it is a container linking to five separate listings, each with its
+ * own page, title, description and location:
+ *
+ *   1.) Computer Studies Teacher
+ *   Location: Osun
+ *   [Click Here To View Details] -> /hotjobs/975527/computer-studies-teacher-…
+ *
+ * Importing the container gives one useless card called "YGF Academy Job
+ * Recruitment" that no industry rule can classify and no job seeker can read.
+ * Importing the children gives five real, correctly classified vacancies.
+ */
+export function extractChildListings(
+  articleHtml: string,
+  baseUrl: string = SOURCE_FEED.baseUrl,
+): ChildListing[] {
+  const anchorRe =
+    /<a\b[^>]*href=["']((?:https?:\/\/[^"']+)?\/hotjobs\/(\d+)\/[^"']*?\.html)["'][^>]*>([\s\S]*?)<\/a>/gi;
+
+  const children: ChildListing[] = [];
+  const seen = new Set<string>();
+  let lastEnd = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = anchorRe.exec(articleHtml)) !== null) {
+    const [, href, id, inner] = match;
+    if (!/view\s+details?/i.test(stripTagsFlat(inner))) continue;
+    if (seen.has(id)) continue;
+
+    const before = stripTags(articleHtml.slice(lastEnd, match.index));
+    lastEnd = match.index + match[0].length;
+
+    // Everything after the last "1.)" marker is this role's block.
+    const roleBlock = before.split(/\d+\s*\.\s*\)/).pop() ?? before;
+
+    const locationText = /Location\s*:\s*([^\n]{2,60})/i.exec(roleBlock)?.[1]?.trim() ?? "";
+
+    const title = roleBlock
+      .replace(/Location\s*:[\s\S]*$/i, "")
+      .replace(/\s+/g, " ")
+      .replace(/[\s\-–—:|]+$/, "")
+      .trim();
+
+    // Guard rails: a real role name, not leftover prose or a stray marker.
+    if (title.length < 3 || title.length > 140) continue;
+    if (!/[A-Za-z]{2}/.test(title)) continue;
+    if (/positions?\s+below|click here|view details/i.test(title)) continue;
+
+    seen.add(id);
+    children.push({
+      sourceId: id,
+      url: new URL(href, baseUrl).toString(),
+      title,
+      locationText,
+    });
+  }
+
+  return children;
 }

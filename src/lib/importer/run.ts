@@ -4,12 +4,16 @@ import { db } from "@/db";
 import { importState, jobs } from "@/db/schema";
 import { IMPORT_CONFIG, SOURCE_FEED, type ImportConfig } from "@/lib/importer/config";
 import {
+  extractArticleDescription,
+  extractArticleHtml,
+  extractChildListings,
   extractDescriptionText,
   extractListingCards,
   extractJobPosting,
   findFirst,
   DEADLINE_PATTERNS,
   LOCATION_PATTERNS,
+  POSTED_PATTERNS,
   REQUIREMENT_MARKERS,
   SALARY_PATTERNS,
   readHeading,
@@ -47,6 +51,8 @@ export interface ImportCandidate {
   category: string;
   summary: string;
   postedText: string;
+  /** Location printed beside the role inside an aggregate advert. */
+  locationHint?: string;
 }
 
 export interface ImportPreview {
@@ -78,6 +84,8 @@ export interface ImportResult {
     inserted: number;
     expired: number;
     failed: number;
+    /** Aggregate adverts that were split into their individual roles. */
+    expanded: number;
   };
   blocked?: string;
   /** True when the run hit its time budget; the next run continues from here. */
@@ -280,7 +288,8 @@ async function collectCandidates(
               ? config.sources[0].category
               : classifyListing(item.title, item.summary),
           summary: item.summary,
-          postedText: "",
+          // The feed's pubDate is the true first-published time.
+          postedText: item.publishedAt ?? "",
         });
       }
     } catch (error) {
@@ -299,11 +308,23 @@ interface ExtractedJob {
   description: string;
   requirements: string[];
   deadline: Date | null;
+  /** True first-published date, read off the article. Empty when unavailable. */
+  postedText: string;
+  /** Roles linked from an aggregate advert. Empty for an ordinary listing. */
+  children: ReturnType<typeof extractChildListings>;
 }
 
 function extractFromHtml(html: string, fallbackTitle: string, fallbackSummary: string): ExtractedJob {
   const posting = extractJobPosting(html);
-  const text = stripTags(html);
+  const pageText = stripTags(html);
+
+  // Everything worth having is inside the article. These pages are mostly a
+  // role directory, so reading the whole page turns navigation into the
+  // description and picks states out of the footer's "Jobs in …" links.
+  const articleHtml = extractArticleHtml(html);
+  const articleText = articleHtml ? stripTags(articleHtml) : "";
+  const articleDescription = articleText ? extractArticleDescription(articleText) : "";
+  const children = extractChildListings(articleHtml);
 
   const metaTitle = readMeta(html, "og:title") || readHeading(html);
   const rootTitle: string = (() => {
@@ -320,40 +341,43 @@ function extractFromHtml(html: string, fallbackTitle: string, fallbackSummary: s
   if (!company) company = companyFromRecruitmentTitle(rootTitle);
   if (!company) {
     const hiring = /^([A-Z][\w&'().,\- ]{2,60}?)\s+is (?:recruiting|currently recruiting|seeking)/m.exec(
-      fallbackSummary || text,
+      articleDescription || fallbackSummary || pageText,
     );
     company = hiring?.[1]?.trim() ?? "";
   }
   if (!company) company = "Confidential Employer";
 
-  // Read the fields off the article body when we managed to isolate it, not off
-  // the whole page. Whole-page text carries the sidebar ("Remote Jobs", "Jobs in
-  // Nigeria") and footer counters, which is how every listing ended up typed as
-  // Remote with a city of "Nigeria".
-  const articleText = extractDescriptionText(text);
-  const scope = articleText.length >= 120 ? articleText : text;
+  const scope = articleDescription.length >= 120 ? articleDescription : articleText || pageText;
 
   const locationText =
     findFirst(scope, LOCATION_PATTERNS) ||
-    findFirst(text, LOCATION_PATTERNS) ||
+    findFirst(articleText, LOCATION_PATTERNS) ||
+    findFirst(pageText, LOCATION_PATTERNS) ||
     (typeof posting?.jobLocation === "object" && posting.jobLocation !== null
       ? findFirst(JSON.stringify(posting.jobLocation), LOCATION_PATTERNS)
       : "") ||
     readMeta(html, "og:description").slice(0, 120);
 
-  const salaryText = findFirst(scope, SALARY_PATTERNS) || findFirst(text, SALARY_PATTERNS);
+  const salaryText = findFirst(scope, SALARY_PATTERNS) || findFirst(articleText, SALARY_PATTERNS);
 
   const requirementsBlock = findFirst(scope, REQUIREMENT_MARKERS);
   const requirements = splitSentences(requirementsBlock, 8);
 
-  const deadlineText = findFirst(scope, DEADLINE_PATTERNS) || findFirst(text, DEADLINE_PATTERNS);
+  const deadlineText =
+    findFirst(scope, DEADLINE_PATTERNS) ||
+    findFirst(articleText, DEADLINE_PATTERNS) ||
+    findFirst(pageText, DEADLINE_PATTERNS);
+
+  // The year in "Posted on Thu 15th Oct, 2026" is the listing's own publication
+  // date. Using the import time instead is what stamped the whole board "Just now".
+  const postedText = findFirst(articleText, POSTED_PATTERNS) || findFirst(pageText, POSTED_PATTERNS);
 
   let description = "";
   if (typeof posting?.description === "string" && posting.description.trim().length > 80) {
     description = stripTags(posting.description).slice(0, 6000);
   }
-  if (!description) description = articleText;
-  // Prefer the listing's own card summary over an empty or page-wide blob.
+  if (!description && articleDescription.length >= 80) description = articleDescription;
+  if (!description) description = extractDescriptionText(articleText || pageText);
   if (description.length < 80) description = fallbackSummary || description;
 
   return {
@@ -364,6 +388,8 @@ function extractFromHtml(html: string, fallbackTitle: string, fallbackSummary: s
     description: description.trim(),
     requirements,
     deadline: parseDeadline(deadlineText),
+    postedText,
+    children,
   };
 }
 
@@ -387,6 +413,8 @@ function extractFromText(text: string, fallbackTitle: string, summary: string): 
     description: (text || summary).trim().slice(0, 6000),
     requirements: splitSentences(findFirst(text, REQUIREMENT_MARKERS), 8),
     deadline: parseDeadline(findFirst(text, DEADLINE_PATTERNS)),
+    postedText: findFirst(text, POSTED_PATTERNS),
+    children: [],
   };
 }
 
@@ -417,6 +445,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       inserted: 0,
       expired: 0,
       failed: 0,
+      expanded: 0,
     },
     errors,
     preview: [],
@@ -488,7 +517,12 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
     bucket.length = 0;
   }
 
-  for (const candidate of selected) {
+  // Work queue rather than a plain loop: one advert can turn out to be a
+  // container for several roles, and each role is queued ahead of the rest.
+  const queue: ImportCandidate[] = [...selected];
+  const handled = new Set<string>(known);
+
+  while (queue.length > 0) {
     // Stop before the platform terminates the function. Whatever was written stays,
     // and the next run picks up from here because stored listings are skipped.
     if (Date.now() - runStartedMs > config.timeBudgetMs) {
@@ -496,7 +530,15 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       break;
     }
 
+    const candidate = queue.shift();
+    if (!candidate) break;
+
     const sourceId = `${SOURCE_FEED.key}:${candidate.sourceId}`;
+    // Skip anything already stored, or already handled in this run — a child
+    // often appears on the listing pages in its own right as well.
+    if (handled.has(sourceId)) continue;
+    handled.add(sourceId);
+
     try {
       // The category page usually carries enough detail. Only pay for a second
       // request when the summary is thin.
@@ -512,6 +554,33 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
         extracted = extractFromText(candidate.summary, candidate.title, candidate.summary);
       }
 
+      // An aggregate advert ("… Job Recruitment (5 Positions)") is a container,
+      // not a vacancy. Publish the roles it links to and never the container:
+      // one unreadable card helps nobody and classifies into nothing.
+      if (extracted.children.length > 0) {
+        const children = extracted.children.slice(0, config.maxChildrenPerPost);
+        result.counts.expanded += 1;
+
+        for (let index = children.length - 1; index >= 0; index -= 1) {
+          const child = children[index];
+          const childKey = `${SOURCE_FEED.key}:${child.sourceId}`;
+          if (handled.has(childKey)) continue;
+
+          queue.unshift({
+            sourceId: child.sourceId,
+            url: child.url,
+            title: child.title,
+            category: candidate.category,
+            summary: "",
+            postedText: extracted.postedText || candidate.postedText,
+            locationHint: child.locationText,
+          });
+        }
+
+        if (config.requestDelayMs > 0) await sleep(config.requestDelayMs);
+        continue;
+      }
+
       const resolvedCategory =
         candidate.category === "auto"
           ? classifyListing(candidate.title, extracted.description)
@@ -522,7 +591,10 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       }
 
       const state = config.fields.location
-        ? detectState(extracted.locationText, extracted.description)
+        ? detectState(
+            extracted.locationText || candidate.locationHint || "",
+            extracted.description,
+          )
         : "Lagos";
       const city = deriveCity(extracted.locationText, state);
       const description = scrubText(
@@ -580,7 +652,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
           experienceLevel: detectExperienceLevel(title, description),
           isFeatured: false,
           isRemote: isRemoteText(`${title} ${extracted.locationText} ${description}`),
-          postedAt: parsePostedDate(candidate.postedText),
+          postedAt: parsePostedDate(extracted.postedText || candidate.postedText),
           deadline: config.fields.deadline
             ? (extracted.deadline ?? new Date(Date.now() + 30 * 86_400_000))
             : null,

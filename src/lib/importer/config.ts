@@ -65,13 +65,23 @@ export interface ImportConfig {
   insertBatchSize: number;
   /**
    * "auto" uses the summary printed on the listing page when it is detailed
-   * enough, and only fetches the job page when it is not. Far fewer requests,
-   * which is what keeps the import under the board's bot protection.
+   * enough, and only fetches the job page when it is not.
    * "always" fetches every job page individually.
+   *
+   * The listing-page summary is a two-line teaser, and the aggregate posts carry
+   * no summary worth having at all. The full copy — and the links to each
+   * individual role inside a multi-position advert — only exist on the job page,
+   * so "always" is what makes real descriptions possible.
    */
   detailPage: "auto" | "always";
   /** Also read the source's RSS feed, newest first. */
   useRssFeed: boolean;
+  /**
+   * An advert like "… Job Recruitment (73 Positions)" links to 73 separate
+   * listings. Expanding them gives 73 real vacancies instead of one unreadable
+   * card, but each child costs one request, so cap the fan-out per advert.
+   */
+  maxChildrenPerPost: number;
   sources: ImportSource[];
   filters: {
     /** Empty array = every state. Otherwise only these (must match NIGERIAN_STATES). */
@@ -97,7 +107,7 @@ export const IMPORT_CONFIG: ImportConfig = {
 
   publishImmediately: true,
   expireAfterDays: 21,
-  requestDelayMs: 350,
+  requestDelayMs: 200,
   /**
    * 13 pages ≈ 650 listings per invocation. Eight daily triggers (vercel.json)
    * give ~104 pages / ~5,200 listings a day, clearing the 5000 target while
@@ -109,8 +119,11 @@ export const IMPORT_CONFIG: ImportConfig = {
   // Safely under the 300s function limit on both Hobby and Pro.
   timeBudgetMs: 240_000,
   insertBatchSize: 250,
-  detailPage: "auto",
-  useRssFeed: false,
+  detailPage: "always",
+  // The feed carries the newest items with their true publication date and a
+  // summary, and covers the gap between sweeps.
+  useRssFeed: true,
+  maxChildrenPerPost: 15,
 
   /**
    * Everything posted in the last week — about 4,000 listings, newest first,

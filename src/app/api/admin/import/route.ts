@@ -28,6 +28,7 @@ function authorised(request: Request): boolean {
   const provided =
     request.headers.get("x-import-secret") ??
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
+    new URL(request.url).searchParams.get("key") ??
     "";
 
   return secrets.includes(provided);
@@ -47,6 +48,7 @@ function authorisationFailure(request: Request) {
   const provided =
     request.headers.get("x-import-secret") ??
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
+    new URL(request.url).searchParams.get("key") ??
     "";
 
   if (secrets.length === 0) {
