@@ -15,6 +15,7 @@ import {
   findFirst,
   POSTED_PATTERNS,
 } from "../src/lib/importer/extract";
+import { parseSalary } from "../src/lib/importer/normalize";
 
 let pass = 0;
 let fail = 0;
@@ -135,6 +136,24 @@ console.log("listing cards");
   check("card posted text", cards[0]?.postedText, "Fri 09th Oct, 2026");
   ok("card summary is real copy", cards[0]?.summary.includes("Serenity Royale Hospital is recruiting"));
   ok("card summary has no posted line", !cards[0]?.summary.includes("Posted on"));
+}
+
+console.log("salary parsing");
+{
+  check("plain salary", parseSalary("N500,000 monthly"), { min: 500000, max: 500000 });
+  check("salary with colon", parseSalary("Salary: N70,000 monthly"), { min: 70000, max: 70000 });
+  check("k suffix", parseSalary("N200k monthly"), { min: 200000, max: 200000 });
+  check("m suffix annual", parseSalary("N1.2m per annum"), { min: 100000, max: 100000 });
+  check("range", parseSalary("N400,000 - N600,000 / month"), { min: 400000, max: 600000 });
+  check("naira sign", parseSalary("\u20a6150,000"), { min: 150000, max: 150000 });
+  check("monthly is not a multiplier", parseSalary("N500,000 monthly, with variable pay"), {
+    min: 500000,
+    max: 500000,
+  });
+  check("no salary in text", parseSalary("The position is located in Lagos State."), {
+    min: 0,
+    max: 0,
+  });
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
