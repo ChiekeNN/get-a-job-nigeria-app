@@ -99,7 +99,7 @@ async function refileLegacyCategories(): Promise<void> {
  * reads the article body and splits multi-position adverts into real roles.
  * The unique index on source_id would otherwise keep the old row forever.
  */
-const DESCRIPTION_REPAIR_KEY = "maintenance:descriptions-v2";
+const DESCRIPTION_REPAIR_KEY = "maintenance:descriptions-v3";
 
 async function purgeThinListings(): Promise<void> {
   const done = await db
@@ -118,6 +118,11 @@ async function purgeThinListings(): Promise<void> {
           ${jobs.description} is null
           or length(trim(${jobs.description})) < 120
           or ${jobs.description} ~ '^[[:space:]]*Posted on'
+          -- An aggregate advert stored whole: "1.) Role  Location: X  Click Here
+          -- To View Details  2.) Role …". These are containers, not vacancies,
+          -- and the import pipeline now splits them into their real roles.
+          or ${jobs.description} ~* 'click here to view details'
+          or ${jobs.description} ~* 'positions? below:'
         )`,
     )
     .returning({ id: jobs.id });
