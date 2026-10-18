@@ -102,7 +102,11 @@ export function deriveCity(location: string, state: string): string {
   if (!cleaned) return state === "FCT Abuja" ? "Abuja" : state;
 
   const first = cleaned.split(",")[0]?.trim();
-  if (first && first.length > 1 && first.length < 40) {
+
+  // "Nigeria", "West Africa" and friends are not cities. Showing a country in
+  // the city slot ("Abia / Nigeria") looks broken, so fall back to the state.
+  const NOT_A_CITY = /^(nigeria|west africa|africa|sub-?saharan africa|anywhere|abroad|remote)$/i;
+  if (first && !NOT_A_CITY.test(first) && first.length > 1 && first.length < 40) {
     return first.replace(/\b\w/g, (char) => char.toUpperCase());
   }
 
@@ -133,16 +137,29 @@ function toNaira(token: string): number {
 export function parseSalary(text: string): SalaryRange {
   if (!text) return { min: 0, max: 0 };
 
+  // Anything above this is a timestamp, an ID or a page counter, not a salary.
+  // A 13-digit epoch (1_759_000_000_000) previously sailed through and rendered
+  // as "₦1,000,000,000,000" on the job card.
+  const MAX_RAW = 120_000_000;
+  const MIN_MONTHLY = 20_000;
+  const MAX_MONTHLY = 50_000_000;
+
   const numbers = [...text.matchAll(/(?:n|₦|ngn)?\s?(\d[\d,.]*\s?[km]?)/gi)]
     .map((match) => toNaira(match[1]))
-    .filter((value) => value >= 10_000);
+    .filter((value) => value >= 10_000 && value <= MAX_RAW);
 
   if (numbers.length === 0) return { min: 0, max: 0 };
 
   const annual = /(per\s+annum|per\s+year|annually|\/\s*annum|\/\s*year|p\.a\.)/i.test(text);
   const divisor = annual ? 12 : 1;
 
-  const scaled = numbers.map((value) => Math.round(value / divisor)).sort((a, b) => a - b);
+  const scaled = numbers
+    .map((value) => Math.round(value / divisor))
+    .filter((value) => value >= MIN_MONTHLY && value <= MAX_MONTHLY)
+    .sort((a, b) => a - b);
+
+  if (scaled.length === 0) return { min: 0, max: 0 };
+
   const min = scaled[0];
   const max = scaled[scaled.length - 1];
 

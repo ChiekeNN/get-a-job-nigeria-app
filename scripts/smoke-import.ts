@@ -20,6 +20,8 @@ import {
 import { detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle, detectCategory, parsePostedDate } from "../src/lib/importer/normalize";
 import { SOURCE_FEED } from "../src/lib/importer/config";
 import { advanceCursor, pageUrl } from "../src/lib/importer/run";
+import { decodeEntities, extractDescriptionText } from "../src/lib/importer/extract";
+import { deriveCity, parseSalary } from "../src/lib/importer/normalize";
 import { IMPORT_CONFIG } from "../src/lib/importer/config";
 
 const brand = SOURCE_FEED.stripFromTitles[0];
@@ -156,6 +158,40 @@ check("eight runs can sweep the window", reached >= 100, true);
 check(
   "daily capacity meets the 5000 target",
   reached * 50 >= IMPORT_CONFIG.maxJobsPerRun,
+  true,
+);
+
+// ---- data quality: the values seen in the live preview must never ship ----
+const trillion = parseSalary("Salary: N1000000000000 - N1000000000000 / month");
+check("rejects an epoch-sized salary", trillion.min === 0 && trillion.max === 0, true);
+
+const timestamps = parseSalary("Posted 1759000000000 salary: N400,000 - N600,000");
+check("keeps the real figure, drops the timestamp", timestamps.min, 400000);
+check("caps the bogus upper bound", timestamps.max, 600000);
+
+const billions = parseSalary("Remuneration: N90000 - N100000000000");
+check("drops an eleven-digit value", billions.max, 90000);
+
+const normal = parseSalary("Salary: N400,000 - N600,000 / month");
+check("still parses a normal range", `${normal.min}-${normal.max}`, "400000-600000");
+
+const annual = parseSalary("Salary: N12,000,000 per annum");
+check("divides annual figures to monthly", annual.min, 1000000);
+
+check("city is never a country", deriveCity("Nigeria", "Abia"), "Abia");
+check("a real city still survives", deriveCity("Lekki, Lagos", "Lagos"), "Lekki");
+
+check("decodes a double-encoded ampersand", decodeEntities("Bakangizo Pharmacy &amp;amp; Stores"), "Bakangizo Pharmacy & Stores");
+check("decodes a single-encoded ampersand", decodeEntities("Bakangizo &amp; Stores"), "Bakangizo & Stores");
+
+check(
+  "page-wide text is not a description",
+  extractDescriptionText("Home Jobs Remote Jobs About Us Contact Privacy Nigeria 2026").length,
+  0,
+);
+check(
+  "a real description survives",
+  extractDescriptionText("Job Description: We need a pharmacist. Requirements: B.Pharm.").includes("pharmacist"),
   true,
 );
 
