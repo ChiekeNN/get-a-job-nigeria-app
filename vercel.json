@@ -1,9 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    {
-      "path": "/api/admin/import",
-      "schedule": "0 5 * * *"
-    }
+    { "path": "/api/admin/import", "schedule": "5 0 * * *" },
+    { "path": "/api/admin/import", "schedule": "5 3 * * *" },
+    { "path": "/api/admin/import", "schedule": "5 6 * * *" },
+    { "path": "/api/admin/import", "schedule": "5 9 * * *" },
+    { "path": "/api/admin/import", "schedule": "5 12 * * *" },
+    { "path": "/api/admin/import", "schedule": "5 15 * * *" },
+    { "path": "/api/admin/import", "schedule": "5 18 * * *" },
+    { "path": "/api/admin/import", "schedule": "5 21 * * *" }
   ]
 }

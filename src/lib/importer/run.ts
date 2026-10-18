@@ -1,7 +1,7 @@
 import { and, eq, inArray, lt, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { jobs } from "@/db/schema";
+import { importState, jobs } from "@/db/schema";
 import { IMPORT_CONFIG, SOURCE_FEED, type ImportConfig } from "@/lib/importer/config";
 import {
   extractDescriptionText,
@@ -82,6 +82,8 @@ export interface ImportResult {
   blocked?: string;
   /** True when the run hit its time budget; the next run continues from here. */
   truncated?: boolean;
+  /** Sweep cursor movement per source, so consecutive runs are traceable. */
+  cursors?: Record<string, { from: number; to: number }>;
   errors: string[];
   preview: ImportPreview[];
 }
@@ -130,49 +132,132 @@ export function pageUrl(source: { url: string; pagination?: string }, page: numb
   return `${base}/${page - 1}/`;
 }
 
-/** Walk the configured source pages, newest first, de-duplicated. */
+/**
+ * Sweep position for a source. Stored in the database so consecutive runs extend
+ * a backfill instead of re-reading page 1 forever — that is what allows a large
+ * daily volume from several short invocations.
+ */
+export async function getCursor(key: string): Promise<number> {
+  try {
+    const rows = await db
+      .select({ value: importState.value })
+      .from(importState)
+      .where(eq(importState.key, key))
+      .limit(1);
+    const parsed = Number.parseInt(rows[0]?.value ?? "1", 10);
+    return Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;
+  } catch {
+    return 1;
+  }
+}
+
+async function saveCursor(key: string, page: number): Promise<void> {
+  await db
+    .insert(importState)
+    .values({ key, value: String(page) })
+    .onConflictDoUpdate({
+      target: importState.key,
+      set: { value: String(page), updatedAt: new Date() },
+    });
+}
+
+/**
+ * Where the next run should start.
+ *  - ran off the end of the listing (empty page)  -> restart at page 1
+ *  - passed the sweep cap                          -> restart at page 1
+ *  - otherwise                                     -> carry on from here
+ */
+export function advanceCursor(start: number, pagesRead: number, hitEmpty: boolean, sweepCap: number): number {
+  if (hitEmpty) return 1;
+  const next = start + pagesRead;
+  return next > sweepCap ? 1 : next;
+}
+
+export interface CollectResult {
+  candidates: ImportCandidate[];
+  cursors: Record<string, { from: number; to: number }>;
+}
+
+/**
+ * Collect candidates:
+ *   1. page 1 of each source, so brand-new listings are always picked up, then
+ *   2. `pagesPerRun` pages continuing from the stored sweep cursor.
+ * De-duplicated across both passes.
+ */
 async function collectCandidates(
   config: ImportConfig,
   errors: string[],
   deadlineMs: number,
-): Promise<ImportCandidate[]> {
+  dryRun: boolean,
+): Promise<CollectResult> {
   const byId = new Map<string, ImportCandidate>();
+  const cursors: Record<string, { from: number; to: number }> = {};
+
+  const add = (card: { sourceId: string; url: string; title: string; summary: string; postedText: string }, category: string) => {
+    if (byId.has(card.sourceId)) return;
+    byId.set(card.sourceId, {
+      sourceId: card.sourceId,
+      url: card.url,
+      title: card.title,
+      category,
+      summary: card.summary,
+      postedText: card.postedText,
+    });
+  };
 
   for (const source of config.sources) {
-    for (let page = 1; page <= config.maxPagesPerSource; page += 1) {
-      const url = pageUrl(source, page);
-      if (!url) break;
+    const cursorKey = `sweep:${source.url}`;
+    const start = dryRun ? 1 : await getCursor(cursorKey);
+    let pagesRead = 0;
+    let hitEmpty = false;
 
+    // Always take the newest page first.
+    const pagesToRead: number[] = [1];
+    for (let offset = 0; offset < config.pagesPerRun; offset += 1) {
+      let page = start + offset;
+      if (page > config.maxPagesPerSource) page = ((page - 1) % config.maxPagesPerSource) + 1;
+      if (!pagesToRead.includes(page)) pagesToRead.push(page);
+    }
+
+    for (const page of pagesToRead) {
       // Leave time to actually store what has been collected.
       if (Date.now() > deadlineMs) {
         errors.push(`Stopped paging ${source.name} at page ${page} to stay inside the function limit.`);
         break;
       }
 
+      const url = pageUrl(source, page);
+      if (!url) break;
+
       try {
         const html = await fetchText(url);
         const cards = extractListingCards(html);
 
-        for (const card of cards) {
-          if (byId.has(card.sourceId)) continue;
-          byId.set(card.sourceId, {
-            sourceId: card.sourceId,
-            url: card.url,
-            title: card.title,
-            category: source.category,
-            summary: card.summary,
-            postedText: card.postedText,
-          });
+        if (cards.length === 0) {
+          // Past the end of the listing: next run starts over.
+          hitEmpty = true;
+          break;
         }
 
-        // Stop early once a page comes back empty — no point walking further.
-        if (cards.length === 0) break;
+        for (const card of cards) add(card, source.category);
+        if (page !== 1) pagesRead += 1;
       } catch (error) {
         errors.push(`${source.name} (${url}): ${error instanceof Error ? error.message : String(error)}`);
         break;
       }
 
       if (config.requestDelayMs > 0) await sleep(config.requestDelayMs);
+    }
+
+    const next = advanceCursor(start, pagesRead, hitEmpty, config.maxPagesPerSource);
+    cursors[source.name] = { from: start, to: next };
+
+    if (!dryRun) {
+      try {
+        await saveCursor(cursorKey, next);
+      } catch (error) {
+        errors.push(`Could not save cursor for ${source.name}: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
   }
 
@@ -200,7 +285,7 @@ async function collectCandidates(
     }
   }
 
-  return [...byId.values()];
+  return { candidates: [...byId.values()], cursors };
 }
 
 interface ExtractedJob {
@@ -334,8 +419,10 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
 
   // Reserve a slice of the budget for writing, so a slow crawl cannot consume it all.
   const collectionDeadline = Date.now() + Math.round(config.timeBudgetMs * 0.6);
-  const candidates = await collectCandidates(config, errors, collectionDeadline);
+  const collected = await collectCandidates(config, errors, collectionDeadline, dryRun);
+  const candidates = collected.candidates;
   result.counts.candidates = candidates.length;
+  result.cursors = collected.cursors;
 
   // Which upstream IDs do we already hold? One query keeps the run cheap.
   const ids = candidates.map((candidate) => `${SOURCE_FEED.key}:${candidate.sourceId}`);

@@ -19,7 +19,7 @@ import {
 } from "../src/lib/importer/extract";
 import { detectJobType, detectState, deriveCity, parseSalary, stripBrand, scrubText, cleanJobTitle, detectCategory, parsePostedDate } from "../src/lib/importer/normalize";
 import { SOURCE_FEED } from "../src/lib/importer/config";
-import { pageUrl } from "../src/lib/importer/run";
+import { advanceCursor, pageUrl } from "../src/lib/importer/run";
 import { IMPORT_CONFIG } from "../src/lib/importer/config";
 
 const brand = SOURCE_FEED.stripFromTitles[0];
@@ -141,6 +141,22 @@ check(
   "batches needed for a full run",
   Math.ceil(IMPORT_CONFIG.maxJobsPerRun / IMPORT_CONFIG.insertBatchSize),
   Math.ceil(5000 / 250),
+);
+
+// ---- sweep cursor: eight short runs must cover a full backfill ----
+check("continues after a normal chunk", advanceCursor(1, 12, false, 110), 13);
+check("wraps when the sweep cap is passed", advanceCursor(105, 12, false, 110), 1);
+check("restarts at 1 when a page comes back empty", advanceCursor(60, 5, true, 110), 1);
+check("stays put when nothing was read", advanceCursor(7, 0, false, 110), 7);
+
+// 8 runs x 12 pages must reach the whole last-week window
+const runsPerDay = 8;
+const reached = runsPerDay * IMPORT_CONFIG.pagesPerRun;
+check("eight runs can sweep the window", reached >= 100, true);
+check(
+  "daily capacity meets the 5000 target",
+  reached * 50 >= IMPORT_CONFIG.maxJobsPerRun,
+  true,
 );
 
 console.log(`\n${failures === 0 ? "All checks passed" : `${failures} check(s) failed`}`);

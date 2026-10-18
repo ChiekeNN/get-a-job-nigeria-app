@@ -47,9 +47,12 @@ export interface ImportConfig {
   /** Polite pause between requests, in milliseconds. */
   requestDelayMs: number;
   /**
-   * How many pages of each listing to walk (about 50 jobs per page).
-   * 5000 jobs needs ~100 pages; leave headroom because some are skipped.
+   * Pages swept per invocation, not per day. Around 50 jobs per page, so 12
+   * pages is roughly 600 listings per run. The run resumes from a stored cursor,
+   * which is what makes a 5000/day target possible across several short runs.
    */
+  pagesPerRun: number;
+  /** Upper bound for a full sweep before the cursor wraps back to page 1. */
   maxPagesPerSource: number;
   /**
    * Stop starting new work after this many milliseconds and return cleanly.
@@ -95,9 +98,15 @@ export const IMPORT_CONFIG: ImportConfig = {
   publishImmediately: true,
   expireAfterDays: 21,
   requestDelayMs: 350,
-  // ~100 pages of 50 covers the whole last-week window.
+  /**
+   * 13 pages ≈ 650 listings per invocation. Eight daily triggers (vercel.json)
+   * give ~104 pages / ~5,200 listings a day, clearing the 5000 target while
+   * keeping every individual run short enough to be safe on any plan.
+   */
+  pagesPerRun: 13,
+  /** ~110 pages covers the whole last-week window before wrapping to page 1. */
   maxPagesPerSource: 110,
-  // 240s: safely under the route's 300s maxDuration.
+  // Safely under the 300s function limit on both Hobby and Pro.
   timeBudgetMs: 240_000,
   insertBatchSize: 250,
   detailPage: "auto",
