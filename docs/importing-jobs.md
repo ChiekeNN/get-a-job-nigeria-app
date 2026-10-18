@@ -77,19 +77,74 @@ would rather not carry them.
 The importer adds five columns and a unique index to `jobs`:
 
 ```
-source, source_id, source_url, imported_at, last_seen_at
+source, source_id, imported_at, last_seen_at
 jobs_source_id_unique
 ```
 
-Apply them with drizzle-kit against the production database:
+`drizzle.config.ts` reads the connection string from the environment — it never
+contains a hardcoded URL, so the command cannot silently target a local database.
 
-```bash
-DATABASE_URL="postgres://…" npx drizzle-kit push
+### Windows PowerShell
+
+```powershell
+$env:DATABASE_URL = "postgresql://user:password@host:5432/dbname"
+npx drizzle-kit push
 ```
 
-The index on `source_id` is what prevents duplicates. Existing rows have
-`NULL` there, and Postgres allows many `NULL`s in a unique index, so manually
-posted jobs are unaffected.
+Note the spacing: PowerShell needs the space either side of `=`, and `$env:` is
+not optional. `DATABASE_URL="..." npx drizzle-kit push` is bash syntax and fails
+in PowerShell with `CommandNotFoundException`.
+
+To keep the value for the session only, the line above is enough. To clear it
+afterwards:
+
+```powershell
+Remove-Item Env:\DATABASE_URL
+```
+
+### macOS / Linux
+
+```bash
+export DATABASE_URL="postgresql://user:password@host:5432/dbname"
+npx drizzle-kit push
+```
+
+### .env (works on every platform)
+
+Copy `.env.example` to `.env`, set `DATABASE_URL`, then just run:
+
+```bash
+npx drizzle-kit push
+```
+
+`drizzle.config.ts` loads `.env` automatically via `dotenv`. `.env` is already
+gitignored.
+
+### Which connection string to use
+
+- **Supabase** — Project settings → Database → Connection string → *URI*. For
+  `drizzle-kit push` prefer the direct connection (port `5432`); the pooler
+  (`6543`) is fine for the running app.
+- **Neon** — Dashboard → Connection details → *Connection string*. Use the
+  pooled string for the app; either works for the migration.
+- **Vercel Postgres** — Storage → your database → `.env.local` tab.
+
+Use the same value in Vercel so the app and the migration agree. The app accepts
+any of `DATABASE_URL`, `POSTGRES_URL`, `POSTGRES_PRISMA_URL`,
+`POSTGRES_URL_NON_POOLING` or `NEON_DATABASE_URL`.
+
+Convenience scripts: `npm run db:push` and `npm run db:studio`.
+
+### Verify
+
+```bash
+curl https://<your-domain>/api/health
+```
+
+- `reason: no_connection_string` — no env var set
+- `reason: connection_failed` — wrong host/password, or the database rejects Vercel's IPs
+- `reason: tables_missing` — connected but the migration has not run
+- `"ok": true` — connected, with a `jobs` count
 
 ## 3. Dry run first
 
