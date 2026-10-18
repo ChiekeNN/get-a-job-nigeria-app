@@ -7,6 +7,8 @@ import { ToastProvider } from "@/components/providers/Toaster";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  // Absolute URLs for canonical links and social previews.
+  metadataBase: new URL("https://getajob.com.ng"),
   title: {
     default: "NaijaHire — Jobs in Nigeria, verified and recruiter-backed",
     template: "%s | NaijaHire",

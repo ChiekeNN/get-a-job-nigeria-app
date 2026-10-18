@@ -10,6 +10,8 @@ import {
   Users,
 } from "lucide-react";
 import type { Metadata } from "next";
+
+import { CONTACT } from "@/data/contact";
 import Link from "next/link";
 
 import { EmployerDashboard } from "@/components/employers/EmployerDashboard";
@@ -226,7 +228,7 @@ export default async function EmployersPage() {
           <div>
             <h2 className="font-display text-xl font-extrabold">Need a hiring partner today?</h2>
             <p className="mt-1 text-sm text-white/85">
-              WhatsApp our employer desk on +234 803 000 4421 or email hire@naijahire.ng.
+              WhatsApp our employer desk on +234 803 000 4421 or email {CONTACT.info}.
             </p>
           </div>
           <a

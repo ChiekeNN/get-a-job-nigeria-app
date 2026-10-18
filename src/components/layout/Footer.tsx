@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { CONTACT, mailto } from "@/data/contact";
+
 const WHATSAPP = "https://wa.me/2348030004421?text=Hello%20NaijaHire%2C%20I%20need%20help%20with%20my%20job%20search";
 
 export function Footer() {
@@ -42,9 +44,19 @@ export function Footer() {
                 <Phone className="size-4 text-brand-400" aria-hidden="true" />
                 +234 803 000 4421
               </a>
-              <a href="mailto:support@naijahire.ng" className="flex items-center gap-2 hover:text-white">
+              <a
+                href={mailto(CONTACT.support, "Support request")}
+                className="flex items-center gap-2 hover:text-white"
+              >
                 <Mail className="size-4 text-brand-400" aria-hidden="true" />
-                support@naijahire.ng
+                {CONTACT.support}
+              </a>
+              <a
+                href={mailto(CONTACT.info, "Enquiry")}
+                className="flex items-center gap-2 hover:text-white"
+              >
+                <Mail className="size-4 text-brand-400" aria-hidden="true" />
+                {CONTACT.info}
               </a>
               <p className="flex items-start gap-2">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-brand-400" aria-hidden="true" />
@@ -106,6 +118,7 @@ export function Footer() {
                 ["Privacy policy", "/legal#privacy"],
                 ["Terms of use", "/legal#terms"],
                 ["CV & data policy", "/legal#cv"],
+                ["Contact us", "/contact"],
               ].map(([label, href]) => (
                 <li key={label}>
                   <Link href={href} className="transition hover:text-white">

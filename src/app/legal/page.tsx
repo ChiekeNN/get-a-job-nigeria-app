@@ -1,6 +1,8 @@
 import { FileCheck2, Lock, Scale } from "lucide-react";
 import type { Metadata } from "next";
 
+import { CONTACT } from "@/data/contact";
+
 export const metadata: Metadata = {
   title: "Legal, privacy and candidate policies",
   description:
@@ -40,7 +42,7 @@ export default function LegalPage() {
               opt in and can be stopped by replying STOP.
             </p>
             <p>
-              Request deletion of your data any time at support@naijahire.ng — we action verified
+              Request deletion of your data any time at {CONTACT.support} — we action verified
               requests within 7 working days.
             </p>
           </div>
@@ -86,7 +88,7 @@ export default function LegalPage() {
               scanning is applied to every upload.
             </p>
             <p>
-              You may ask for the CV you uploaded to be removed by emailing support@naijahire.ng from
+              You may ask for the CV you uploaded to be removed by emailing {CONTACT.support} from
               the address on your profile.
             </p>
           </div>
@@ -96,7 +98,7 @@ export default function LegalPage() {
       <div className="mt-6 card p-5 text-sm leading-relaxed text-ink-600">
         <h2 className="font-display text-base font-bold text-ink-900">Contact our data protection team</h2>
         <p className="mt-1">
-          Email <span className="font-semibold text-brand-700">privacy@naijahire.ng</span> or call{" "}
+          Email <span className="font-semibold text-brand-700">{CONTACT.support}</span> or call{" "}
           <span className="font-semibold text-brand-700">+234 803 000 4421</span> (Mon–Fri, 9am–5pm
           WAT). Postal address: 14 Adeola Odeku Street, Victoria Island, Lagos.
         </p>

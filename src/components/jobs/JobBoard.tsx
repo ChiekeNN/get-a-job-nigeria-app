@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FilterPanel } from "@/components/jobs/FilterPanel";
 import { JobCard } from "@/components/jobs/JobCard";
 import { QuickApplyModal } from "@/components/jobs/QuickApplyModal";
+import { CONTACT, mailto } from "@/data/contact";
 import { useToast } from "@/components/providers/Toaster";
 import { formatNaira } from "@/lib/format";
 import { useSavedJobs } from "@/lib/useSavedJobs";
@@ -351,7 +352,14 @@ export function JobBoard({ initialJobs, initialFilters }: Props) {
               <p>
                 <span className="font-semibold">Every employer is verified.</span> NaijaHire never
                 charges candidates to apply, and salaries are displayed exactly as disclosed by the
-                hiring company.
+                hiring company. Spotted a listing that has closed? Tell{" "}
+                <a
+                  href={mailto(CONTACT.expiredListings, "Expired job listing")}
+                  className="font-semibold underline decoration-brand-300 underline-offset-2"
+                >
+                  {CONTACT.expiredListings}
+                </a>
+                .
               </p>
             </div>
           ) : null}

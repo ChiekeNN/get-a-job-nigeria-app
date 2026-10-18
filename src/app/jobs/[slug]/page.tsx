@@ -16,6 +16,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ApplyForm } from "@/components/jobs/ApplyForm";
+import { CONTACT } from "@/data/contact";
 import {
   companyTint,
   daysUntil,
@@ -219,7 +220,7 @@ export default async function JobDetailPage({ params }: Props) {
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-600" aria-hidden="true" />
               <p>
                 <span className="font-semibold">Safety note:</span> this employer will never ask you
-                to pay a recruitment fee. Report any request for money to support@naijahire.ng.
+                to pay a recruitment fee. Report any request for money to {CONTACT.support}.
               </p>
             </div>
           </section>
