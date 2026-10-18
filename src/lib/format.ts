@@ -14,8 +14,23 @@ export function formatNairaShort(value: number): string {
   return `₦${value}`;
 }
 
+/**
+ * A salary range, collapsed to a single figure when only one number is known.
+ *
+ * The source often prints one figure ("Salary: N70,000 monthly"), and rendering
+ * that as "₦70,000 – ₦70,000" looks like a data bug to a job seeker.
+ */
 export function salaryRange(min: number, max: number): string {
+  if (!(min > 0) && !(max > 0)) return "Not disclosed";
+  if (!(max > min)) return formatNairaShort(min);
   return `${formatNairaShort(min)} – ${formatNairaShort(max)}`;
+}
+
+/** Full-figure variant used on job cards and detail pages. */
+export function salaryLabel(min: number, max: number): string {
+  if (!(min > 0) && !(max > 0)) return "Salary not disclosed";
+  if (!(max > min)) return formatNaira(min);
+  return `${formatNaira(min)} – ${formatNaira(max)}`;
 }
 
 export function timeAgo(iso: string): string {

@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 
 import { useToast } from "@/components/providers/Toaster";
 import { Modal } from "@/components/ui/Modal";
-import { formatNaira, salaryRange } from "@/lib/format";
+import { salaryLabel, salaryRange } from "@/lib/format";
 import type { ActionState, Job } from "@/types";
 
 interface Props {
@@ -95,7 +95,7 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
                 Salary
               </p>
               <p className="text-xs font-bold text-brand-700">
-                {formatNaira(job.salaryMin)} – {formatNaira(job.salaryMax)}
+                {salaryLabel(job.salaryMin, job.salaryMax)}
               </p>
             </div>
           </div>

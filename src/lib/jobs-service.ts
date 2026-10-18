@@ -89,6 +89,49 @@ async function refileLegacyCategories(): Promise<void> {
     .onConflictDoNothing();
 }
 
+/**
+ * Listings imported before the article extractor existed carry either no
+ * description at all (the aggregate "Company Recruitment" adverts) or the
+ * publication line as their text ("Posted on Fri 09th Oct, 2026 ---").
+ *
+ * They cannot be repaired in place — the copy was never stored — so they are
+ * deleted and the next sweep re-imports them through the new pipeline, which
+ * reads the article body and splits multi-position adverts into real roles.
+ * The unique index on source_id would otherwise keep the old row forever.
+ */
+const DESCRIPTION_REPAIR_KEY = "maintenance:descriptions-v1";
+
+async function purgeThinListings(): Promise<void> {
+  const done = await db
+    .select({ value: importState.value })
+    .from(importState)
+    .where(eq(importState.key, DESCRIPTION_REPAIR_KEY))
+    .limit(1);
+
+  if (done.length > 0) return;
+
+  const removed = await db
+    .delete(jobs)
+    .where(
+      sql`${jobs.source} = 'feed'
+        and (
+          ${jobs.description} is null
+          or length(trim(${jobs.description})) < 120
+          or ${jobs.description} ~ '^\s*Posted on'
+        )`,
+    )
+    .returning({ id: jobs.id });
+
+  if (removed.length > 0) {
+    console.log(`[jobs] removed ${removed.length} listing(s) with no real description`);
+  }
+
+  await db
+    .insert(importState)
+    .values({ key: DESCRIPTION_REPAIR_KEY, value: new Date().toISOString() })
+    .onConflictDoNothing();
+}
+
 async function purgeLegacyRows(): Promise<void> {
   const demo = await db
     .delete(jobs)
@@ -114,6 +157,7 @@ async function purgeLegacyRows(): Promise<void> {
   }
 
   await refileLegacyCategories();
+  await purgeThinListings();
 }
 
 export async function ensureCleanBoard(): Promise<void> {
