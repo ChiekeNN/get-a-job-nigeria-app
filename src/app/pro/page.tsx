@@ -52,7 +52,7 @@ export default function ProPage() {
             Naira, starting at ₦8,000/month. Built for the reality of the Nigerian job market.
           </p>
           <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11.5px] text-white/65">
-            {["Cancel anytime", "Human recruiter support", "No card needed to start", "37 states covered"].map(
+            {["Cancel anytime", "Human recruiter support", "No card needed to start", "36 states + FCT"].map(
               (item) => (
                 <span key={item} className="inline-flex items-center gap-1.5">
                   <Check className="size-3.5 text-brand-400" aria-hidden="true" />

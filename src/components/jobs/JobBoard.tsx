@@ -139,7 +139,7 @@ export function JobBoard({ initialJobs, initialFilters }: Props) {
         <div>
           <p className="eyebrow">
             <span className="size-1.5 rounded-full bg-brand-500" aria-hidden="true" />
-            Live openings · updated hourly
+            Live openings · refreshed through the day
           </p>
           <h1 className="mt-3 font-display text-[26px] font-extrabold leading-tight tracking-tight text-ink-900 sm:text-4xl">
             Job discovery, built for Nigeria

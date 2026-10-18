@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: `${BRAND.name} — Stop applying without results`,
     description:
-      "1,800+ verified Nigerian job openings, real Naira salaries and referrals that get employers calling you.",
+      "Verified Nigerian job openings, real Naira salaries and referrals that get employers calling you.",
     type: "website",
   },
   // Lets iOS launch the site from the home screen without Safari chrome.
