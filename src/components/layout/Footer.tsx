@@ -148,7 +148,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {new Date().getFullYear()} {BRAND.tradingName}. Owned by {BRAND.legalName} ·{" "}
+            © {new Date().getFullYear()} {BRAND.tradingName} · Owned by {BRAND.legalName} ·{" "}
             {BRAND.legalRegistration}
           </p>
           <div className="flex flex-wrap items-center gap-4">
