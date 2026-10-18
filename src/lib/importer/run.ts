@@ -53,6 +53,11 @@ export interface ImportCandidate {
   postedText: string;
   /** Location printed beside the role inside an aggregate advert. */
   locationHint?: string;
+  /**
+   * Company named by the aggregate advert that contains this role. Child pages
+   * often say only "Marine Manager" with no employer, so it is inherited.
+   */
+  companyHint?: string;
 }
 
 export interface ImportPreview {
@@ -574,6 +579,10 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
             summary: "",
             postedText: extracted.postedText || candidate.postedText,
             locationHint: child.locationText,
+            companyHint:
+              extracted.company !== "Confidential Employer"
+                ? extracted.company
+                : companyFromRecruitmentTitle(candidate.title) || undefined,
           });
         }
 
@@ -604,8 +613,15 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
         ? extracted.requirements.map((item) => scrubText(item)).filter(Boolean)
         : [];
       const title = scrubText(config.fields.title ? extracted.title : candidate.title);
+      // A child listing rarely names its employer; inherit it from the advert
+      // that linked to it rather than publishing "Confidential Employer" for
+      // every role in a multi-position campaign.
+      const resolvedCompany =
+        extracted.company && extracted.company !== "Confidential Employer"
+          ? extracted.company
+          : candidate.companyHint ?? "Confidential Employer";
       const company = scrubText(
-        config.fields.company ? extracted.company : "Confidential Employer",
+        config.fields.company ? resolvedCompany : "Confidential Employer",
       );
       const jobType = detectJobType(`${title} ${description}`);
 
