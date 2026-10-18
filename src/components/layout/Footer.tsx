@@ -12,8 +12,9 @@ import {
 import Link from "next/link";
 
 import { CONTACT, mailto } from "@/data/contact";
+import { BRAND } from "@/data/site";
 
-const WHATSAPP = "https://wa.me/2348030004421?text=Hello%20NaijaHire%2C%20I%20need%20help%20with%20my%20job%20search";
+const WHATSAPP = "https://wa.me/2348030004421?text=Hello%20GetAJob%2C%20I%20need%20help%20with%20my%20job%20search";
 
 export function Footer() {
   return (
@@ -22,7 +23,8 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <p className="font-display text-2xl font-extrabold tracking-tight">
-              Naija<span className="text-brand-400">Hire</span>
+              {BRAND.wordmarkLead}
+              <span className="text-brand-400">{BRAND.wordmarkAccent}</span>
             </p>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/65">
               The placement-first job network for Nigerian talent. Verified employers, transparent
@@ -113,7 +115,7 @@ export function Footer() {
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm text-white/70">
               {[
-                ["About NaijaHire", "/#how-it-works"],
+                [`About ${BRAND.name}`, "/#how-it-works"],
                 ["Success stories", "/#stories"],
                 ["Privacy policy", "/legal#privacy"],
                 ["Terms of use", "/legal#terms"],
@@ -134,7 +136,7 @@ export function Footer() {
                   href="https://wa.me/2348030004421"
                   target="_blank"
                   rel="noreferrer noopener"
-                  aria-label="NaijaHire social profile"
+                  aria-label={`${BRAND.name} social profile`}
                   className="grid size-8 place-items-center rounded-lg bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white"
                 >
                   <Icon className="size-4" aria-hidden="true" />
@@ -145,7 +147,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} NaijaHire Technologies Ltd. RC 1782945. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {BRAND.legalName}. {BRAND.legalRegistration}. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-4">
             <span className="inline-flex items-center gap-1.5 text-white/60">
               <ShieldCheck className="size-3.5 text-brand-400" aria-hidden="true" />

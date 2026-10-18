@@ -6,7 +6,7 @@ import { CONTACT } from "@/data/contact";
 export const metadata: Metadata = {
   title: "Legal, privacy and candidate policies",
   description:
-    "NaijaHire privacy policy, terms of use and CV data policy for candidates and employers in Nigeria.",
+    "GetAJob privacy policy, terms of use and CV data policy for candidates and employers in Nigeria.",
 };
 
 export default function LegalPage() {
@@ -20,7 +20,7 @@ export default function LegalPage() {
         Policies written in plain language
       </h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-500">
-        NaijaHire Technologies Ltd is registered in Nigeria (RC 1782945). These policies explain how
+        GetAJob Technologies Ltd is registered in Nigeria (RC 1782945). These policies explain how
         we handle candidate data, employer listings and payments in Naira. Last updated January 2026.
       </p>
 
@@ -53,7 +53,7 @@ export default function LegalPage() {
           <h2 className="mt-2 font-display text-lg font-bold text-ink-900">Terms of use</h2>
           <div className="mt-2 space-y-2 text-xs leading-relaxed text-ink-600">
             <p>
-              NaijaHire is a job discovery platform, not an employer or recruitment agency. Hiring
+              GetAJob is a job discovery platform, not an employer or recruitment agency. Hiring
               decisions and employment contracts are between you and the employer.
             </p>
             <p>
@@ -76,7 +76,7 @@ export default function LegalPage() {
           <h2 className="mt-2 font-display text-lg font-bold text-ink-900">CV & data policy</h2>
           <div className="mt-2 space-y-2 text-xs leading-relaxed text-ink-600">
             <p>
-              Uploaded CVs are stored securely, encrypted at rest, and reviewed only by NaijaHire
+              Uploaded CVs are stored securely, encrypted at rest, and reviewed only by GetAJob
               career advisers and the employers you apply to.
             </p>
             <p>

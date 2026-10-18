@@ -1,7 +1,7 @@
 # Importing listings from another board
 
 A scheduled importer pulls listings from the configured upstream feed, normalises
-them into NaijaHire's schema, and keeps them in sync. It is idempotent: running it twice
+them into GetAJob's schema, and keeps them in sync. It is idempotent: running it twice
 does not create duplicates.
 
 ## 1. Choose your parts
@@ -120,7 +120,7 @@ Imported listings are indistinguishable from native ones in the interface:
 - no source name, badge or attribution anywhere,
 - no outbound link — the job page never points at the upstream board,
 - the local apply form handles every application, so candidates stay on
-  NaijaHire end to end.
+  GetAJob end to end.
 
 Applications land in your own `applications` table. Nothing forwards them
 upstream automatically, so delivery to employers is yours to operate.

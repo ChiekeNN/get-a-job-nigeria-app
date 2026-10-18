@@ -1,4 +1,4 @@
-const USER_AGENT = "NaijaHireBot/1.0 (+job listing sync; contact: support@getajob.com.ng)";
+const USER_AGENT = "GetAJobBot/1.0 (+job listing sync; contact: support@getajob.com.ng)";
 
 export class FetchError extends Error {
   readonly status?: number;

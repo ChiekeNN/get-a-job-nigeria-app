@@ -160,7 +160,7 @@ export function ApplyForm({ job }: { job: Job }) {
       </button>
       <p className="mt-2 flex items-center justify-center gap-1 text-[10.5px] text-ink-400">
         <Lock className="size-3" aria-hidden="true" />
-        NaijaHire never charges candidates to apply.
+        GetAJob never charges candidates to apply.
       </p>
     </form>
   );

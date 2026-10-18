@@ -6,7 +6,7 @@ import { CONTACT, CONTACT_CHANNELS, mailto, type ContactAudience } from "@/data/
 export const metadata: Metadata = {
   title: "Contact us",
   description:
-    "Reach the right NaijaHire team — support, job alerts, Job Seeker Pro, CV writing, billing, orders and escalations.",
+    "Reach the right GetAJob team — support, job alerts, Job Seeker Pro, CV writing, billing, orders and escalations.",
 };
 
 const audiences: ContactAudience[] = ["Everyone", "Job seekers", "Employers"];
@@ -27,7 +27,7 @@ export default function ContactPage() {
             We reply within one working day
           </p>
           <h1 className="mt-3 font-display text-3xl font-extrabold tracking-tight text-ink-900 sm:text-4xl">
-            Contact NaijaHire
+            Contact GetAJob
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-600">
             Email the desk that handles your question and you will skip the queue. Every address is
@@ -40,7 +40,7 @@ export default function ContactPage() {
               Email support
             </a>
             <a
-              href="https://wa.me/2348030004421?text=Hello%20NaijaHire%2C%20I%20need%20help"
+              href="https://wa.me/2348030004421?text=Hello%20GetAJob%2C%20I%20need%20help"
               target="_blank"
               rel="noreferrer noopener"
               className="btn border border-ink-200 bg-white text-ink-900 hover:bg-ink-50"
@@ -104,7 +104,7 @@ export default function ContactPage() {
             <div>
               <p className="text-sm font-semibold text-ink-900">Never pay for a job</p>
               <p className="mt-1 text-xs leading-relaxed text-ink-600">
-                NaijaHire never charges candidates to apply and never asks for payment to secure an
+                GetAJob never charges candidates to apply and never asks for payment to secure an
                 offer. Report any request for money to{" "}
                 <a
                   href={mailto(CONTACT.support, "Report a recruiter requesting payment")}

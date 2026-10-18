@@ -1,5 +1,29 @@
 import type { CategoryInfo, JobStats, Testimonial } from "@/types";
 
+/**
+ * Brand identity. Change a value here and the whole site follows — the wordmark,
+ * page titles, legal entity, share cards and the saved-jobs storage key.
+ *
+ * The wordmark is split so it can be styled in two tones: `wordmarkLead` + `wordmarkAccent`.
+ */
+export const BRAND = {
+  name: "GetAJob",
+  wordmarkLead: "GetA",
+  wordmarkAccent: "Job",
+  tagline: "Nigeria job network",
+  domain: "getajob.com.ng",
+  url: "https://getajob.com.ng",
+  legalName: "GetAJob Technologies Ltd",
+  legalRegistration: "RC 1782945",
+  /** Used in <title> defaults and social cards. */
+  metaTitle: "GetAJob — Jobs in Nigeria, verified and recruiter-backed",
+  metaDescription:
+    "Find verified jobs across all 36 Nigerian states and the FCT. Transparent Naira salaries, one-click applications, CV reviews and daily WhatsApp alerts.",
+  storageKey: "getajob:saved-jobs",
+  /** Bots and API clients identify themselves with this. */
+  botName: "GetAJobBot",
+} as const;
+
 export const NIGERIAN_STATES = [
   "Abia",
   "Adamawa",

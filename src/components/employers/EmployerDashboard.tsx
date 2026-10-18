@@ -580,7 +580,7 @@ export function EmployerDashboard({ initialJobs, totalJobs }: Props) {
       <section className="mt-8">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <h2 className="font-display text-xl font-bold text-ink-900">Recently posted on NaijaHire</h2>
+            <h2 className="font-display text-xl font-bold text-ink-900">Recently posted on GetAJob</h2>
             <p className="mt-0.5 text-xs text-ink-500">
               Benchmark your salary and requirements against live roles.
             </p>

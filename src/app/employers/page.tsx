@@ -92,7 +92,7 @@ export default async function EmployersPage() {
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
                 <a
-                  href="https://wa.me/2348030004421?text=I%20want%20to%20hire%20on%20NaijaHire"
+                  href="https://wa.me/2348030004421?text=I%20want%20to%20hire%20on%20GetAJob"
                   target="_blank"
                   rel="noreferrer noopener"
                   className="btn btn-outline !border-white/25 !bg-white/5 !text-white hover:!bg-white/10"
@@ -232,7 +232,7 @@ export default async function EmployersPage() {
             </p>
           </div>
           <a
-            href="https://wa.me/2348030004421?text=I%20need%20help%20hiring%20on%20NaijaHire"
+            href="https://wa.me/2348030004421?text=I%20need%20help%20hiring%20on%20GetAJob"
             target="_blank"
             rel="noreferrer noopener"
             className="btn shrink-0 bg-white text-brand-800 hover:bg-brand-50"

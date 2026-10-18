@@ -93,7 +93,7 @@ export function Hero() {
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-950/75 via-ink-950/10 to-transparent p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-200">
-                  This week on NaijaHire
+                  This week on GetAJob
                 </p>
                 <p className="mt-1 text-sm font-semibold text-white">
                   412 candidates invited to interview
@@ -143,7 +143,7 @@ export function Hero() {
 
       <div className="wrap relative pb-6">
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-xl border border-white/70 bg-white/60 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-400 backdrop-blur">
-          <span className="hidden sm:inline">Hiring on NaijaHire:</span>
+          <span className="hidden sm:inline">Hiring on GetAJob:</span>
           {["Paystack", "Access Bank", "MTN", "Shell", "Dangote", "Interswitch", "GTBank"].map(
             (company) => (
               <span key={company} className="text-ink-500/80">
