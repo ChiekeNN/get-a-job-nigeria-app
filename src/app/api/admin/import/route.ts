@@ -4,7 +4,9 @@ import { runImport } from "@/lib/importer/run";
 /**
  * Import endpoint.
  *
- * Called by the Vercel cron in vercel.json, or manually:
+ * Triggered eight times a day by the crons in vercel.json. Each run sweeps a
+ * slice of the listing pages and stores a cursor, so the eight runs together
+ * cover a full backfill without any single invocation running long. Manual use:
  *   curl -X POST "https://<your-domain>/api/admin/import?limit=5&dryRun=1" \
  *        -H "x-import-secret: $IMPORT_SECRET"
  *

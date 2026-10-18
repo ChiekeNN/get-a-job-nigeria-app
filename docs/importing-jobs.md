@@ -182,39 +182,86 @@ daily run. Set `CRON_SECRET` in the project environment and Vercel
 signs the cron request automatically; `IMPORT_SECRET` covers manual and external
 callers (GitHub Actions, cron-job.org, your laptop).
 
-## 4b. Running at 5,000 jobs a day
+## 4b. Running at 5,000 jobs a day on Vercel
 
-The ceiling is `maxJobsPerRun: 5000`, but three things have to line up for a run
-to actually finish that many:
+`maxJobsPerRun` is 5000, but a single invocation should never try to do all of it.
+The work is split instead:
 
-- **Pages.** 5000 jobs is ~100 pages at 50 per page, so `maxPagesPerSource` is
-  110. The last-week window holds roughly 4,000 listings, so in practice a full
-  run takes everything available and stops.
-- **Writes are batched.** 5000 individual `INSERT`s would never finish inside a
-  function timeout, so rows are collected and written 250 at a time — 20
-  statements instead of 5000.
-- **The run is time-budgeted.** `timeBudgetMs` (240s) stops the run before
-  Vercel terminates the function at 300s. Because listings already stored are
-  skipped, the next run simply resumes. A truncated run says so in its response
-  (`"truncated": true`).
+**13 pages per run, eight runs a day.** At ~50 listings per page that is ~650 per
+run and ~5,200 a day — the 5000 target cleared, with every run staying well
+inside the function limit.
 
-### Plan limits to be aware of
+The eight triggers live in `vercel.json`:
 
-| Plan | Function limit | Crons |
+```json
+{ "path": "/api/admin/import", "schedule": "5 0 * * *" },
+{ "path": "/api/admin/import", "schedule": "5 3 * * *" },
+… every three hours …
+```
+
+### Why eight separate crons and not one hourly cron
+
+Vercel **Hobby** allows 100 cron jobs per project, but each one may run **only
+once per day**. A single `0 * * * *` entry fails deployment outright:
+
+```
+Hobby accounts are limited to daily Cron Jobs.
+```
+
+Eight separate daily entries are all legal on Hobby, and give the same practical
+effect as an every-three-hours schedule. On Pro the identical config works too,
+so nothing needs changing when the plan is upgraded.
+
+### The cursor is what makes it work
+
+A run cannot start from page 1 every time — it would re-read the same listings
+forever and never reach page 40. So the sweep position is stored in the
+`import_state` table:
+
+1. Every run reads **page 1 first**, so brand-new listings are picked up promptly.
+2. It then sweeps **13 pages continuing from the stored cursor**.
+3. The cursor advances. After the last page (or an empty page) it wraps back to 1.
+
+Response includes `cursors: { "Last week": { "from": 14, "to": 27 } }` so you can
+see the walk advancing between runs.
+
+### Safeties
+
+- **Batched writes** — 250 rows per `INSERT`, not one per job.
+- **Time budget** — `timeBudgetMs` (240s) stops the run cleanly before the 300s
+  function limit. A cut-short run reports `"truncated": true`, and the next run
+  resumes from the cursor.
+- **Page-collection deadline** — 60% of the budget, so a slow crawl cannot
+  consume the whole run and leave nothing written.
+
+### Plan limits
+
+| | Hobby | Pro |
 | --- | --- | --- |
-| Hobby | 60s | once per day |
-| Pro | 300s | unlimited |
+| Function max duration | 300s | 300s default (up to 800s) |
+| Crons per project | 100 | 100 |
+| Cron frequency | **once per day each** | any |
+| Cost | free | $20/mo per member |
 
-On **Hobby**, `maxDuration = 300` is not honoured — the function is cut at 60s.
-A 5000-job run will not finish in one invocation there. Either run it manually a
-few times (each resumes), lower `maxPagesPerSource`, or move to Pro. On **Pro**
-the full run fits comfortably: ~80s of paging plus ~20 batched writes.
+The eight-daily-crons design deliberately fits inside Hobby's once-per-day rule,
+so **5,000 a day does not require Pro**. Pro only helps if you want a single
+hourly job instead of eight daily ones.
 
-### Watching a big run
+### Custom domain
 
-The response reports `counts.inserted`, `counts.failed` and `counts.expired`.
-`preview[]` is capped at 50 entries on purpose — a 5000-row preview would be a
-multi-megabyte response.
+Pointing `getajob.com.ng` at Vercel from Namecheap changes **nothing** about the
+limits above — the plan is attached to the Vercel account, not the domain, and
+custom domains are free on Hobby. Add it under Project → Settings → Domains,
+then set these records at Namecheap:
+
+| Type | Host | Value |
+| --- | --- | --- |
+| A | `@` | `76.76.21.21` |
+| CNAME | `www` | `cname.vercel-dns.com` |
+
+Once it resolves, `metadataBase` (already `https://getajob.com.ng`) makes every
+canonical and social URL correct without a code change. Rename the Vercel project
+if you want the `*.vercel.app` URL to match the brand.
 
 ## 5. How sync behaves
 

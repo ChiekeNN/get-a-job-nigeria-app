@@ -78,6 +78,17 @@ export const subscribers = pgTable("subscribers", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * Small key/value store for importer bookkeeping — currently the page cursor
+ * that lets a run resume where the last one stopped, so a large backfill can be
+ * spread across several short invocations instead of one long one.
+ */
+export const importState = pgTable("import_state", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type JobRow = typeof jobs.$inferSelect;
 export type NewJobRow = typeof jobs.$inferInsert;
 export type ApplicationRow = typeof applications.$inferSelect;
