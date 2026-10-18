@@ -145,7 +145,7 @@ export function JobBoard({ initialJobs, initialFilters }: Props) {
             Job discovery, built for Nigeria
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-500 sm:text-[15px]">
-            {initialJobs.length} verified openings with disclosed Naira salaries. Filter by state,
+            {initialJobs.length} verified openings across Nigeria. Filter by state,
             industry and pay — then apply in one click.
           </p>
         </div>

@@ -53,7 +53,7 @@ export default async function StatesPage() {
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-600 sm:text-[15px]">
           From Lagos tech hubs to Kaduna agribusiness and Rivers oil & gas — choose your state to see
-          verified openings with disclosed Naira salaries.
+          verified openings across Nigeria.
         </p>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <Link href="/jobs" className="btn btn-primary">
