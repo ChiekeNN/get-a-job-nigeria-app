@@ -7,8 +7,12 @@ import { useState } from "react";
 import { JobCard } from "@/components/jobs/JobCard";
 import { QuickApplyModal } from "@/components/jobs/QuickApplyModal";
 import { useToast } from "@/components/providers/Toaster";
+import { pickDiverseJobs } from "@/lib/job-selection";
 import { useSavedJobs } from "@/lib/useSavedJobs";
 import type { Job } from "@/types";
+
+/** How many listings the homepage section shows. */
+const FEATURED_JOB_COUNT = 12;
 
 export function FeaturedJobs({ jobs }: { jobs: Job[] }) {
   const { toast } = useToast();
@@ -16,7 +20,9 @@ export function FeaturedJobs({ jobs }: { jobs: Job[] }) {
   const [appliedIds, setAppliedIds] = useState<number[]>([]);
   const { saved, isSaved, toggle } = useSavedJobs();
 
-  const visible = jobs.slice(0, 4);
+  // A dozen listings, spread across categories. Imported boards cluster heavily
+  // in one category, so the head of the list is not representative.
+  const visible = pickDiverseJobs(jobs, FEATURED_JOB_COUNT);
 
   return (
     <section className="wrap mt-16">
@@ -40,7 +46,7 @@ export function FeaturedJobs({ jobs }: { jobs: Job[] }) {
         </Link>
       </div>
 
-      <div className="mt-6 grid gap-3 lg:grid-cols-2">
+      <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {visible.map((job) => (
           <JobCard
             key={job.slug}
