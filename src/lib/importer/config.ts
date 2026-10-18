@@ -165,5 +165,5 @@ export const SOURCE_FEED = {
    * Brand strings scrubbed out of imported titles, so the source's name never
    * appears in a heading, page title, meta description or search result.
    */
-  stripFromTitles: ["HotNigerianJobs", "Hot Nigerian Jobs"],
+  stripFromTitles: ["HotNigerianJobs", "Hot Nigerian Jobs", "HNJ Exclusive", "HNJ"],
 };

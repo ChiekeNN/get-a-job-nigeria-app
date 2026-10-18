@@ -299,6 +299,10 @@ export function scrubText(value: string): string {
     .replace(/\s{2,}/g, " ")
     .replace(/\s+([,.;:])/g, "$1")
     .replace(/^[\s,;:.\-\u2013\u2014]+/, "")
+    // Removing a trailing brand leaves the joining dash behind:
+    // "… in Nigeria - HNJ Exclusive" becomes "… in Nigeria -". Only separators
+    // are trimmed here — a trailing colon or full stop is real prose.
+    .replace(/[\s|\-\u2013\u2014]+$/, "")
     .trim();
 }
 
