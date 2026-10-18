@@ -44,6 +44,9 @@ import {
   tintFor,
 } from "@/lib/importer/normalize";
 
+/** Below this, a listing is a headline with no job copy behind it. */
+const MIN_DESCRIPTION_LENGTH = 80;
+
 export interface ImportCandidate {
   sourceId: string;
   url: string;
@@ -91,6 +94,8 @@ export interface ImportResult {
     failed: number;
     /** Aggregate adverts that were split into their individual roles. */
     expanded: number;
+    /** Listings dropped because the source page carried no real description. */
+    skipped: number;
   };
   blocked?: string;
   /** True when the run hit its time budget; the next run continues from here. */
@@ -451,6 +456,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       expired: 0,
       failed: 0,
       expanded: 0,
+      skipped: 0,
     },
     errors,
     preview: [],
@@ -623,6 +629,15 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       const company = scrubText(
         config.fields.company ? resolvedCompany : "Confidential Employer",
       );
+      // Some adverts are a headline and nothing else: no body, no roles, no
+      // salary. Publishing them fills the board with cards that say nothing,
+      // cannot be classified, and give a job seeker no reason to click. There is
+      // nothing to repair later either, because the copy was never published.
+      if (description.trim().length < MIN_DESCRIPTION_LENGTH) {
+        result.counts.skipped += 1;
+        continue;
+      }
+
       const jobType = detectJobType(`${title} ${description}`);
 
       // A full 5000-row preview would be a multi-megabyte response; keep it useful
