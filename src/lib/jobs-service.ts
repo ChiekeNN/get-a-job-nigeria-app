@@ -8,30 +8,48 @@ import { slugify } from "@/lib/format";
 const DAY = 86_400_000;
 
 /**
- * The demo listings that shipped with this project (real company names, invented
- * vacancies, every contact address on the reserved `.example` TLD) are gone.
- * They are never inserted again, and any database still holding them has them
- * deleted on the first request after deploy.
+ * One-time clean-up, run once per server process on the first request after a
+ * deploy.
  *
- * That TLD is the marker: it can never belong to a real employer, so the filter
- * cannot touch imported listings or anything posted through the site.
+ * It removes two kinds of leftover that must never reach a visitor:
+ *   1. the demo listings that shipped with this project — real company names,
+ *      invented vacancies, every contact address on the reserved `.example`
+ *      TLD, which can never belong to a real employer;
+ *   2. listings imported before the upstream board's initials joined the brand
+ *      list, so they are dropped and re-imported clean by the next sweep.
+ *
+ * Neither filter can touch a genuine listing, and both are idempotent.
  */
 let cleanupPromise: Promise<void> | null = null;
 
-async function purgeDemoJobs(): Promise<void> {
-  const removed = await db
+async function purgeLegacyRows(): Promise<void> {
+  const demo = await db
     .delete(jobs)
     .where(like(jobs.employerEmail, "%.example"))
     .returning({ id: jobs.id });
 
-  if (removed.length > 0) {
-    console.log(`[jobs] removed ${removed.length} demo listing(s)`);
+  // Listings imported before "HNJ" joined the brand list still carry the initials
+  // in their title or body. Delete them so the next sweep re-imports them clean;
+  // leaving them would break the rule that the upstream board is never named.
+  const branded = await db
+    .delete(jobs)
+    .where(
+      sql`${jobs.title} ~* '\\yHNJ\\y'
+        or ${jobs.title} ilike '%hotnigerianjobs%'
+        or ${jobs.title} ilike '%hot nigerian jobs%'
+        or ${jobs.description} ~* '\\yHNJ\\y'`,
+    )
+    .returning({ id: jobs.id });
+
+  const removed = demo.length + branded.length;
+  if (removed > 0) {
+    console.log(`[jobs] removed ${removed} legacy listing(s)`);
   }
 }
 
-export async function ensureDemoJobsRemoved(): Promise<void> {
+export async function ensureCleanBoard(): Promise<void> {
   if (!cleanupPromise) {
-    cleanupPromise = purgeDemoJobs().catch((error) => {
+    cleanupPromise = purgeLegacyRows().catch((error) => {
       // Let the next request try again rather than caching the failure forever.
       cleanupPromise = null;
       throw error;
@@ -80,7 +98,7 @@ function mapRow(row: typeof jobs.$inferSelect): Job {
 
 export async function listJobs(): Promise<Job[]> {
   try {
-    await ensureDemoJobsRemoved();
+    await ensureCleanBoard();
     const rows = await db
       .select()
       .from(jobs)
@@ -95,7 +113,7 @@ export async function listJobs(): Promise<Job[]> {
 
 export async function getJobBySlug(slug: string): Promise<Job | null> {
   try {
-    await ensureDemoJobsRemoved();
+    await ensureCleanBoard();
     const rows = await db.select().from(jobs).where(eq(jobs.slug, slug)).limit(1);
     if (rows.length === 0) return null;
     return mapRow(rows[0]);
@@ -113,7 +131,7 @@ function uniqueSlug(base: string, taken: Set<string>): string {
 }
 
 export async function createJob(input: NewJobInput): Promise<Job> {
-  await ensureDemoJobsRemoved();
+  await ensureCleanBoard();
   const existing = await db.select({ slug: jobs.slug }).from(jobs);
   const taken = new Set(existing.map((row) => row.slug));
   const slug = uniqueSlug(`${input.title}-${input.city}`, taken);
@@ -156,7 +174,7 @@ export async function createJob(input: NewJobInput): Promise<Job> {
 }
 
 export async function applyToJob(input: ApplicationInput): Promise<void> {
-  await ensureDemoJobsRemoved();
+  await ensureCleanBoard();
   await db.insert(applications).values({
     jobId: input.jobId,
     fullName: input.fullName,
