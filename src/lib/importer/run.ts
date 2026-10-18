@@ -31,7 +31,7 @@ import {
   detectExperienceLevel,
   detectJobType,
   detectState,
-  detectCategory,
+  classifyListing,
   isRemoteText,
   makeSlug,
   parseDeadline,
@@ -278,7 +278,7 @@ async function collectCandidates(
           category:
             config.sources[0]?.category && config.sources[0].category !== "auto"
               ? config.sources[0].category
-              : detectCategory(item.title),
+              : classifyListing(item.title, item.summary),
           summary: item.summary,
           postedText: "",
         });
@@ -514,7 +514,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
 
       const resolvedCategory =
         candidate.category === "auto"
-          ? detectCategory(`${candidate.title} ${extracted.description}`)
+          ? classifyListing(candidate.title, extracted.description)
           : candidate.category;
       const salary = config.fields.salary ? parseSalary(extracted.salaryText) : { min: 0, max: 0 };
       if (config.filters.minSalary > 0 && salary.max > 0 && salary.max < config.filters.minSalary) {

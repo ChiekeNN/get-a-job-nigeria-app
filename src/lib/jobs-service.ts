@@ -1,9 +1,10 @@
 import { desc, eq, inArray, like, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { applications, jobs, subscribers } from "@/db/schema";
+import { applications, importState, jobs, subscribers } from "@/db/schema";
 import type { ApplicationInput, Job, JobStats, NewJobInput, SubscriptionInput } from "@/types";
 import { slugify } from "@/lib/format";
+import { classifyListing } from "@/lib/importer/normalize";
 
 const DAY = 86_400_000;
 
@@ -23,37 +24,68 @@ const DAY = 86_400_000;
 let cleanupPromise: Promise<void> | null = null;
 
 /**
- * The board used to classify listings into nine broad industries. It now follows
- * the full industry list, so rows stored under the old names are re-filed once.
- * New imports are classified at fetch time and never hit this path.
+ * Category names from earlier taxonomies: the original nine sectors, and the
+ * nine coarse buckets they were briefly renamed to. Any row still carrying one
+ * of these is re-classified once into the current industry list.
  */
-const LEGACY_CATEGORY_MAP: Record<string, string> = {
-  Technology: "Programming / Software Jobs",
-  "Banking & Finance": "Banking Jobs in Nigeria",
-  "Oil & Gas": "Oil & Gas Jobs in Nigeria",
-  Healthcare: "Medical & Healthcare Jobs",
-  "Customer Service": "Customer Service Jobs",
-  Engineering: "Engineering Jobs in Nigeria",
-  Agriculture: "Agriculture Jobs in Nigeria",
-  Education: "Teaching Jobs in Nigeria",
-  "Sales & Marketing": "Marketing & Sales Jobs",
-};
+const COARSE_CATEGORY_NAMES = [
+  "Technology",
+  "Banking & Finance",
+  "Oil & Gas",
+  "Healthcare",
+  "Customer Service",
+  "Engineering",
+  "Agriculture",
+  "Education",
+  "Sales & Marketing",
+  "Programming / Software Jobs",
+  "Banking Jobs in Nigeria",
+  "Oil & Gas Jobs in Nigeria",
+  "Medical & Healthcare Jobs",
+  "Customer Service Jobs",
+  "Engineering Jobs in Nigeria",
+  "Agriculture Jobs in Nigeria",
+  "Teaching Jobs in Nigeria",
+  "Marketing & Sales Jobs",
+];
+
+/** Recorded in import_state so the re-classification runs exactly once. */
+const TAXONOMY_MIGRATION_KEY = "maintenance:taxonomy-v3";
 
 async function refileLegacyCategories(): Promise<void> {
-  const legacyNames = Object.keys(LEGACY_CATEGORY_MAP);
-  const present = await db
-    .select({ id: jobs.id })
-    .from(jobs)
-    .where(inArray(jobs.category, legacyNames))
+  const done = await db
+    .select({ value: importState.value })
+    .from(importState)
+    .where(eq(importState.key, TAXONOMY_MIGRATION_KEY))
     .limit(1);
 
-  if (present.length === 0) return;
+  if (done.length > 0) return;
 
-  for (const [from, to] of Object.entries(LEGACY_CATEGORY_MAP)) {
-    await db.update(jobs).set({ category: to }).where(eq(jobs.category, from));
+  const rows = await db
+    .select({ id: jobs.id, title: jobs.title, description: jobs.description })
+    .from(jobs)
+    .where(inArray(jobs.category, COARSE_CATEGORY_NAMES));
+
+  if (rows.length > 0) {
+    const byCategory = new Map<string, number[]>();
+    for (const row of rows) {
+      const category = classifyListing(row.title, row.description ?? "");
+      const bucket = byCategory.get(category);
+      if (bucket) bucket.push(row.id);
+      else byCategory.set(category, [row.id]);
+    }
+
+    for (const [category, ids] of byCategory) {
+      await db.update(jobs).set({ category }).where(inArray(jobs.id, ids));
+    }
+
+    console.log(`[jobs] re-filed ${rows.length} listing(s) into the current industry list`);
   }
 
-  console.log("[jobs] re-filed listings from the previous industry taxonomy");
+  await db
+    .insert(importState)
+    .values({ key: TAXONOMY_MIGRATION_KEY, value: new Date().toISOString() })
+    .onConflictDoNothing();
 }
 
 async function purgeLegacyRows(): Promise<void> {
