@@ -9,6 +9,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -60,9 +61,15 @@ export function Navbar() {
       <header className="sticky top-0 z-50 border-b border-ink-100/80 bg-white/90 backdrop-blur-md">
         <div className="wrap flex h-16 items-center justify-between gap-3 sm:h-[68px]">
           <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${BRAND.name} home`}>
-            <span className="grid size-10 place-items-center rounded-xl bg-brand-600 text-white shadow-[0_8px_18px_-10px_rgba(7,142,88,0.9)]">
-              <BriefcaseBusiness className="size-5" aria-hidden="true" />
-            </span>
+            <Image
+              src="/brand/mark.png"
+              alt=""
+              width={40}
+              height={40}
+              priority
+              className="size-10 shrink-0"
+              aria-hidden="true"
+            />
             <span className="leading-none">
               <span className="block font-display text-[19px] font-extrabold tracking-tight text-ink-900">
                 {BRAND.wordmarkLead}
