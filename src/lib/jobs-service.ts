@@ -47,10 +47,11 @@ const COARSE_CATEGORY_NAMES = [
   "Agriculture Jobs in Nigeria",
   "Teaching Jobs in Nigeria",
   "Marketing & Sales Jobs",
+  "Administration & Office",
 ];
 
 /** Recorded in import_state so the re-classification runs exactly once. */
-const TAXONOMY_MIGRATION_KEY = "maintenance:taxonomy-v3";
+const TAXONOMY_MIGRATION_KEY = "maintenance:taxonomy-v4";
 
 async function refileLegacyCategories(): Promise<void> {
   const done = await db

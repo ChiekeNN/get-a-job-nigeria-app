@@ -117,7 +117,7 @@ check("category: nurse", detectCategory("Registered Nurse at Lagoon Hospital"), 
 check("category: teacher", detectCategory("Mathematics Teacher at YGF Academy"), "Education & Teaching");
 check("category: hse", detectCategory("HSE Officer (Upstream Operations)"), "Oil, Gas & Energy");
 check("category: sparky", detectCategory("Electrical Technician"), "Engineering");
-check("category: unknown falls back", detectCategory("Something Unclassifiable"), "Administration & Office");
+check("category: unknown falls back", detectCategory("Something Unclassifiable"), "General Vacancies");
 check("category: sales", detectCategory("Sales Manager - Generator at P.Petrop"), "Sales & Marketing");
 check("category: oracle", detectCategory("Oracle Database Administrator"), "Technology & IT");
 check("category: php", detectCategory("PHP / MySQL Developer"), "Technology & IT");

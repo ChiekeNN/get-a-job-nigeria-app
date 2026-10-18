@@ -402,7 +402,13 @@ const CATEGORY_RULES: Array<{ category: string; words: string[] }> = [
   },
 ];
 
-export const FALLBACK_CATEGORY = "Administration & Office";
+/**
+ * Used only when nothing matched. It is deliberately *not* an industry: these are
+ * mostly aggregate "Company Recruitment" posts that describe no particular role,
+ * and filing them under a real industry would make that industry's filter a lie.
+ * The bucket shrinks as extraction improves.
+ */
+export const FALLBACK_CATEGORY = "General Vacancies";
 
 /**
  * A trailing `*` marks a stem: `pharmac*` matches pharmacy and pharmacist.
