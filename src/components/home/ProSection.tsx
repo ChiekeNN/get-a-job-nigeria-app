@@ -9,7 +9,7 @@ import { whatsappLink } from "@/data/contact";
 /**
  * The homepage face of Job Seeker Pro.
  *
- * Deliberately one decision: start the trial. The price, the free window and
+ * Deliberately one decision: start the plan. The price and
  * the three things people care about most sit above the button, and everything
  * else lives on /pro.
  */
@@ -32,7 +32,7 @@ export function ProSection() {
           <div className="min-w-0">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.12em] text-amber-200">
               <Sparkles className="size-3.5" aria-hidden="true" />
-              {PRO.name} · {PRO.trialDays}-day free trial
+              {PRO.name} · one-time payment
             </span>
 
             <h2 className="mt-4 font-display text-[26px] font-extrabold leading-[1.08] tracking-tight sm:text-[36px]">
@@ -69,7 +69,7 @@ export function ProSection() {
                 <span className="text-[11px] font-medium text-white/50">{PRO.cadence}</span>
               </p>
               <span className="shrink-0 rounded-full bg-amber-300 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-ink-950">
-                Free for {PRO.trialDays} days
+                No monthly fee
               </span>
             </div>
 
@@ -99,7 +99,7 @@ export function ProSection() {
             <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
               <span className="inline-flex items-center gap-1 text-[10.5px] text-white/50">
                 <BadgeCheck className="size-3.5 text-brand-400" aria-hidden="true" />
-                Cancel anytime
+                Pay once only
               </span>
               <a
                 href={whatsappLink(`Hi GetAJob, I'd like to know more about ${PRO.name}.`)}

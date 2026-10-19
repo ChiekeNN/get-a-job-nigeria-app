@@ -301,7 +301,7 @@ export default async function JobDetailPage({ params }: Props) {
               Job Seeker Pro includes a Naira-specific negotiation script for this exact role level.
             </p>
             <Link href="/pro" className="btn btn-amber btn-sm mt-3 w-full">
-              Upgrade · ₦8,000/mo
+              Upgrade · ₦15,300 once
             </Link>
           </div>
 

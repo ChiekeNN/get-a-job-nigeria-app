@@ -63,8 +63,8 @@ export default function LegalPage() {
               salary range and may not charge candidates any fee.
             </p>
             <p>
-              Pro subscriptions are optional career services billed in Naira. Monthly plans renew
-              unless cancelled before the next cycle.
+              Pro is an optional career service, billed in Naira as a one-time payment of ₦15,300.
+              There is no monthly charge and nothing renews.
             </p>
             <p>
               We may remove listings that violate these terms, including misleading salaries or

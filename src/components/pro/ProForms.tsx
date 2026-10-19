@@ -13,7 +13,7 @@ const MAX_CV_BYTES = 5 * 1024 * 1024;
 const CV_TYPES = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 /**
- * The Job Seeker Pro trial form.
+ * The Job Seeker Pro signup form.
  *
  * The details land in the database immediately. The CV itself cannot travel
  * through a browser link, so the last step hands the candidate a WhatsApp
@@ -67,10 +67,10 @@ export function ProSignupForm() {
         }),
       });
       const payload = (await response.json()) as ActionState;
-      if (!response.ok) throw new Error(payload.message || "Could not start your trial");
+      if (!response.ok) throw new Error(payload.message || "Could not save your signup");
 
       const message = [
-        `Hi GetAJob, I have started my ${PRO.trialDays}-day free ${PRO.name} trial.`,
+        `Hi GetAJob, I have signed up for ${PRO.name}.`,
         `Name: ${name}`,
         `Email: ${String(data.get("email") ?? "")}`,
         `State: ${String(data.get("state") ?? "")}`,
@@ -83,7 +83,7 @@ export function ProSignupForm() {
 
       setDone({ name, link: whatsappLink(message) });
       toast({
-        title: "Trial started 🎉",
+        title: "Signup received 🎉",
         description: "One last step — send your CV on WhatsApp so the rewrite can begin.",
         variant: "success",
       });
@@ -92,7 +92,7 @@ export function ProSignupForm() {
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "Network error. Please try again.";
       setError(message);
-      toast({ title: "Could not start your trial", description: message, variant: "error" });
+      toast({ title: "Could not save your signup", description: message, variant: "error" });
     } finally {
       setPending(false);
     }
@@ -108,8 +108,8 @@ export function ProSignupForm() {
           You&apos;re in, {done.name.split(" ")[0]}.
         </h3>
         <p className="mt-1.5 text-[13px] leading-relaxed text-ink-500">
-          Your first {PRO.trialDays} days are free. One step left: send your CV on WhatsApp so our team
-          can start the rewrite — the button below opens the chat with your details already written.
+          One step left: send your CV on WhatsApp so our team can start the rewrite — the button
+          below opens the chat with your details already written.
         </p>
         <a
           href={done.link}
@@ -135,14 +135,14 @@ export function ProSignupForm() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-display text-base font-extrabold leading-tight">
-            Start your {PRO.trialDays}-day free trial
+            Join {PRO.name}
           </p>
           <p className="mt-1 text-[11.5px] leading-relaxed text-ink-500">
-            No payment today. Our team confirms on WhatsApp within 24 hours.
+            {PRO.price} once. Our team sends the payment details on WhatsApp within 24 hours.
           </p>
         </div>
         <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-brand-700">
-          {PRO.price}/{PRO.cadence.replace("per ", "")}
+          {PRO.price} once
         </span>
       </div>
 
@@ -287,7 +287,7 @@ export function ProSignupForm() {
         {pending ? "Starting…" : PRO.cta}
       </button>
       <p className="mt-2 text-center text-[10.5px] leading-relaxed text-ink-400">
-        No card, no payment for {PRO.trialDays} days. Cancel any time.
+        One payment of {PRO.price}. No monthly charge.
       </p>
     </form>
   );

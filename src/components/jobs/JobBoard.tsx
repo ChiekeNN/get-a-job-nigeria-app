@@ -205,7 +205,7 @@ export function JobBoard({ initialJobs, initialFilters }: Props) {
               </p>
               <a href="/pro" className="btn btn-primary btn-sm mt-3 w-full">
                 <Sparkles className="size-3.5" aria-hidden="true" />
-                Start alerts · ₦8,000/mo
+                Go Pro · ₦15,300
               </a>
             </div>
           </div>

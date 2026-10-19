@@ -220,7 +220,7 @@ export function Navbar() {
                   {PRO.name}
                 </span>
                 <span className="rounded-full bg-amber-300 px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wide text-ink-950">
-                  {PRO.trialDays} days free
+                  {PRO.price} once
                 </span>
               </Link>
               {LINKS.map((link) => (

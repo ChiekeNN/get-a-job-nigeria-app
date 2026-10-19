@@ -121,7 +121,7 @@ export const CONTACT_CHANNELS: ContactChannel[] = [
     key: "billings",
     email: CONTACT.billings,
     label: "Billing & invoices",
-    purpose: "Invoices, payment plans, refunds and Pro subscription billing.",
+    purpose: "Invoices, refunds and Job Seeker Pro billing.",
     audience: "Everyone",
     subject: "Billing",
   },
