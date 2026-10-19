@@ -72,7 +72,7 @@ export default function ProPage() {
 
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
             <a href="#start" className="btn btn-amber w-full justify-center sm:w-auto">
-              Start my free trial
+              {PRO.cta}
               <ArrowRight className="size-4" aria-hidden="true" />
             </a>
             <a
@@ -236,7 +236,7 @@ export default function ProPage() {
               </ul>
 
               <a href="#start" className="btn btn-amber mt-5 w-full justify-center">
-                Start my free trial
+                {PRO.cta}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </a>
               <p className="mt-2 text-center text-[10.5px] text-white/40">
@@ -448,7 +448,7 @@ export default function ProPage() {
             </p>
           </div>
           <a href="#start" className="btn w-full shrink-0 justify-center bg-white text-brand-800 hover:bg-brand-50 sm:w-auto">
-            Start my free trial
+            {PRO.cta}
             <ArrowRight className="size-4" aria-hidden="true" />
           </a>
         </div>
