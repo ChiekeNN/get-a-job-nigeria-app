@@ -55,8 +55,19 @@ async function handle(request: Request) {
 
   // ?reset=1 starts the walk again from the newest page — useful after a
   // listings change or an interrupted run that the cursor outran.
+  // ?reset=1&only=1 does just that and returns, so it is instant to call.
   if (["1", "true", "yes"].includes((searchParams.get("reset") ?? "").toLowerCase())) {
-    await resetBackfillCursor();
+    try {
+      await resetBackfillCursor();
+    } catch (error) {
+      return Response.json(
+        { ok: false, message: "Could not reset the cursor.", error: String(error) },
+        { status: 500 },
+      );
+    }
+    if (["1", "true", "yes"].includes((searchParams.get("only") ?? "").toLowerCase())) {
+      return Response.json({ ok: true, reset: true });
+    }
   }
 
   const requested = Number.parseInt(searchParams.get("days") ?? "", 10);
