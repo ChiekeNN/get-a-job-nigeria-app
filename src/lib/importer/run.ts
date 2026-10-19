@@ -748,6 +748,25 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
 
   await flush();
   result.truncated = truncated;
+
+  // A backfill batch that ran out of time only wrote part of what its pages
+  // contained. Rewinding the cursor makes the next batch re-read exactly those
+  // pages; everything already written is skipped, and the rest lands then. The
+  // daily sweep is untouched — its pages are re-fetched on every run anyway.
+  if (truncated && options.backfillDays && !dryRun) {
+    const name = `Backfill (${options.backfillDays}d)`;
+    const from = collected.cursors[name]?.from;
+    if (from) {
+      try {
+        await saveCursor(`backfill:${config.backfill.url}`, from);
+        result.cursors = { ...result.cursors, [name]: { from, to: from } };
+      } catch (error) {
+        errors.push(
+          `Could not rewind the backfill cursor: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  }
   if (truncated) {
     errors.push(
       `Stopped after ${Math.round(config.timeBudgetMs / 1000)}s to stay inside the function limit. ` +

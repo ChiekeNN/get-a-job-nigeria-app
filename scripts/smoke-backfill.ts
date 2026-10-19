@@ -8,7 +8,7 @@
  *
  * Run: node --experimental-strip-types scripts/smoke-backfill.ts
  */
-import { advanceCursor, isWithinWindow, parseListingDate } from "../src/lib/importer/window.ts";
+import { advanceCursor, isWithinWindow, pageUrl, parseListingDate } from "../src/lib/importer/window.ts";
 
 let failures = 0;
 function check(name: string, condition: boolean, detail?: unknown) {
@@ -25,11 +25,14 @@ const now = Date.now();
 const daysAgo = (ms: number | null) => (ms === null ? Number.NaN : Math.round((now - ms) / DAY));
 
 console.log("\nDates printed on the listing cards");
+// Exactly how the archive prints a card, trailing domain and all.
 const cases: Array<[string, number]> = [
-  ["Posted on Fri 16th Oct, 2026", 3],
-  ["Posted on Tue 13th Oct, 2026", 6],
+  ["Posted on Fri 16th Oct, 2026 - hotnigerianjobs.com --- (0 comments)", 3],
+  ["Posted on Tue 13th Oct, 2026 - hotnigerianjobs.com --- (1 comments)", 6],
   ["Posted on Tue 6th Oct, 2026", 13],
   ["Posted on Wed 30th Sep, 2026", 19],
+  ["Oct 16, 2026", 3],
+  ["2026-10-16T09:30:00Z", 3],
 ];
 
 for (const [text, expected] of cases) {
@@ -43,10 +46,18 @@ for (const [text, expected] of cases) {
   check(`"${text}" is ${expected <= 15 ? "inside" : "outside"}`, inside === (expected <= 15));
 }
 
+console.log("\nPaging");
+const archive = { url: "https://www.hotnigerianjobs.com/alljobs/", pagination: "path-zero" };
+check("archive page 1 is /alljobs/0/", pageUrl(archive, 1) === "https://www.hotnigerianjobs.com/alljobs/0/", pageUrl(archive, 1));
+check("archive page 51 is /alljobs/50/", pageUrl(archive, 51) === "https://www.hotnigerianjobs.com/alljobs/50/", pageUrl(archive, 51));
+const weekly = { url: "https://www.hotnigerianjobs.com/jobs/lastweek/", pagination: "path-indexed" };
+check("weekly page 2 is /jobs/lastweek/1/", pageUrl(weekly, 2) === "https://www.hotnigerianjobs.com/jobs/lastweek/1/", pageUrl(weekly, 2));
+check("weekly page 1 is the bare url", pageUrl(weekly, 1) === weekly.url);
+
 console.log("\nCursor");
 check("carries on while inside the window", advanceCursor(1, 5, false, 120) === 6);
 check("restarts when the window is exhausted", advanceCursor(40, 3, true, 120) === 1);
-check("wraps at the cap", advanceCursor(118, 5, false, 120) === 1);
+check("wraps at the cap", advanceCursor(398, 5, false, 400) === 1);
 
 console.log("\nSafety");
 check(
