@@ -611,15 +611,6 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       // An aggregate advert ("… Job Recruitment (5 Positions)") is a container,
       // not a vacancy. Publish the roles it links to and never the container:
       // one unreadable card helps nobody and classifies into nothing.
-      // A backfill walks the whole archive, where every role inside an aggregate
-      // advert also appears on its own further down the list. Expanding them
-      // here would fetch each role twice and let one heavy page eat the whole
-      // time budget, so the backfill takes the standalone cards only.
-      if (extracted.children.length > 0 && options.backfillDays) {
-        result.counts.skipped += 1;
-        continue;
-      }
-
       if (extracted.children.length > 0) {
         const children = extracted.children.slice(0, config.maxChildrenPerPost);
         result.counts.expanded += 1;
