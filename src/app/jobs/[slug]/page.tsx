@@ -134,7 +134,7 @@ export default async function JobDetailPage({ params }: Props) {
               <p className="mt-2 flex items-center justify-center gap-1 text-[10.5px] text-brand-800/70">
                 <CalendarDays className="size-3" aria-hidden="true" />
                 {closingIn !== null && closingIn > 0
-                  ? `Closes in ${closingIn} days`
+                  ? `Closes in ${closingIn} day${closingIn === 1 ? "" : "s"}`
                   : "Open until filled"}
               </p>
             </div>
