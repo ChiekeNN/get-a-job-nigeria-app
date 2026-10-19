@@ -25,7 +25,9 @@ export function JobDescription({ text }: { text: string }) {
         if (block.kind === "field") {
           return (
             <p key={index} className="break-words">
-              <span className="font-semibold text-ink-800">{block.label}:</span>{" "}
+              {/* The space lives inside the label's text node so the rendered
+                  output is "Location: Lagos", not "Location:Lagos". */}
+              <span className="font-semibold text-ink-800">{`${block.label}: `}</span>
               {block.label.toLowerCase() === "job title" ? (
                 <strong className="font-bold text-ink-900">{block.value}</strong>
               ) : (
