@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { useToast } from "@/components/providers/Toaster";
+import { whatsappLink } from "@/data/contact";
 import { NIGERIAN_STATES } from "@/data/site";
 import { companyTint, formatNaira, formatDate, timeAgo } from "@/lib/format";
 import { CATEGORIES, JOB_TYPES, type ActionState, type Job } from "@/types";
@@ -566,7 +567,7 @@ export function EmployerDashboard({ initialJobs, totalJobs }: Props) {
               Our sourcing team can screen 50 candidates for your role in 48 hours.
             </p>
             <a
-              href="https://wa.me/2348030004421?text=I%20need%20a%20shortlist%20for%20my%20role"
+              href={whatsappLink("I need a shortlist for my role")}
               target="_blank"
               rel="noreferrer noopener"
               className="btn btn-primary btn-sm mt-3 w-full"
@@ -578,8 +579,8 @@ export function EmployerDashboard({ initialJobs, totalJobs }: Props) {
       </div>
 
       <section className="mt-8">
-        <div className="flex items-end justify-between gap-3">
-          <div>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="min-w-0">
             <h2 className="font-display text-xl font-bold text-ink-900">Recently posted on GetAJob</h2>
             <p className="mt-0.5 text-xs text-ink-500">
               Benchmark your salary and requirements against live roles.
@@ -589,7 +590,49 @@ export function EmployerDashboard({ initialJobs, totalJobs }: Props) {
             Browse all
           </Link>
         </div>
-        <div className="mt-3 overflow-x-auto rounded-xl border border-ink-100 bg-white">
+        <ul className="mt-3 space-y-2 md:hidden">
+          {[...myPostings, ...initialJobs].slice(0, 6).map((job) => (
+            <li key={job.slug} className="rounded-xl border border-ink-100 bg-white p-3">
+              <Link
+                href={`/jobs/${job.slug}`}
+                className="break-words text-sm font-semibold text-ink-900 hover:text-brand-700"
+              >
+                {job.title}
+              </Link>
+              <p className="mt-0.5 break-words text-[11px] text-ink-400">
+                {job.company} · {job.category}
+              </p>
+              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
+                <div className="min-w-0">
+                  <dt className="text-ink-400">Location</dt>
+                  <dd className="truncate text-ink-700">
+                    {job.city}, {job.state}
+                  </dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-ink-400">Salary</dt>
+                  <dd className="truncate font-semibold text-brand-700">
+                    {formatNaira(job.salaryMin)} – {formatNaira(job.salaryMax)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-ink-400">Applicants</dt>
+                  <dd className="text-ink-700">{job.applicants}</dd>
+                </div>
+                <div>
+                  <dt className="text-ink-400">Posted</dt>
+                  <dd className="text-ink-700">
+                    {timeAgo(job.postedAt)}
+                    <span className="block text-[10px] text-ink-400">
+                      closes {formatDate(job.deadline)}
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-3 hidden overflow-x-auto rounded-xl border border-ink-100 bg-white md:block">
           <table className="w-full min-w-[680px] text-left text-sm">
             <thead className="bg-ink-50/70 text-[10.5px] uppercase tracking-wide text-ink-500">
               <tr>

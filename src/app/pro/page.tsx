@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { ProSection } from "@/components/home/ProSection";
 import { Testimonials } from "@/components/home/Sections";
+import { whatsappLink } from "@/data/contact";
 
 export const metadata: Metadata = {
   title: "Job Seeker Pro — CV rewrites, referrals and WhatsApp job alerts",
@@ -90,7 +91,7 @@ export default function ProPage() {
               </p>
             </div>
             <a
-              href="https://wa.me/2348030004421?text=I%20have%20a%20question%20about%20Job%20Seeker%20Pro"
+              href={whatsappLink("I have a question about Job Seeker Pro")}
               target="_blank"
               rel="noreferrer noopener"
               className="btn btn-outline mt-4"

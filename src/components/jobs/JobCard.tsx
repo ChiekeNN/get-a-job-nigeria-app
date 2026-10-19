@@ -13,6 +13,10 @@ import {
 import Link from "next/link";
 
 import { companyTint, salaryLabel, timeAgo } from "@/lib/format";
+
+/** One timestamp per page load: reading the clock during render is impure. */
+const PAGE_LOADED_AT = Date.now();
+const NEW_WINDOW_MS = 36 * 3_600_000;
 import type { Job } from "@/types";
 
 interface JobCardProps {
@@ -32,7 +36,7 @@ export function JobCard({
   applied = false,
   showDescription = true,
 }: JobCardProps) {
-  const isNew = Date.now() - new Date(job.postedAt).getTime() < 36 * 3_600_000;
+  const isNew = PAGE_LOADED_AT - new Date(job.postedAt).getTime() < NEW_WINDOW_MS;
 
   return (
     <article className="card group relative flex flex-col p-4 transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-[0_20px_44px_-30px_rgba(5,20,15,0.45)] sm:p-5">
@@ -45,8 +49,8 @@ export function JobCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-500">
-            <span className="truncate font-semibold text-ink-700">{job.company}</span>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-500">
+            <span className="max-w-full truncate font-semibold text-ink-700">{job.company}</span>
             <span className="text-ink-300" aria-hidden="true">
               ·
             </span>

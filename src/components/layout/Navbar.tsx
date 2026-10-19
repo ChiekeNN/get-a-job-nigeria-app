@@ -12,9 +12,10 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { CvUploadModal } from "@/components/forms/CvUploadModal";
+import { PHONE } from "@/data/contact";
 import { BRAND } from "@/data/site";
 
 const LINKS = [
@@ -32,10 +33,6 @@ export function Navbar() {
   const [cvOpen, setCvOpen] = useState(false);
   const isEmployer = pathname.startsWith("/employers");
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
   function switchMode(mode: "seeker" | "employer") {
     setMenuOpen(false);
     router.push(mode === "employer" ? "/employers" : "/jobs");
@@ -50,7 +47,7 @@ export function Navbar() {
             Nigeria&apos;s placement-first job network — verified roles across the 36 states and FCT
           </p>
           <div className="flex items-center gap-5 text-white/75">
-            <span>WhatsApp: +234 803 000 4421</span>
+            <span>WhatsApp: {PHONE.display}</span>
             <Link href="/pro" className="flex items-center gap-1 font-semibold text-brand-300 hover:text-brand-200">
               <Sparkles className="size-3.5" aria-hidden="true" />
               Job Seeker Pro
@@ -188,6 +185,7 @@ export function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
+                  onClick={() => setMenuOpen(false)}
                   className="flex items-center justify-between border-b border-ink-50 px-1 py-3 text-sm font-medium text-ink-700"
                 >
                   {link.label}

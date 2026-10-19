@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/providers/Toaster";
 import { CATEGORIES, type ActionState } from "@/types";
 import { NIGERIAN_STATES } from "@/data/site";
+import { PHONE } from "@/data/contact";
 
 interface Props {
   open: boolean;
@@ -107,7 +108,7 @@ export function CvUploadModal({ open, onClose }: Props) {
               name="phone"
               required
               className="field"
-              placeholder="0803 000 4421"
+              placeholder={PHONE.local}
               inputMode="tel"
               autoComplete="tel"
             />

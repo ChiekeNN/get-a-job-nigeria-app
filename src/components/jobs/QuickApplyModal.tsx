@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2, Lock, MapPin, Sparkles, UploadCloud } from "luci
 import { useState, type FormEvent } from "react";
 
 import { useToast } from "@/components/providers/Toaster";
+import { PHONE } from "@/data/contact";
 import { Modal } from "@/components/ui/Modal";
 import { salaryLabel, salaryRange } from "@/lib/format";
 import type { ActionState, Job } from "@/types";
@@ -164,7 +165,7 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
                 required
                 inputMode="tel"
                 className="field"
-                placeholder="0803 000 4421"
+                placeholder={PHONE.local}
                 autoComplete="tel"
               />
             </div>

@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
+import { PHONE } from "@/data/contact";
 import { applications, jobs } from "@/db/schema";
 import { applyToJob } from "@/lib/jobs-service";
 import { cleanText, isEmail, isValidNigerianPhone, toNumber } from "@/lib/validation";
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
       return Response.json({ ok: false, message: "Enter a valid email address" }, { status: 400 });
     if (!isValidNigerianPhone(phone))
       return Response.json(
-        { ok: false, message: "Enter a valid Nigerian phone number (e.g. 0803 000 4421)" },
+        { ok: false, message: `Enter a valid Nigerian phone number (e.g. ${PHONE.local})` },
         { status: 400 },
       );
 

@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2, Lock, UploadCloud } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { useToast } from "@/components/providers/Toaster";
+import { PHONE } from "@/data/contact";
 import type { ActionState, Job } from "@/types";
 
 export function ApplyForm({ job }: { job: Job }) {
@@ -107,7 +108,7 @@ export function ApplyForm({ job }: { job: Job }) {
               required
               inputMode="tel"
               className="field"
-              placeholder="0803 000 4421"
+              placeholder={PHONE.local}
             />
           </div>
         </div>
