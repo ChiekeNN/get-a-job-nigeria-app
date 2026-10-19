@@ -18,6 +18,7 @@ import { CvUploadModal } from "@/components/forms/CvUploadModal";
 import { BRAND } from "@/data/site";
 
 const LINKS = [
+  { label: "Home", href: "/" },
   { label: "Find Jobs", href: "/jobs" },
   { label: "Browse Categories", href: "/#categories" },
   { label: "States", href: "/states" },
