@@ -99,6 +99,10 @@ export interface ImportResult {
     expanded: number;
     /** Listings dropped because the source page carried no real description. */
     skipped: number;
+    /** Candidates whose source id was already handled in this run. */
+    duplicate: number;
+    /** Aggregate adverts expanded into their individual roles. */
+    aggregates: number;
   };
   blocked?: string;
   /** True when the run hit its time budget; the next run continues from here. */
@@ -495,8 +499,10 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       inserted: 0,
       expired: 0,
       failed: 0,
-      expanded: 0,
-      skipped: 0,
+          expanded: 0,
+    skipped: 0,
+    duplicate: 0,
+    aggregates: 0,
     },
     errors,
     preview: [],
@@ -590,7 +596,10 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
     const sourceId = `${SOURCE_FEED.key}:${candidate.sourceId}`;
     // Skip anything already stored, or already handled in this run — a child
     // often appears on the listing pages in its own right as well.
-    if (handled.has(sourceId)) continue;
+    if (handled.has(sourceId)) {
+      result.counts.duplicate += 1;
+      continue;
+    }
     handled.add(sourceId);
 
     try {
@@ -612,6 +621,7 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
       // not a vacancy. Publish the roles it links to and never the container:
       // one unreadable card helps nobody and classifies into nothing.
       if (extracted.children.length > 0) {
+        result.counts.aggregates += 1;
         const children = extracted.children.slice(0, config.maxChildrenPerPost);
         result.counts.expanded += 1;
 
