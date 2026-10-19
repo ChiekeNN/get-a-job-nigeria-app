@@ -143,11 +143,6 @@ export const PRO_INCLUDED = [
 
 export const PRO_FAQS = [
   {
-    question: "Is the 7-day free trial really free?",
-    answer:
-      "Yes. No payment is required to start and you get full access to every Job Seeker Pro feature for 7 days. After the trial a subscription of ₦8,000/month applies, and you can stop before it begins.",
-  },
-  {
     question: "How quickly will my CV be rewritten?",
     answer:
       "Your rewrite is delivered within 2–3 working days after you send your CV to our team on WhatsApp.",
