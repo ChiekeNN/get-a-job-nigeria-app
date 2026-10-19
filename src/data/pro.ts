@@ -22,6 +22,8 @@ export const PRO = {
   trialDays: 7,
   /** Stored on the subscriber row, so the admin console can group signups. */
   plan: "Job Seeker Pro · ₦8,000/month",
+  /** The call to action, everywhere it appears. */
+  cta: "Start Now",
   headline: "Stop applying without results.",
   headlineAccent: "Let employers start calling you.",
   promise:

@@ -86,7 +86,7 @@ export function ProSection() {
               href="/pro#start"
               className="btn btn-amber mt-4 w-full justify-center"
             >
-              Start my free trial
+              {PRO.cta}
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
             <Link

@@ -284,7 +284,7 @@ export function ProSignupForm() {
         ) : (
           <ArrowRight className="size-4" aria-hidden="true" />
         )}
-        {pending ? "Starting…" : "Start my 7-day free trial"}
+        {pending ? "Starting…" : PRO.cta}
       </button>
       <p className="mt-2 text-center text-[10.5px] leading-relaxed text-ink-400">
         No card, no payment for {PRO.trialDays} days. Cancel any time.
