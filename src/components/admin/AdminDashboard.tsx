@@ -602,7 +602,7 @@ export function AdminDashboard() {
             <div
               className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400 transition-all duration-700"
               style={{
-                width: windowDone ? "100%" : `${Math.min(96, Math.max(4, (backfillPage / 200) * 100))}%`,
+                width: windowDone ? "100%" : `${Math.min(96, Math.max(4, (backfillPage / 400) * 100))}%`,
               }}
             />
           </div>

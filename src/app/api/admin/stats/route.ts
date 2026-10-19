@@ -171,9 +171,19 @@ export async function GET() {
         cvs: subscriberRows.filter((row) => row.cvFileName).length,
       },
       importer: {
-        cursors: cursorRows
+        // One row per cursor family ("sweep:", "backfill:"), newest first — an
+        // old key left behind by a changed URL should not outrank the live one.
+        cursors: [...cursorRows]
+          .sort(
+            (a, b) =>
+              new Date(b.updatedAt as unknown as Date).getTime() -
+              new Date(a.updatedAt as unknown as Date).getTime(),
+          )
           .map((row) => ({ key: row.key, page: Number(row.value), at: row.updatedAt }))
-          .sort((a, b) => a.key.localeCompare(b.key)),
+          .filter(
+            (row, index, all) =>
+              all.findIndex((other) => other.key.split(":")[0] === row.key.split(":")[0]) === index,
+          ),
         lastImportAt:
           jobRows
             .map((job) => job.importedAt)

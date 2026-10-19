@@ -8,10 +8,11 @@
 /**
  * How the board addresses page 2, 3, 4…
  *  - "path-indexed": /jobs/lastweek/ is page 1, /jobs/lastweek/1/ is page 2, /2/ is page 3
+ *  - "path-zero":    /alljobs/ is page 1, /alljobs/1/ is page 2 (the archive)
  *  - "query":        ?page=N
  *  - "none":         single page only
  */
-export type PaginationStyle = "path-indexed" | "query" | "none";
+export type PaginationStyle = "path-indexed" | "path-zero" | "query" | "none";
 
 export interface ImportSource {
   /** Human label used in logs. */
@@ -166,12 +167,21 @@ export const IMPORT_CONFIG: ImportConfig = {
   ],
 
   backfill: {
-    url: "https://www.hotnigerianjobs.com/alljobs/0/",
-    pagination: "path-indexed",
+    // The archive is newest-first and numbers its pages from zero:
+    // /alljobs/0/ is page 1, /alljobs/50/ is page 51.
+    url: "https://www.hotnigerianjobs.com/alljobs/",
+    pagination: "path-zero",
     windowDays: 15,
-    pagesPerRun: 16,
-    /** ~50 listings a page: 260 pages is 13,000 listings, well past the window. */
-    maxPages: 260,
+    /**
+     * Pages collected per invocation. The writing half of the run is the slow
+     * part (one job page each), so a modest slice keeps every batch inside the
+     * 300s function limit; if a batch runs out of time the cursor stays where
+     * it was and the next batch re-reads the same pages, skipping what already
+     * landed. Nothing is lost.
+     */
+    pagesPerRun: 10,
+    /** Hard stop, so a bad date parse cannot sweep the whole archive. */
+    maxPages: 400,
   },
 
   filters: {
