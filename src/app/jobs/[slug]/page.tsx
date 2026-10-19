@@ -16,6 +16,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ApplyForm } from "@/components/jobs/ApplyForm";
+import { FitCheck } from "@/components/jobs/FitCheck";
 import { CONTACT } from "@/data/contact";
 import {
   companyTint,
@@ -193,6 +194,8 @@ export default async function JobDetailPage({ params }: Props) {
               </div>
             ) : null}
           </section>
+
+          <FitCheck job={job} />
 
           <section className="card p-5">
             <h2 className="font-display text-lg font-bold text-ink-900">How to apply</h2>
