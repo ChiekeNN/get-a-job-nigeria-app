@@ -296,7 +296,11 @@ async function collectCandidates(
     const next = advanceCursor(start, pagesRead, hitEmpty, sweepCap);
     cursors[source.name] = { from: start, to: next };
 
-    if (!dryRun) {
+    // A backfill cursor is written only after its listings are stored (below),
+    // so an invocation that dies mid-write leaves the cursor where it was and
+    // the next one simply retries the same pages. The daily sweep keeps saving
+    // here: its pages are re-read on every run anyway.
+    if (!dryRun && !backfillDays) {
       try {
         await saveCursor(cursorKey, next);
       } catch (error) {
@@ -463,13 +467,18 @@ export interface RunOptions {
    * daily listing. Resumable, with its own cursor.
    */
   backfillDays?: number;
+  /** Override the run's time budget (milliseconds). Never above the config value. */
+  timeBudgetMs?: number;
 }
 
 export async function runImport(options: RunOptions = {}): Promise<ImportResult> {
-  const config = options.config ?? IMPORT_CONFIG;
+  let config = options.config ?? IMPORT_CONFIG;
   const dryRun = options.dryRun ?? false;
   const limit = Math.min(options.limit ?? config.maxJobsPerRun, config.maxJobsPerRun);
   const startedAt = new Date().toISOString();
+  if (options.timeBudgetMs && options.timeBudgetMs > 0) {
+    config = { ...config, timeBudgetMs: Math.min(config.timeBudgetMs, options.timeBudgetMs) };
+  }
   const errors: string[] = [];
 
   const result: ImportResult = {
@@ -750,25 +759,27 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
   result.truncated = truncated;
 
   // A backfill batch that only wrote part of what its pages contained (it ran
-  // out of time, or the caller capped the run) rewinds its cursor, so the next
-  // batch re-reads exactly those pages; everything already written is skipped
-  // and the rest lands then. Nothing is quietly dropped. The daily sweep is
-  // untouched — its pages are re-fetched on every run anyway.
-  const backfillIncomplete = truncated || selected.length < fresh.length;
-  if (backfillIncomplete && options.backfillDays && !dryRun) {
+  // out of time, the caller capped the run, or the function was killed before
+  // reaching here) leaves its cursor untouched, so the next batch re-reads the
+  // same pages: everything already stored is skipped and the rest lands then.
+  // Nothing is quietly dropped. The daily sweep never comes through here.
+  if (options.backfillDays && !dryRun) {
     const name = `Backfill (${options.backfillDays}d)`;
-    const from = collected.cursors[name]?.from;
-    if (from) {
+    const collectedForSource = collected.cursors[name];
+    const complete = !truncated && selected.length >= fresh.length;
+    const next = complete ? collectedForSource?.to : collectedForSource?.from;
+    if (next) {
       try {
-        await saveCursor(`backfill:${config.backfill.url}`, from);
-        result.cursors = { ...result.cursors, [name]: { from, to: from } };
+        await saveCursor(`backfill:${config.backfill.url}`, next);
+        result.cursors = { ...result.cursors, [name]: { from: collectedForSource?.from ?? next, to: next } };
       } catch (error) {
         errors.push(
-          `Could not rewind the backfill cursor: ${error instanceof Error ? error.message : String(error)}`,
+          `Could not save the backfill cursor: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
   }
+
   if (truncated) {
     errors.push(
       `Stopped after ${Math.round(config.timeBudgetMs / 1000)}s to stay inside the function limit. ` +
