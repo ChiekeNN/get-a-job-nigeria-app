@@ -16,6 +16,7 @@ import { useState } from "react";
 
 import { CvUploadModal } from "@/components/forms/CvUploadModal";
 import { PHONE } from "@/data/contact";
+import { PRO } from "@/data/pro";
 import { BRAND } from "@/data/site";
 
 const LINKS = [
@@ -94,7 +95,11 @@ export function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  // From lg the bar also carries the Pro pill and the mode switch;
+                  // the homepage section link is the one that can wait for xl.
+                  className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
+                    link.href === "/#categories" ? "hidden xl:inline-flex" : ""
+                  } ${
                     active
                       ? "bg-brand-50 text-brand-800"
                       : "text-ink-600 hover:bg-ink-50 hover:text-ink-900"
@@ -104,6 +109,18 @@ export function Navbar() {
                 </Link>
               );
             })}
+            <Link
+              href="/pro"
+              aria-current={pathname.startsWith("/pro") ? "page" : undefined}
+              className={`ml-1 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12.5px] font-bold transition ${
+                pathname.startsWith("/pro")
+                  ? "border-amber-300 bg-amber-100 text-amber-900"
+                  : "border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-300 hover:bg-amber-100"
+              }`}
+            >
+              <Sparkles className="size-3.5" aria-hidden="true" />
+              {PRO.name}
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -112,10 +129,14 @@ export function Navbar() {
               role="group"
               aria-label="Switch between job seeker and employer views"
             >
+              {/* The bar is capped at 1200px, so it is always full: the switch
+                  shows icons only, with the words kept for screen readers. */}
               <button
                 type="button"
                 onClick={() => switchMode("seeker")}
                 aria-pressed={!isEmployer}
+                aria-label="Switch to the job seeker view"
+                title="Job Seeker"
                 className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
                   !isEmployer
                     ? "bg-white text-brand-800 shadow-sm"
@@ -123,12 +144,14 @@ export function Navbar() {
                 }`}
               >
                 <UserRound className="size-3.5" aria-hidden="true" />
-                Job Seeker
+                <span className="sr-only">Job Seeker</span>
               </button>
               <button
                 type="button"
                 onClick={() => switchMode("employer")}
                 aria-pressed={isEmployer}
+                aria-label="Switch to the employer view"
+                title="Employer"
                 className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
                   isEmployer
                     ? "bg-white text-brand-800 shadow-sm"
@@ -136,7 +159,7 @@ export function Navbar() {
                 }`}
               >
                 <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
-                Employer
+                <span className="sr-only">Employer</span>
               </button>
             </div>
 
@@ -186,6 +209,20 @@ export function Navbar() {
               </button>
             </div>
             <nav className="flex flex-col" aria-label="Mobile navigation">
+              <Link
+                href="/pro"
+                onClick={() => setMenuOpen(false)}
+                aria-current={pathname.startsWith("/pro") ? "page" : undefined}
+                className="mb-1 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3 py-3"
+              >
+                <span className="flex items-center gap-2 text-sm font-bold text-amber-900">
+                  <Sparkles className="size-4 text-amber-600" aria-hidden="true" />
+                  {PRO.name}
+                </span>
+                <span className="rounded-full bg-amber-300 px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wide text-ink-950">
+                  {PRO.trialDays} days free
+                </span>
+              </Link>
               {LINKS.map((link) => (
                 <Link
                   key={link.label}
@@ -210,9 +247,9 @@ export function Navbar() {
                 <Upload className="size-4" aria-hidden="true" />
                 Upload CV
               </button>
-              <Link href="/pro" className="btn btn-outline w-full">
+              <Link href="/pro#start" className="btn btn-amber w-full" onClick={() => setMenuOpen(false)}>
                 <Sparkles className="size-4" aria-hidden="true" />
-                Explore Job Seeker Pro
+                {PRO.cta}
               </Link>
             </div>
           </div>
