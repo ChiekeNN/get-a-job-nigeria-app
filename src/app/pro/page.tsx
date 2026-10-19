@@ -1,87 +1,117 @@
-import { BadgeCheck, Check, MessageCircle, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Check,
+  CheckCircle2,
+  MessageCircle,
+  Quote,
+  ShieldCheck,
+  Sparkles,
+  X,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { ProSection } from "@/components/home/ProSection";
-import { Testimonials } from "@/components/home/Sections";
-import { whatsappLink } from "@/data/contact";
+import { AlertsForm, ProSignupForm } from "@/components/pro/ProForms";
+import { CONTACT, PHONE, mailto, whatsappLink } from "@/data/contact";
+import {
+  PRO,
+  PRO_FAQS,
+  PRO_FEATURES,
+  PRO_INCLUDED,
+  PRO_PAIN_POINTS,
+  PRO_STEPS,
+  PRO_STORIES,
+} from "@/data/pro";
 
 export const metadata: Metadata = {
-  title: "Job Seeker Pro — CV rewrites, referrals and WhatsApp job alerts",
+  title: "Job Seeker Pro — CV rewrite, WhatsApp job alerts and interview coaching",
   description:
-    "Career support priced in Naira: professional CV rewrite, daily WhatsApp job alerts and direct referrals from ₦8,000 per month.",
+    "Job Seeker Pro: a professional CV rewrite, verified WhatsApp job alerts, referrals and interview coaching for ₦8,000/month. Start with a 7-day free trial.",
 };
-
-const FAQS = [
-  {
-    question: "Do I pay before I get any value?",
-    answer:
-      "No card is collected upfront. A career adviser confirms your goals on WhatsApp first, then sends a Naira payment link only after you accept the plan.",
-  },
-  {
-    question: "Which states do you cover for alerts?",
-    answer:
-      "All 36 states and the FCT. You choose your state, industry and salary expectation, and we send matching verified roles every morning by 8am.",
-  },
-  {
-    question: "How does the referral track work?",
-    answer:
-      "We match you to hiring managers in our employer network who have active roles. You get a warm introduction plus interview prep tailored to that company.",
-  },
-  {
-    question: "Can I cancel anytime?",
-    answer:
-      "Yes. Monthly plans can be cancelled from WhatsApp before the next cycle. There are no lock-in contracts or exit fees.",
-  },
-];
 
 export default function ProPage() {
   return (
     <>
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-ink-950 text-white">
-        <div className="pointer-events-none absolute -left-20 top-0 size-72 rounded-full bg-brand-500/20 blur-3xl" aria-hidden="true" />
-        <div className="wrap py-10 sm:py-14">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-amber-200">
+        <div
+          className="pointer-events-none absolute -left-24 top-0 size-72 rounded-full bg-brand-500/20 blur-3xl"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute -right-20 bottom-0 size-64 rounded-full bg-amber-400/10 blur-3xl"
+          aria-hidden="true"
+        />
+
+        <div className="wrap relative py-9 sm:py-14">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.12em] text-amber-200">
             <Sparkles className="size-3.5" aria-hidden="true" />
-            Job Seeker Pro
+            Nigeria&apos;s #1 job search service
           </span>
-          <h1 className="mt-4 max-w-3xl font-display text-[28px] font-extrabold leading-[1.1] tracking-tight sm:text-[40px]">
-            The career support that makes Nigerian employers call you.
+
+          <h1 className="mt-4 max-w-3xl font-display text-[30px] font-extrabold leading-[1.06] tracking-tight sm:text-[46px]">
+            {PRO.headline}
+            <span className="mt-1 block text-brand-300">{PRO.headlineAccent}</span>
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/70 sm:text-[15px]">
-            CV rewrites by recruiters, daily WhatsApp alerts and direct referrals — all priced in
-            Naira, starting at ₦8,000/month. Built for the reality of the Nigerian job market.
+
+          <p className="mt-3 max-w-2xl text-[13.5px] leading-relaxed text-white/70 sm:text-[15px]">
+            {PRO.promise}
           </p>
-          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11.5px] text-white/65">
-            {["Cancel anytime", "Human recruiter support", "No card needed to start", "36 states + FCT"].map(
+
+          <p className="mt-4 inline-flex flex-wrap items-baseline gap-x-2 rounded-xl border border-white/12 bg-white/5 px-3 py-2 text-[12.5px] text-white/80">
+            <span className="font-display text-lg font-extrabold text-white">
+              {PRO.price}
+              <span className="ml-1 text-[11px] font-medium text-white/50">{PRO.cadence}</span>
+            </span>
+            <span className="text-white/45">·</span>
+            <span>
+              Start with a <strong className="font-semibold text-brand-300">{PRO.trialDays}-day free trial</strong>
+            </span>
+          </p>
+
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <a href="#start" className="btn btn-amber w-full justify-center sm:w-auto">
+              Start my free trial
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </a>
+            <a
+              href={whatsappLink(`Hi GetAJob, I'd like to know more about ${PRO.name}.`)}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="btn w-full justify-center border border-white/20 bg-white/5 text-white hover:bg-white/10 sm:w-auto"
+            >
+              <MessageCircle className="size-4" aria-hidden="true" />
+              Chat on WhatsApp
+            </a>
+          </div>
+
+          <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-white/65">
+            {["Cancel anytime", "No card to start", "36 states + FCT", "Priority WhatsApp support"].map(
               (item) => (
-                <span key={item} className="inline-flex items-center gap-1.5">
+                <li key={item} className="inline-flex items-center gap-1.5">
                   <Check className="size-3.5 text-brand-400" aria-hidden="true" />
                   {item}
-                </span>
+                </li>
               ),
             )}
-          </div>
+          </ul>
         </div>
       </section>
 
-      <div className="-mt-6">
-        <ProSection />
-      </div>
-
-      <section className="wrap mt-14">
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1.1fr]">
-          <div>
+      {/* ── The problem ──────────────────────────────────────────────── */}
+      <section className="wrap mt-10 sm:mt-14">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <div className="min-w-0">
             <p className="eyebrow">
               <BadgeCheck className="size-3.5 text-brand-600" aria-hidden="true" />
-              Questions, answered
+              Sound familiar?
             </p>
-            <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[30px]">
-              Straight answers before you pay
+            <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
+              Are you struggling to get interview calls?
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-500">
-              We keep the process transparent — the same standard we ask employers to follow on
-              GetAJob.
+            <p className="mt-2 text-[13.5px] leading-relaxed text-ink-500">
+              Applying more is not the answer. Being seen by the right person, with the right CV, is.
             </p>
             <div className="mt-4 flex items-start gap-2 rounded-xl border border-brand-100 bg-brand-50/70 p-3.5 text-[11.5px] leading-relaxed text-brand-900">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-600" aria-hidden="true" />
@@ -90,49 +120,337 @@ export default function ProPage() {
                 service, not a placement fee.
               </p>
             </div>
+          </div>
+
+          <ul className="grid grid-cols-1 gap-2.5">
+            {PRO_PAIN_POINTS.map((point) => (
+              <li
+                key={point}
+                className="flex items-start gap-2.5 rounded-xl border border-ink-100 bg-white p-3.5"
+              >
+                <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-rose-50 text-rose-600">
+                  <X className="size-3" aria-hidden="true" />
+                </span>
+                <p className="min-w-0 text-[12.5px] leading-relaxed text-ink-700">{point}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ── Everything included ──────────────────────────────────────── */}
+      <section className="wrap mt-12 sm:mt-16">
+        <div className="max-w-2xl">
+          <p className="eyebrow">
+            <Sparkles className="size-3.5 text-brand-600" aria-hidden="true" />
+            What you get
+          </p>
+          <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
+            Everything included in Job Seeker Pro
+          </h2>
+          <p className="mt-2 text-[13.5px] leading-relaxed text-ink-500">
+            One subscription, five things that actually move a Nigerian recruiter.
+          </p>
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {PRO_FEATURES.map((feature, index) => (
+            <article
+              key={feature.title}
+              className={`card min-w-0 p-4 sm:p-5 ${
+                index === 0 ? "border-brand-200 bg-brand-50/40" : ""
+              }`}
+            >
+              <span className="grid size-10 place-items-center rounded-xl bg-brand-600 text-white">
+                <feature.icon className="size-[18px]" aria-hidden="true" />
+              </span>
+              <h3 className="mt-3 font-display text-[15px] font-bold leading-snug text-ink-900">
+                {feature.title}
+              </h3>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-ink-500">{feature.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Pricing ──────────────────────────────────────────────────── */}
+      <section className="wrap mt-12 sm:mt-16">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+          <div className="min-w-0">
+            <p className="eyebrow">
+              <BadgeCheck className="size-3.5 text-brand-600" aria-hidden="true" />
+              Simple pricing
+            </p>
+            <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
+              One price. No hidden fees.
+            </h2>
+            <p className="mt-2 max-w-lg text-[13.5px] leading-relaxed text-ink-500">
+              Start free for {PRO.trialDays} days. After that it is {PRO.price} a month, paid by bank
+              transfer — and you can stop any time before the next cycle.
+            </p>
+            <p className="mt-3 text-[11.5px] text-ink-400">
+              Questions about a plan?{" "}
+              <a
+                href={mailto(CONTACT.jobSeekerPro, "Job Seeker Pro")}
+                className="font-semibold text-brand-700 hover:text-brand-900"
+              >
+                {CONTACT.jobSeekerPro}
+              </a>{" "}
+              · Billing:{" "}
+              <a
+                href={mailto(CONTACT.billings, "Billing")}
+                className="font-semibold text-brand-700 hover:text-brand-900"
+              >
+                {CONTACT.billings}
+              </a>
+            </p>
+          </div>
+
+          <div className="relative min-w-0 overflow-hidden rounded-[22px] border border-ink-950/10 bg-ink-950 p-5 text-white shadow-[0_30px_70px_-40px_rgba(5,20,15,0.9)] sm:p-6">
+            <div
+              className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-brand-500/25 blur-3xl"
+              aria-hidden="true"
+            />
+            <div className="relative">
+              <span className="rounded-full bg-amber-300 px-2.5 py-1 text-[9.5px] font-extrabold uppercase tracking-wide text-ink-950">
+                🎁 {PRO.trialDays}-day free trial
+              </span>
+              <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-white/55">
+                {PRO.name}
+              </p>
+              <p className="mt-1 font-display text-[40px] font-extrabold leading-none">
+                {PRO.price}
+                <span className="ml-1.5 text-[12px] font-medium text-white/50">{PRO.cadence}</span>
+              </p>
+
+              <ul className="mt-4 space-y-2">
+                {PRO_INCLUDED.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-[12.5px] leading-relaxed">
+                    <CheckCircle2
+                      className="mt-0.5 size-3.5 shrink-0 text-brand-400"
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 text-white/80">{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <a href="#start" className="btn btn-amber mt-5 w-full justify-center">
+                Start my free trial
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </a>
+              <p className="mt-2 text-center text-[10.5px] text-white/40">
+                Cancel anytime — no long-term contract.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ─────────────────────────────────────────────── */}
+      <section className="wrap mt-12 sm:mt-16">
+        <div className="max-w-2xl">
+          <p className="eyebrow">
+            <BadgeCheck className="size-3.5 text-brand-600" aria-hidden="true" />
+            How it works
+          </p>
+          <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
+            From sign-up to interview call in five steps
+          </h2>
+        </div>
+
+        <ol className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {PRO_STEPS.map((step, index) => (
+            <li key={step.title} className="card min-w-0 p-4">
+              <span className="grid size-8 place-items-center rounded-full bg-ink-950 font-display text-[13px] font-extrabold text-white">
+                {index + 1}
+              </span>
+              <h3 className="mt-3 font-display text-[14.5px] font-bold leading-snug text-ink-900">
+                {step.title}
+              </h3>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-ink-500">{step.description}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* ── Member stories ───────────────────────────────────────────── */}
+      <section className="wrap mt-12 sm:mt-16">
+        <div className="max-w-2xl">
+          <p className="eyebrow">
+            <Quote className="size-3.5 text-brand-600" aria-hidden="true" />
+            What members say
+          </p>
+          <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
+            Real people, real offers
+          </h2>
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+          {PRO_STORIES.map((story) => (
+            <figure key={story.name} className="card flex min-w-0 flex-col p-4 sm:p-5">
+              <div className="flex gap-0.5 text-amber-400" aria-hidden="true">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <span key={index} className="text-[13px] leading-none">
+                    ★
+                  </span>
+                ))}
+              </div>
+              <blockquote className="mt-2 flex-1 text-[12.5px] leading-relaxed text-ink-700">
+                “{story.quote}”
+              </blockquote>
+              <figcaption className="mt-3 flex items-center gap-2.5 border-t border-ink-50 pt-3">
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-50 text-[10.5px] font-bold text-brand-700">
+                  {story.initials}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-[12px] font-semibold text-ink-900">{story.name}</p>
+                  <p className="truncate text-[10.5px] text-ink-400">{story.location}</p>
+                </div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FAQ ──────────────────────────────────────────────────────── */}
+      <section className="wrap mt-12 sm:mt-16">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="min-w-0">
+            <p className="eyebrow">
+              <BadgeCheck className="size-3.5 text-brand-600" aria-hidden="true" />
+              Questions, answered
+            </p>
+            <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
+              Straight answers before you pay
+            </h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-ink-500">
+              Still unsure? Message the team on WhatsApp — the same people who will coach you.
+            </p>
             <a
-              href={whatsappLink("I have a question about Job Seeker Pro")}
+              href={whatsappLink(`I have a question about ${PRO.name}`)}
               target="_blank"
               rel="noreferrer noopener"
-              className="btn btn-outline mt-4"
+              className="btn btn-outline mt-4 w-full justify-center sm:w-auto"
             >
               <MessageCircle className="size-4" aria-hidden="true" />
               Ask on WhatsApp
             </a>
+            <p className="mt-3 text-[11.5px] text-ink-400">
+              Or call {PHONE.display}, Monday to Saturday.
+            </p>
           </div>
 
-          <div className="space-y-2.5">
-            {FAQS.map((faq) => (
-              <details
-                key={faq.question}
-                className="card group p-4 [&_summary::-webkit-details-marker]:hidden"
-              >
-                <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-semibold text-ink-900">
-                  {faq.question}
-                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-ink-50 text-ink-500 transition group-open:rotate-45">
+          <div className="min-w-0 space-y-2.5">
+            {PRO_FAQS.map((faq) => (
+              <details key={faq.question} className="card group p-4 [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer items-start justify-between gap-3 text-[13px] font-semibold text-ink-900">
+                  <span className="min-w-0">{faq.question}</span>
+                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-ink-50 text-ink-500 transition group-open:rotate-45">
                     +
                   </span>
                 </summary>
-                <p className="mt-2 text-xs leading-relaxed text-ink-500">{faq.answer}</p>
+                <p className="mt-2 text-[12px] leading-relaxed text-ink-500">{faq.answer}</p>
               </details>
             ))}
           </div>
         </div>
       </section>
 
-      <Testimonials />
+      {/* ── Start ────────────────────────────────────────────────────── */}
+      <section id="start" className="wrap mt-12 scroll-mt-24 sm:mt-16">
+        <div className="relative overflow-hidden rounded-[26px] bg-ink-950 p-5 text-white sm:p-8">
+          <div
+            className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-brand-500/20 blur-3xl"
+            aria-hidden="true"
+          />
+          <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-[1fr_0.95fr] lg:items-start lg:gap-10">
+            <div className="min-w-0">
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-brand-300">
+                Start here
+              </p>
+              <h2 className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-[32px]">
+                Start your {PRO.trialDays}-day free trial
+              </h2>
+              <p className="mt-2 max-w-md text-[13px] leading-relaxed text-white/65">
+                Fill the form and our team is in touch within 24 hours. Your first {PRO.trialDays} days
+                are completely free — {PRO.price} a month only after that.
+              </p>
 
-      <section className="wrap mt-14">
-        <div className="flex flex-col items-center justify-between gap-4 rounded-2xl bg-brand-600 px-5 py-6 text-white sm:flex-row sm:px-7">
-          <div>
-            <h2 className="font-display text-xl font-extrabold">Still job hunting without replies?</h2>
-            <p className="mt-1 text-sm text-white/85">
-              Upload your CV for a free review — no payment, no obligation.
+              <ul className="mt-4 space-y-2.5">
+                {[
+                  "No payment today. Nothing is collected automatically.",
+                  "Send your CV once the form is in — that starts the rewrite.",
+                  "Your details are never sold or shared with employers without your say-so.",
+                ].map((line) => (
+                  <li key={line} className="flex items-start gap-2 text-[12px] leading-relaxed">
+                    <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-brand-400" aria-hidden="true" />
+                    <span className="min-w-0 text-white/70">{line}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-5 rounded-xl border border-white/12 bg-white/5 p-3.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                  Prefer to talk first?
+                </p>
+                <a
+                  href={whatsappLink(`Hi GetAJob, I'd like to start ${PRO.name}.`)}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="mt-1.5 flex items-center gap-2 text-[13px] font-semibold text-brand-300 hover:text-brand-200"
+                >
+                  <MessageCircle className="size-4" aria-hidden="true" />
+                  {PHONE.display}
+                </a>
+              </div>
+            </div>
+
+            <div className="min-w-0">
+              <ProSignupForm />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Free alerts ──────────────────────────────────────────────── */}
+      <section className="wrap mt-10 sm:mt-12">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div className="min-w-0">
+            <h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900 sm:text-2xl">
+              Not ready for Pro? Start with the free digest.
+            </h2>
+            <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-ink-500">
+              Every morning we send verified openings that match your state and field. No cost, no
+              card, unsubscribe any time — and you can upgrade to Pro whenever you want the CV work
+              and the coaching.
+            </p>
+            <Link href="/jobs" className="btn btn-outline mt-4 w-full justify-center sm:w-auto">
+              Browse the job board
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="min-w-0">
+            <AlertsForm />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Closing ──────────────────────────────────────────────────── */}
+      <section className="wrap my-12 sm:my-16">
+        <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-brand-600 px-5 py-6 text-white sm:flex-row sm:items-center sm:px-7">
+          <div className="min-w-0">
+            <h2 className="font-display text-xl font-extrabold sm:text-2xl">
+              Your dream job is waiting. Don&apos;t keep it waiting.
+            </h2>
+            <p className="mt-1 text-[13px] text-white/85">
+              Join the members getting hired faster — start free, no payment required.
             </p>
           </div>
-          <Link href="/jobs" className="btn shrink-0 bg-white text-brand-800 hover:bg-brand-50">
-            Find your next role
-          </Link>
+          <a href="#start" className="btn w-full shrink-0 justify-center bg-white text-brand-800 hover:bg-brand-50 sm:w-auto">
+            Start my free trial
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </a>
         </div>
       </section>
     </>

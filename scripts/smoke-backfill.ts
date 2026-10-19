@@ -20,7 +20,8 @@ function check(name: string, condition: boolean, detail?: unknown) {
 }
 
 const DAY = 86_400_000;
-const now = Date.now();
+// A fixed anchor, so the assertions below never drift with the wall clock.
+const now = Date.parse("2026-10-19T00:00:00Z");
 /** Whole days between a printed date and now, rounded to the nearest day. */
 const daysAgo = (ms: number | null) => (ms === null ? Number.NaN : Math.round((now - ms) / DAY));
 
