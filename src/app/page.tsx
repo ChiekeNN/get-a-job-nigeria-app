@@ -18,8 +18,9 @@ export default async function HomePage() {
       <Hero />
       <StatsBanner stats={stats} />
       <FeaturedJobs jobs={jobs} />
-      <CategoryGrid counts={categoryCounts} />
+      {/* Featured service, directly under the listings it is meant to help with. */}
       <ProSection />
+      <CategoryGrid counts={categoryCounts} />
       <HowItWorks />
       <StateStrip jobs={jobs} />
       <Testimonials />

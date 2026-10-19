@@ -776,7 +776,11 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
   if (options.backfillDays && !dryRun) {
     const name = `Backfill (${options.backfillDays}d)`;
     const collectedForSource = collected.cursors[name];
-    const complete = !truncated && selected.length >= fresh.length;
+    // Only a run that finished its pages may move the cursor. Title filters and
+    // a caller's ?limit both drop candidates on purpose, so they must not hold
+    // the walk in place — that would re-read the same pages forever.
+    const cappedByCaller = typeof options.limit === "number";
+    const complete = !truncated && !cappedByCaller;
     const next = complete ? collectedForSource?.to : collectedForSource?.from;
     if (next) {
       try {
