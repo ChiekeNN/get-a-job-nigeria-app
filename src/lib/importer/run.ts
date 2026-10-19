@@ -161,7 +161,7 @@ export async function getCursor(key: string): Promise<number> {
   }
 }
 
-async function saveCursor(key: string, page: number): Promise<void> {
+export async function saveCursor(key: string, page: number): Promise<void> {
   await db
     .insert(importState)
     .values({ key, value: String(page) })
@@ -749,11 +749,13 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
   await flush();
   result.truncated = truncated;
 
-  // A backfill batch that ran out of time only wrote part of what its pages
-  // contained. Rewinding the cursor makes the next batch re-read exactly those
-  // pages; everything already written is skipped, and the rest lands then. The
-  // daily sweep is untouched — its pages are re-fetched on every run anyway.
-  if (truncated && options.backfillDays && !dryRun) {
+  // A backfill batch that only wrote part of what its pages contained (it ran
+  // out of time, or the caller capped the run) rewinds its cursor, so the next
+  // batch re-reads exactly those pages; everything already written is skipped
+  // and the rest lands then. Nothing is quietly dropped. The daily sweep is
+  // untouched — its pages are re-fetched on every run anyway.
+  const backfillIncomplete = truncated || selected.length < fresh.length;
+  if (backfillIncomplete && options.backfillDays && !dryRun) {
     const name = `Backfill (${options.backfillDays}d)`;
     const from = collected.cursors[name]?.from;
     if (from) {
