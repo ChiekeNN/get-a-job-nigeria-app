@@ -1,15 +1,18 @@
 import {
   ArrowUpRight,
+  Check,
   Mail,
   MapPin,
   MessageCircle,
   Phone,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { CONTACT, PHONE, SOCIAL, mailto, whatsappLink } from "@/data/contact";
+import { PRO } from "@/data/pro";
 import { BRAND } from "@/data/site";
 
 const WHATSAPP = whatsappLink("Hello GetAJob, I need help with my job search");
@@ -27,6 +30,44 @@ export function Footer() {
   return (
     <footer className="mt-20 bg-ink-950 text-white">
       <div className="wrap py-14">
+        {/* Job Seeker Pro gets its own row here: the footer is on every page,
+            and this is where a visitor who has read to the bottom decides. */}
+        <div className="mb-10 flex flex-col gap-4 overflow-hidden rounded-2xl border border-amber-300/25 bg-gradient-to-r from-amber-300/[0.09] via-amber-300/[0.04] to-transparent p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <p className="inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-amber-300">
+              <Sparkles className="size-3.5" aria-hidden="true" />
+              {PRO.name}
+            </p>
+            <p className="mt-1.5 font-display text-[17px] font-extrabold leading-snug text-white sm:text-xl">
+              {PRO.headline} <span className="text-brand-300">{PRO.headlineAccent}</span>
+            </p>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-white/60">
+              <span className="font-semibold text-white/85">
+                {PRO.price} {PRO.cadence}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Check className="size-3 text-brand-400" aria-hidden="true" />
+                First {PRO.trialDays} days free
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Check className="size-3 text-brand-400" aria-hidden="true" />
+                Cancel anytime
+              </span>
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <Link href="/pro#start" className="btn btn-amber w-full justify-center sm:w-auto">
+              {PRO.cta}
+            </Link>
+            <Link
+              href="/pro"
+              className="btn w-full justify-center border border-white/20 bg-white/5 text-white hover:bg-white/10 sm:w-auto"
+            >
+              See what is included
+            </Link>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" aria-label={`${BRAND.tradingName} home`} className="inline-flex">
@@ -88,13 +129,22 @@ export function Footer() {
               For job seekers
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm text-white/70">
+              <li>
+                <Link
+                  href="/pro"
+                  className="inline-flex items-center gap-1.5 font-semibold text-amber-300 transition hover:text-amber-200"
+                >
+                  <Sparkles className="size-3.5" aria-hidden="true" />
+                  {PRO.name}
+                </Link>
+              </li>
               {[
                 ["Home", "/"],
                 ["Find jobs", "/jobs"],
                 ["Browse categories", "/#categories"],
                 ["All states", "/states"],
-                ["Job Seeker Pro", "/pro"],
-                ["Upload your CV", "/#pro"],
+                // The CV attach lives in the Pro trial form.
+                ["Upload your CV", "/pro#start"],
               ].map(([label, href]) => (
                 <li key={label}>
                   <Link href={href} className="transition hover:text-white">
