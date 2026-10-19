@@ -23,17 +23,19 @@ export function Footer() {
       <div className="wrap py-14">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            {/* The supplied logo is green and black, so it sits on a light plate
-                rather than being recoloured for the dark footer. */}
-            <span className="inline-flex rounded-2xl bg-white px-4 py-3">
-              <Image
-                src="/brand/logo.png"
-                alt={`${BRAND.tradingName} — ${BRAND.domain}`}
-                width={220}
-                height={145}
-                className="h-auto w-[190px] sm:w-[210px]"
-              />
-            </span>
+            <Link href="/" aria-label={`${BRAND.tradingName} home`} className="inline-flex">
+              {/* The supplied logo is green and black, so it sits on a light plate
+                  rather than being recoloured for the dark footer. */}
+              <span className="inline-flex rounded-2xl bg-white px-4 py-3">
+                <Image
+                  src="/brand/logo.png"
+                  alt={`${BRAND.tradingName} — ${BRAND.domain}`}
+                  width={220}
+                  height={145}
+                  className="h-auto w-[190px] sm:w-[210px]"
+                />
+              </span>
+            </Link>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/65">
               The placement-first job network for Nigerian talent. Verified employers, transparent
               Naira salaries, and human follow-up — from Lagos to Maiduguri.
@@ -81,6 +83,7 @@ export function Footer() {
             </h3>
             <ul className="mt-4 space-y-2.5 text-sm text-white/70">
               {[
+                ["Home", "/"],
                 ["Find jobs", "/jobs"],
                 ["Browse categories", "/#categories"],
                 ["All states", "/states"],
