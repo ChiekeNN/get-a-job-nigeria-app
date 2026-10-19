@@ -77,7 +77,16 @@ async function handle(request: Request) {
       : IMPORT_CONFIG.backfill.windowDays;
 
   try {
-    const result = await runImport({ backfillDays: days });
+    // ?budget= seconds. A caller that cannot wait out a full 240s batch (a
+    // script, a proxy with a short timeout) asks for a short one; it still
+    // stores what it collected and leaves the cursor for the next call.
+    const budgetParam = Number.parseInt(searchParams.get("budget") ?? "", 10);
+    const timeBudgetMs =
+      Number.isFinite(budgetParam) && budgetParam > 0
+        ? Math.min(budgetParam, 240) * 1000
+        : undefined;
+
+    const result = await runImport({ backfillDays: days, timeBudgetMs });
     const cursor = result.cursors?.[`Backfill (${days}d)`];
     return Response.json({
       ok: result.ok,
