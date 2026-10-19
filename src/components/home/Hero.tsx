@@ -8,7 +8,7 @@ export function Hero() {
   return (
     <section className="hero-mesh relative overflow-hidden border-b border-ink-100/80">
       <div className="grid-lines absolute inset-0 opacity-60" aria-hidden="true" />
-      <div className="wrap relative grid items-center gap-10 py-10 sm:py-14 lg:grid-cols-[1.06fr_0.94fr] lg:py-16">
+      <div className="wrap relative grid grid-cols-1 items-center gap-10 py-10 sm:py-14 lg:grid-cols-[1.06fr_0.94fr] lg:py-16">
         <div className="animate-fade-up">
           <p className="eyebrow">
             <span className="size-1.5 rounded-full bg-brand-500" aria-hidden="true" />

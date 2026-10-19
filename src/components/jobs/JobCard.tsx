@@ -39,8 +39,8 @@ export function JobCard({
   const isNew = PAGE_LOADED_AT - new Date(job.postedAt).getTime() < NEW_WINDOW_MS;
 
   return (
-    <article className="card group relative flex flex-col p-4 transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-[0_20px_44px_-30px_rgba(5,20,15,0.45)] sm:p-5">
-      <div className="flex items-start gap-3">
+    <article className="card group relative flex min-w-0 flex-col p-4 transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-[0_20px_44px_-30px_rgba(5,20,15,0.45)] sm:p-5">
+      <div className="flex min-w-0 items-start gap-3">
         <div
           className={`grid size-11 shrink-0 place-items-center rounded-xl text-sm font-extrabold tracking-wide ${companyTint(job.companyColor)}`}
           aria-hidden="true"
@@ -50,7 +50,7 @@ export function JobCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-500">
-            <span className="max-w-full truncate font-semibold text-ink-700">{job.company}</span>
+            <span className="min-w-0 max-w-full truncate font-semibold text-ink-700">{job.company}</span>
             <span className="text-ink-300" aria-hidden="true">
               ·
             </span>

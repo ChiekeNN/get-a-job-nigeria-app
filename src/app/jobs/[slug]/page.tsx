@@ -143,7 +143,7 @@ export default async function JobDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="wrap grid gap-5 py-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="wrap grid grid-cols-1 gap-5 py-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-4">
           <section className="card p-5">
             <h2 className="font-display text-lg font-bold text-ink-900">About the role</h2>

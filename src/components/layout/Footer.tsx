@@ -27,7 +27,7 @@ export function Footer() {
   return (
     <footer className="mt-20 bg-ink-950 text-white">
       <div className="wrap py-14">
-        <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" aria-label={`${BRAND.tradingName} home`} className="inline-flex">
               {/* The supplied logo is green and black, so it sits on a light plate

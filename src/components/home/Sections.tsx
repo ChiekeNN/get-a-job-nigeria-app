@@ -193,8 +193,8 @@ export function StateStrip({ jobs }: { jobs: Job[] }) {
 export function EmployerCta() {
   return (
     <section className="wrap mt-16">
-      <div className="grid overflow-hidden rounded-[26px] border border-brand-100 bg-brand-50/70 lg:grid-cols-[1fr_0.9fr]">
-        <div className="p-6 sm:p-8 lg:p-10">
+      <div className="grid grid-cols-1 overflow-hidden rounded-[26px] border border-brand-100 bg-brand-50/70 lg:grid-cols-[1fr_0.9fr]">
+        <div className="min-w-0 p-6 sm:p-8 lg:p-10">
           <p className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-brand-800">
             <Building2 className="size-3.5" aria-hidden="true" />
             For employers

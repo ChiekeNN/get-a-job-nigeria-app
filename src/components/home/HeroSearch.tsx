@@ -37,7 +37,7 @@ export function HeroSearch({ initialKeyword = "", initialState = "", compact = f
         className="rounded-2xl border border-white/70 bg-white p-2.5 shadow-[0_24px_50px_-30px_rgba(5,20,15,0.5)] sm:p-3"
         role="search"
       >
-        <div className="grid gap-2 sm:grid-cols-[1fr_190px_auto]">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_190px_auto]">
           <div className="relative">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-400"

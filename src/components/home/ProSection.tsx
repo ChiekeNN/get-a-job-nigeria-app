@@ -147,7 +147,7 @@ export function ProSection() {
           aria-hidden="true"
         />
 
-        <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
+        <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-amber-200">
               <Sparkles className="size-3.5" aria-hidden="true" />

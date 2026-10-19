@@ -193,7 +193,7 @@ export function Navbar() {
                 </Link>
               ))}
             </nav>
-            <div className="mt-4 grid gap-2">
+            <div className="mt-4 grid grid-cols-1 gap-2">
               <button
                 type="button"
                 onClick={() => {

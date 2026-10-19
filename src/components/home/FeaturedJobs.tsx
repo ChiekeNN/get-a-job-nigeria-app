@@ -46,7 +46,7 @@ export function FeaturedJobs({ jobs }: { jobs: Job[] }) {
         </Link>
       </div>
 
-      <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {visible.map((job) => (
           <JobCard
             key={job.slug}

@@ -70,7 +70,7 @@ export default function ProPage() {
       </div>
 
       <section className="wrap mt-14">
-        <div className="grid gap-5 lg:grid-cols-[1fr_1.1fr]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1.1fr]">
           <div>
             <p className="eyebrow">
               <BadgeCheck className="size-3.5 text-brand-600" aria-hidden="true" />
