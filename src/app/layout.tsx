@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
-import { Footer } from "@/components/layout/Footer";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Navbar } from "@/components/layout/Navbar";
 import { ToastProvider } from "@/components/providers/Toaster";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ToastProvider>
           <Navbar />
           <main>{children}</main>
-          <Footer />
+          <SiteFooter />
           <InstallPrompt />
           <ServiceWorkerRegistrar />
         </ToastProvider>

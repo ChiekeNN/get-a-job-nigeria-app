@@ -3,6 +3,9 @@ import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { importState, jobs } from "@/db/schema";
 import { IMPORT_CONFIG, SOURCE_FEED, type ImportConfig } from "@/lib/importer/config";
+import { advanceCursor, isWithinWindow, pageUrl } from "@/lib/importer/window";
+
+export { advanceCursor, pageUrl };
 import {
   extractArticleDescription,
   extractArticleHtml,
@@ -102,6 +105,8 @@ export interface ImportResult {
   truncated?: boolean;
   /** Sweep cursor movement per source, so consecutive runs are traceable. */
   cursors?: Record<string, { from: number; to: number }>;
+  /** Backfill only: true once the archive runs past the requested window. */
+  backfillComplete?: boolean;
   errors: string[];
   preview: ImportPreview[];
 }
@@ -137,19 +142,6 @@ function passesTitleFilters(candidate: ImportCandidate, config: ImportConfig): b
   return true;
 }
 
-/** Walk the configured source pages and the RSS feed, newest first, de-duplicated. */
-export function pageUrl(source: { url: string; pagination?: string }, page: number): string | null {
-  const style = source.pagination ?? "path-indexed";
-  if (page === 1) return source.url;
-  if (style === "none") return null;
-
-  const base = source.url.replace(/\/$/, "");
-  if (style === "query") return `${base}/?page=${page}`;
-
-  // The board is 1-indexed oddly: /jobs/lastweek/ is page 1, /jobs/lastweek/1/ is page 2.
-  return `${base}/${page - 1}/`;
-}
-
 /**
  * Sweep position for a source. Stored in the database so consecutive runs extend
  * a backfill instead of re-reading page 1 forever — that is what allows a large
@@ -179,21 +171,11 @@ async function saveCursor(key: string, page: number): Promise<void> {
     });
 }
 
-/**
- * Where the next run should start.
- *  - ran off the end of the listing (empty page)  -> restart at page 1
- *  - passed the sweep cap                          -> restart at page 1
- *  - otherwise                                     -> carry on from here
- */
-export function advanceCursor(start: number, pagesRead: number, hitEmpty: boolean, sweepCap: number): number {
-  if (hitEmpty) return 1;
-  const next = start + pagesRead;
-  return next > sweepCap ? 1 : next;
-}
-
 export interface CollectResult {
   candidates: ImportCandidate[];
   cursors: Record<string, { from: number; to: number }>;
+  /** Backfill only: the walk reached listings older than the window. */
+  windowComplete?: boolean;
 }
 
 /**
@@ -202,14 +184,44 @@ export interface CollectResult {
  *   2. `pagesPerRun` pages continuing from the stored sweep cursor.
  * De-duplicated across both passes.
  */
+interface CollectOptions {
+  /** When set, sweep the archive instead of the daily listing, newest-first. */
+  backfillDays?: number;
+}
+
 async function collectCandidates(
   config: ImportConfig,
   errors: string[],
   deadlineMs: number,
   dryRun: boolean,
+  options: CollectOptions = {},
 ): Promise<CollectResult> {
   const byId = new Map<string, ImportCandidate>();
   const cursors: Record<string, { from: number; to: number }> = {};
+  let windowComplete = false;
+
+  // A backfill is a window over the archive, not another daily source: it has
+  // its own cursor and never touches `sweep:<daily url>`.
+  const backfillDays = options.backfillDays;
+  const sources = backfillDays
+    ? [
+        {
+          name: `Backfill (${backfillDays}d)`,
+          url: config.backfill.url,
+          category: "auto",
+          pagination: config.backfill.pagination,
+        },
+      ]
+    : config.sources;
+  const pagesPerRun = backfillDays ? config.backfill.pagesPerRun : config.pagesPerRun;
+  const sweepCap = backfillDays ? config.backfill.maxPages : config.maxPagesPerSource;
+  const cursorPrefix = backfillDays ? "backfill" : "sweep";
+
+  /** True when the card is inside the window. Unparseable dates are kept. */
+  const withinWindow = (postedText: string): boolean => {
+    if (!backfillDays) return true;
+    return isWithinWindow(postedText, backfillDays);
+  };
 
   const add = (card: { sourceId: string; url: string; title: string; summary: string; postedText: string }, category: string) => {
     if (byId.has(card.sourceId)) return;
@@ -223,17 +235,17 @@ async function collectCandidates(
     });
   };
 
-  for (const source of config.sources) {
-    const cursorKey = `sweep:${source.url}`;
+  for (const source of sources) {
+    const cursorKey = `${cursorPrefix}:${source.url}`;
     const start = dryRun ? 1 : await getCursor(cursorKey);
     let pagesRead = 0;
     let hitEmpty = false;
 
     // Always take the newest page first.
     const pagesToRead: number[] = [1];
-    for (let offset = 0; offset < config.pagesPerRun; offset += 1) {
+    for (let offset = 0; offset < pagesPerRun; offset += 1) {
       let page = start + offset;
-      if (page > config.maxPagesPerSource) page = ((page - 1) % config.maxPagesPerSource) + 1;
+      if (page > sweepCap) page = ((page - 1) % sweepCap) + 1;
       if (!pagesToRead.includes(page)) pagesToRead.push(page);
     }
 
@@ -257,7 +269,21 @@ async function collectCandidates(
           break;
         }
 
-        for (const card of cards) add(card, source.category);
+        if (backfillDays) {
+          const fresh = cards.filter((card) => withinWindow(card.postedText));
+          if (fresh.length === 0) {
+            // The archive is newest-first, so the first all-old page is the end.
+            hitEmpty = true;
+            windowComplete = true;
+            errors.push(
+              `${source.name}: page ${page} is older than ${backfillDays} days, window complete.`,
+            );
+            break;
+          }
+          for (const card of fresh) add(card, source.category);
+        } else {
+          for (const card of cards) add(card, source.category);
+        }
         if (page !== 1) pagesRead += 1;
       } catch (error) {
         errors.push(`${source.name} (${url}): ${error instanceof Error ? error.message : String(error)}`);
@@ -267,7 +293,7 @@ async function collectCandidates(
       if (config.requestDelayMs > 0) await sleep(config.requestDelayMs);
     }
 
-    const next = advanceCursor(start, pagesRead, hitEmpty, config.maxPagesPerSource);
+    const next = advanceCursor(start, pagesRead, hitEmpty, sweepCap);
     cursors[source.name] = { from: start, to: next };
 
     if (!dryRun) {
@@ -279,7 +305,7 @@ async function collectCandidates(
     }
   }
 
-  if (config.useRssFeed) {
+  if (config.useRssFeed && !backfillDays) {
     try {
       const items = await fetchRssItems(SOURCE_FEED.rss);
       for (const item of items) {
@@ -307,7 +333,7 @@ async function collectCandidates(
     }
   }
 
-  return { candidates: [...byId.values()], cursors };
+  return { candidates: [...byId.values()], cursors, windowComplete };
 }
 
 interface ExtractedJob {
@@ -432,6 +458,11 @@ export interface RunOptions {
   dryRun?: boolean;
   limit?: number;
   config?: ImportConfig;
+  /**
+   * Sweep the archive for listings posted in the last N days, instead of the
+   * daily listing. Resumable, with its own cursor.
+   */
+  backfillDays?: number;
 }
 
 export async function runImport(options: RunOptions = {}): Promise<ImportResult> {
@@ -471,10 +502,13 @@ export async function runImport(options: RunOptions = {}): Promise<ImportResult>
 
   // Reserve a slice of the budget for writing, so a slow crawl cannot consume it all.
   const collectionDeadline = Date.now() + Math.round(config.timeBudgetMs * 0.6);
-  const collected = await collectCandidates(config, errors, collectionDeadline, dryRun);
+  const collected = await collectCandidates(config, errors, collectionDeadline, dryRun, {
+    backfillDays: options.backfillDays,
+  });
   const candidates = collected.candidates;
   result.counts.candidates = candidates.length;
   result.cursors = collected.cursors;
+  if (collected.windowComplete) result.backfillComplete = true;
 
   // Which upstream IDs do we already hold? One query keeps the run cheap.
   const ids = candidates.map((candidate) => `${SOURCE_FEED.key}:${candidate.sourceId}`);
