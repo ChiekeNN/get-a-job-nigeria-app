@@ -1,7 +1,7 @@
 import { findDatabaseUrlVar } from "@/db";
 import { isAdmin } from "@/lib/admin";
 import { IMPORT_CONFIG } from "@/lib/importer/config";
-import { runImport } from "@/lib/importer/run";
+import { runImport, saveCursor } from "@/lib/importer/run";
 
 /**
  * Two-week top-up.
@@ -17,7 +17,13 @@ import { runImport } from "@/lib/importer/run";
  */
 
 export const dynamic = "force-dynamic";
+
 export const maxDuration = 300;
+
+async function resetBackfillCursor() {
+  await saveCursor(`backfill:${IMPORT_CONFIG.backfill.url}`, 1);
+}
+
 
 function authorisedByKey(request: Request): boolean {
   const secrets = [process.env.IMPORT_SECRET, process.env.CRON_SECRET].filter(
@@ -46,6 +52,13 @@ async function handle(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
+
+  // ?reset=1 starts the walk again from the newest page — useful after a
+  // listings change or an interrupted run that the cursor outran.
+  if (["1", "true", "yes"].includes((searchParams.get("reset") ?? "").toLowerCase())) {
+    await resetBackfillCursor();
+  }
+
   const requested = Number.parseInt(searchParams.get("days") ?? "", 10);
   const days =
     Number.isFinite(requested) && requested > 0
