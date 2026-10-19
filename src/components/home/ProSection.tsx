@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-import { CONTACT, mailto } from "@/data/contact";
+import { CONTACT, PHONE, mailto } from "@/data/contact";
 import { useToast } from "@/components/providers/Toaster";
 import { Modal } from "@/components/ui/Modal";
 import { PRO_FEATURES, NIGERIAN_STATES } from "@/data/site";
@@ -274,7 +274,7 @@ export function ProSection() {
                   required
                   inputMode="tel"
                   className="field"
-                  placeholder="0803 000 4421"
+                  placeholder={PHONE.local}
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -361,7 +361,7 @@ export function ProSection() {
                 required
                 inputMode="tel"
                 className="field"
-                placeholder="0803 000 4421"
+                placeholder={PHONE.local}
               />
             </div>
             <div>

@@ -1,21 +1,27 @@
 import {
   ArrowUpRight,
-  AtSign,
-  Globe,
   Mail,
   MapPin,
   MessageCircle,
   Phone,
-  Rss,
   ShieldCheck,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { CONTACT, mailto } from "@/data/contact";
+import { CONTACT, PHONE, SOCIAL, mailto, whatsappLink } from "@/data/contact";
 import { BRAND } from "@/data/site";
 
-const WHATSAPP = "https://wa.me/2348030004421?text=Hello%20GetAJob%2C%20I%20need%20help%20with%20my%20job%20search";
+const WHATSAPP = whatsappLink("Hello GetAJob, I need help with my job search");
+
+/** Facebook's mark, drawn inline because lucide no longer ships brand icons. */
+function FacebookMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M13.5 21v-7.2h2.4l.36-2.8H13.5V9.2c0-.81.22-1.36 1.38-1.36h1.48V5.34c-.26-.03-1.14-.11-2.17-.11-2.15 0-3.62 1.31-3.62 3.72v2.05H8.16v2.8h2.41V21h2.93Z" />
+    </svg>
+  );
+}
 
 export function Footer() {
   return (
@@ -52,9 +58,9 @@ export function Footer() {
             </a>
 
             <div className="mt-5 space-y-2 text-sm text-white/70">
-              <a href="tel:+2348030004421" className="flex items-center gap-2 hover:text-white">
+              <a href={`tel:${PHONE.tel}`} className="flex items-center gap-2 hover:text-white">
                 <Phone className="size-4 text-brand-400" aria-hidden="true" />
-                +234 803 000 4421
+                {PHONE.display}
               </a>
               <a
                 href={mailto(CONTACT.support, "Support request")}
@@ -141,18 +147,15 @@ export function Footer() {
               ))}
             </ul>
             <div className="mt-5 flex items-center gap-2">
-              {[Globe, AtSign, Rss].map((Icon, index) => (
-                <a
-                  key={index}
-                  href="https://wa.me/2348030004421"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label={`${BRAND.name} social profile`}
-                  className="grid size-8 place-items-center rounded-lg bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white"
-                >
-                  <Icon className="size-4" aria-hidden="true" />
-                </a>
-              ))}
+              <a
+                href={SOCIAL.facebook}
+                target="_blank"
+                rel="noreferrer noopener"
+                aria-label={`${BRAND.name} on Facebook`}
+                className="grid size-8 place-items-center rounded-lg bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                <FacebookMark className="size-4" />
+              </a>
             </div>
           </div>
         </div>

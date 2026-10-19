@@ -17,7 +17,8 @@ import { notFound } from "next/navigation";
 
 import { ApplyForm } from "@/components/jobs/ApplyForm";
 import { FitCheck } from "@/components/jobs/FitCheck";
-import { CONTACT } from "@/data/contact";
+import { JobDescription } from "@/components/jobs/JobDescription";
+import { CONTACT, whatsappLink } from "@/data/contact";
 import {
   companyTint,
   daysUntil,
@@ -76,7 +77,7 @@ export default async function JobDetailPage({ params }: Props) {
           </Link>
 
           <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-3.5">
+            <div className="flex min-w-0 items-start gap-3.5">
               <div
                 className={`grid size-14 shrink-0 place-items-center rounded-2xl text-base font-extrabold ${companyTint(job.companyColor)}`}
                 aria-hidden="true"
@@ -146,9 +147,7 @@ export default async function JobDetailPage({ params }: Props) {
         <div className="space-y-4">
           <section className="card p-5">
             <h2 className="font-display text-lg font-bold text-ink-900">About the role</h2>
-            <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-600">
-              {job.description}
-            </p>
+            <JobDescription text={job.description} />
 
             {job.responsibilities.length > 0 ? (
               <div className="mt-5">
@@ -286,7 +285,7 @@ export default async function JobDetailPage({ params }: Props) {
               no-fee candidate policy.
             </p>
             <a
-              href={`https://wa.me/2348030004421?text=${encodeURIComponent(`I need help applying for ${job.title} at ${job.company}`)}`}
+              href={whatsappLink(`I need help applying for ${job.title} at ${job.company}`)}
               target="_blank"
               rel="noreferrer noopener"
               className="btn btn-outline btn-sm mt-3 w-full"

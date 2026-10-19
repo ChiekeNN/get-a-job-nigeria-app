@@ -7,6 +7,33 @@
 
 export const CONTACT_DOMAIN = "getajob.com.ng";
 
+/**
+ * The one phone number GetAJob publishes. Everything diallable, every WhatsApp
+ * deep link and every phone placeholder on the site is built from these values,
+ * so changing the line is a single edit here.
+ */
+export const PHONE = {
+  /** Printed on the page. */
+  display: "+234 802 656 8715",
+  /** Dialable form for tel: links. */
+  tel: "+2348026568715",
+  /** wa.me takes digits only, no plus and no spaces. */
+  whatsapp: "2348026568715",
+  /** How Nigerians write it locally — used in form placeholders and examples. */
+  local: "0802 656 8715",
+} as const;
+
+/** A wa.me link with an optional pre-filled message. */
+export function whatsappLink(message?: string): string {
+  const base = `https://wa.me/${PHONE.whatsapp}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
+
+/** Official social profiles. Only add a URL that actually exists. */
+export const SOCIAL = {
+  facebook: "https://www.facebook.com/share/1AsQgc8czs/?mibextid=wwXIfr",
+} as const;
+
 export const CONTACT = {
   alerts: "alerts@getajob.com.ng",
   billings: "billings@getajob.com.ng",

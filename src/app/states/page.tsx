@@ -70,7 +70,7 @@ export default async function StatesPage() {
       <div className="mt-6 space-y-5">
         {ZONES.map((zone) => (
           <section key={zone.name} className="card p-4 sm:p-5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-display text-lg font-bold text-ink-900">{zone.name}</h2>
               <span className="chip">
                 {zone.states.reduce((sum, state) => sum + (counts[state] ?? 0), 0)} open roles

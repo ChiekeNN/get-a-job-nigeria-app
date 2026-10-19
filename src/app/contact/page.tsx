@@ -1,7 +1,14 @@
-import { ArrowUpRight, Clock, Mail, MessageCircle, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Clock, Mail, MessageCircle, Phone, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 
-import { CONTACT, CONTACT_CHANNELS, mailto, type ContactAudience } from "@/data/contact";
+import {
+  CONTACT,
+  CONTACT_CHANNELS,
+  PHONE,
+  mailto,
+  whatsappLink,
+  type ContactAudience,
+} from "@/data/contact";
 
 export const metadata: Metadata = {
   title: "Contact us",
@@ -40,13 +47,20 @@ export default function ContactPage() {
               Email support
             </a>
             <a
-              href="https://wa.me/2348030004421?text=Hello%20GetAJob%2C%20I%20need%20help"
+              href={whatsappLink("Hello GetAJob, I need help")}
               target="_blank"
               rel="noreferrer noopener"
               className="btn border border-ink-200 bg-white text-ink-900 hover:bg-ink-50"
             >
               <MessageCircle className="size-4" aria-hidden="true" />
               Chat on WhatsApp
+            </a>
+            <a
+              href={`tel:${PHONE.tel}`}
+              className="btn border border-ink-200 bg-white text-ink-900 hover:bg-ink-50"
+            >
+              <Phone className="size-4" aria-hidden="true" />
+              {PHONE.display}
             </a>
           </div>
         </div>

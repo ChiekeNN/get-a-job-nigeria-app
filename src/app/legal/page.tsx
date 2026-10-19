@@ -1,7 +1,7 @@
 import { FileCheck2, Lock, Scale } from "lucide-react";
 import type { Metadata } from "next";
 
-import { CONTACT } from "@/data/contact";
+import { CONTACT, PHONE } from "@/data/contact";
 import { BRAND } from "@/data/site";
 
 export const metadata: Metadata = {
@@ -101,7 +101,7 @@ export default function LegalPage() {
         <h2 className="font-display text-base font-bold text-ink-900">Contact our data protection team</h2>
         <p className="mt-1">
           Email <span className="font-semibold text-brand-700">{CONTACT.support}</span> or call{" "}
-          <span className="font-semibold text-brand-700">+234 803 000 4421</span> (Mon–Fri, 9am–5pm
+          <span className="font-semibold text-brand-700">{PHONE.display}</span> (Mon–Fri, 9am–5pm
           WAT). Postal address: 14 Adeola Odeku Street, Victoria Island, Lagos.
         </p>
       </div>
