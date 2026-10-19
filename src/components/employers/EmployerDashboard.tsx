@@ -151,7 +151,7 @@ export function EmployerDashboard({ initialJobs, totalJobs }: Props) {
         ))}
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]" id="post-job">
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]" id="post-job">
         <form onSubmit={handleSubmit} className="card p-5">
           <div className="flex items-start justify-between gap-3">
             <div>

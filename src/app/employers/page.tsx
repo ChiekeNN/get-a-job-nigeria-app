@@ -75,7 +75,7 @@ export default async function EmployersPage() {
             <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
             Employer view
           </span>
-          <div className="mt-4 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div>
               <h1 className="font-display text-[28px] font-extrabold leading-[1.1] tracking-tight sm:text-[40px]">
                 Hire verified Nigerian talent in

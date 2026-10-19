@@ -165,8 +165,8 @@ export function JobBoard({ initialJobs, initialFilters }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[286px_minmax(0,1fr)]">
-        <div className="lg:sticky lg:top-24 lg:self-start">
+      <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[286px_minmax(0,1fr)]">
+        <div className="min-w-0 lg:sticky lg:top-24 lg:self-start">
           <button
             type="button"
             onClick={() => setShowFilters((open) => !open)}
@@ -211,10 +211,10 @@ export function JobBoard({ initialJobs, initialFilters }: Props) {
           </div>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <div className="card p-3 sm:p-4">
             <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="relative flex-1">
+              <div className="relative min-w-0 flex-1">
                 <Search
                   className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-400"
                   aria-hidden="true"
@@ -228,12 +228,12 @@ export function JobBoard({ initialJobs, initialFilters }: Props) {
                   aria-label="Search jobs by keyword"
                 />
               </div>
-              <div className="flex gap-2">
-                <div className="relative flex-1 sm:w-[168px] sm:flex-none">
+              <div className="flex min-w-0 gap-2">
+                <div className="relative min-w-0 flex-1 sm:w-[168px] sm:flex-none">
                   <select
                     value={filters.sort}
                     onChange={(event) => update({ sort: event.target.value as SortOption })}
-                    className="field appearance-none pr-8"
+                    className="field min-w-0 appearance-none pr-8"
                     aria-label="Sort job results"
                   >
                     {SORT_OPTIONS.map((option) => (
