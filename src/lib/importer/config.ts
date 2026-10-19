@@ -36,6 +36,25 @@ export interface ImportFields {
   applyUrl: boolean;
 }
 
+/**
+ * A one-off widening of the window: the archive listing (/alljobs/) runs
+ * newest-first over every active advert, so paging it until the dates fall
+ * outside `windowDays` pulls in exactly the extra days and stops.
+ *
+ * Kept separate from `sources` on purpose: a backfill run has its own cursor,
+ * so it can never move the cursor the daily sweep depends on.
+ */
+export interface BackfillConfig {
+  url: string;
+  pagination: PaginationStyle;
+  /** Stop once listings are older than this. 15 = last two weeks plus today. */
+  windowDays: number;
+  /** Listing pages read per backfill invocation. */
+  pagesPerRun: number;
+  /** Hard stop, so a bad date parse cannot sweep the whole archive. */
+  maxPages: number;
+}
+
 export interface ImportConfig {
   enabled: boolean;
   /** Hard ceiling per run. New jobs only — already-imported ones are skipped. */
@@ -83,6 +102,8 @@ export interface ImportConfig {
    */
   maxChildrenPerPost: number;
   sources: ImportSource[];
+  /** The archive window used by `?backfill=N` runs. Never part of the daily sweep. */
+  backfill: BackfillConfig;
   filters: {
     /** Empty array = every state. Otherwise only these (must match NIGERIAN_STATES). */
     states: string[];
@@ -143,6 +164,15 @@ export const IMPORT_CONFIG: ImportConfig = {
       pagination: "path-indexed",
     },
   ],
+
+  backfill: {
+    url: "https://www.hotnigerianjobs.com/alljobs/0/",
+    pagination: "path-indexed",
+    windowDays: 15,
+    pagesPerRun: 16,
+    /** ~50 listings a page: 260 pages is 13,000 listings, well past the window. */
+    maxPages: 260,
+  },
 
   filters: {
     states: [], // e.g. ["Lagos", "FCT Abuja"] to restrict by location

@@ -2,6 +2,7 @@
 
 import { Download, Share, X } from "lucide-react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 /**
@@ -76,6 +77,8 @@ function alreadyPrompted(): boolean {
 }
 
 export function InstallPrompt() {
+  const pathname = usePathname();
+  const hidden = pathname.startsWith("/admin");
   const [phase, setPhase] = useState<Phase>("waiting");
   // Held in state, not a ref: the button has to re-render once the browser
   // offers an install event, otherwise the first paint shows a dead control.
@@ -84,11 +87,11 @@ export function InstallPrompt() {
   // Start the clock, unless this visitor is already running the installed app
   // or has seen the prompt before.
   useEffect(() => {
-    if (isStandalone() || alreadyPrompted()) return;
+    if (hidden || isStandalone() || alreadyPrompted()) return;
 
     const timer = window.setTimeout(() => setPhase("first"), APPEAR_AFTER_MS);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [hidden]);
 
   // Capture the browser's install event so our own button can trigger it.
   useEffect(() => {
@@ -150,6 +153,7 @@ export function InstallPrompt() {
 
   // Rendered only on the client, and only while one of the two appearances is
   // active, so the browser sniffing below never runs during server rendering.
+  if (hidden) return null;
   if (phase !== "first" && phase !== "final") return null;
 
   // beforeinstallprompt is Chromium-only. Safari on iOS and Firefox never fire

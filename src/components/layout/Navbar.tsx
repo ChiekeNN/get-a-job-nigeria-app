@@ -33,10 +33,15 @@ export function Navbar() {
   const [cvOpen, setCvOpen] = useState(false);
   const isEmployer = pathname.startsWith("/employers");
 
+  // The admin console is private and carries its own header.
+  const isAdmin = pathname.startsWith("/admin");
+
   function switchMode(mode: "seeker" | "employer") {
     setMenuOpen(false);
     router.push(mode === "employer" ? "/employers" : "/jobs");
   }
+
+  if (isAdmin) return null;
 
   return (
     <>

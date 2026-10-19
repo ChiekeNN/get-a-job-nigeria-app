@@ -116,11 +116,17 @@ async function handle(request: Request) {
   const { searchParams } = new URL(request.url);
   const dryRun = ["1", "true", "yes"].includes((searchParams.get("dryRun") ?? "").toLowerCase());
   const limitParam = Number.parseInt(searchParams.get("limit") ?? "", 10);
+  // ?backfill=14 walks the archive for the last 14 days, with its own cursor, so
+  // the daily sweep below is untouched. It resumes across calls.
+  const backfillParam = Number.parseInt(searchParams.get("backfill") ?? "", 10);
+  const backfillDays =
+    Number.isFinite(backfillParam) && backfillParam > 0 ? Math.min(backfillParam, 60) : undefined;
 
   try {
     const result = await runImport({
       dryRun,
       limit: Number.isFinite(limitParam) && limitParam > 0 ? limitParam : undefined,
+      backfillDays,
     });
 
     console.log(
