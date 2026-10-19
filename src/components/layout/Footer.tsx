@@ -47,11 +47,11 @@ export function Footer() {
               </span>
               <span className="inline-flex items-center gap-1">
                 <Check className="size-3 text-brand-400" aria-hidden="true" />
-                First {PRO.trialDays} days free
+                Nothing renews
               </span>
               <span className="inline-flex items-center gap-1">
                 <Check className="size-3 text-brand-400" aria-hidden="true" />
-                Cancel anytime
+                No monthly fee
               </span>
             </p>
           </div>
@@ -143,7 +143,7 @@ export function Footer() {
                 ["Find jobs", "/jobs"],
                 ["Browse categories", "/#categories"],
                 ["All states", "/states"],
-                // The CV attach lives in the Pro trial form.
+                // The CV attach lives in the Pro signup form.
                 ["Upload your CV", "/pro#start"],
               ].map(([label, href]) => (
                 <li key={label}>

@@ -27,7 +27,7 @@ import {
 export const metadata: Metadata = {
   title: "Job Seeker Pro — CV rewrite, WhatsApp job alerts and interview coaching",
   description:
-    "Job Seeker Pro: a professional CV rewrite, verified WhatsApp job alerts, referrals and interview coaching for ₦8,000/month. Start with a 7-day free trial.",
+    "Job Seeker Pro: a professional CV rewrite, verified WhatsApp job alerts, referrals and interview coaching for a one-time payment of ₦15,300.",
 };
 
 export default function ProPage() {
@@ -66,7 +66,7 @@ export default function ProPage() {
             </span>
             <span className="text-white/45">·</span>
             <span>
-              Start with a <strong className="font-semibold text-brand-300">{PRO.trialDays}-day free trial</strong>
+              <strong className="font-semibold text-brand-300">No monthly fees</strong>, nothing renews
             </span>
           </p>
 
@@ -87,7 +87,7 @@ export default function ProPage() {
           </div>
 
           <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-white/65">
-            {["Cancel anytime", "No card to start", "36 states + FCT", "Priority WhatsApp support"].map(
+            {["Pay once", "No monthly fees", "36 states + FCT", "Priority WhatsApp support"].map(
               (item) => (
                 <li key={item} className="inline-flex items-center gap-1.5">
                   <Check className="size-3.5 text-brand-400" aria-hidden="true" />
@@ -149,7 +149,7 @@ export default function ProPage() {
             Everything included in Job Seeker Pro
           </h2>
           <p className="mt-2 text-[13.5px] leading-relaxed text-ink-500">
-            One subscription, five things that actually move a Nigerian recruiter.
+            One payment, five things that actually move a Nigerian recruiter.
           </p>
         </div>
 
@@ -185,8 +185,8 @@ export default function ProPage() {
               One price. No hidden fees.
             </h2>
             <p className="mt-2 max-w-lg text-[13.5px] leading-relaxed text-ink-500">
-              Start free for {PRO.trialDays} days. After that it is {PRO.price} a month, paid by bank
-              transfer — and you can stop any time before the next cycle.
+              One payment of {PRO.price} covers everything below, paid by bank transfer. There is no
+              monthly charge and nothing renews.
             </p>
             <p className="mt-3 text-[11.5px] text-ink-400">
               Questions about a plan?{" "}
@@ -213,7 +213,7 @@ export default function ProPage() {
             />
             <div className="relative">
               <span className="rounded-full bg-amber-300 px-2.5 py-1 text-[9.5px] font-extrabold uppercase tracking-wide text-ink-950">
-                🎁 {PRO.trialDays}-day free trial
+                One-time payment · no renewals
               </span>
               <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-white/55">
                 {PRO.name}
@@ -240,7 +240,7 @@ export default function ProPage() {
                 <ArrowRight className="size-4" aria-hidden="true" />
               </a>
               <p className="mt-2 text-center text-[10.5px] text-white/40">
-                Cancel anytime — no long-term contract.
+                Paid once — no monthly charge, nothing renewing.
               </p>
             </div>
           </div>
@@ -370,16 +370,16 @@ export default function ProPage() {
                 Start here
               </p>
               <h2 className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-[32px]">
-                Start your {PRO.trialDays}-day free trial
+                Start with one payment
               </h2>
               <p className="mt-2 max-w-md text-[13px] leading-relaxed text-white/65">
-                Fill the form and our team is in touch within 24 hours. Your first {PRO.trialDays} days
-                are completely free — {PRO.price} a month only after that.
+                Fill the form and our team is in touch within 24 hours with the bank details.{" "}
+                {PRO.price} once — no monthly fee, nothing renewing.
               </p>
 
               <ul className="mt-4 space-y-2.5">
                 {[
-                  "No payment today. Nothing is collected automatically.",
+                  `${PRO.price} once. No monthly fee, nothing renewing.`,
                   "Send your CV once the form is in — that starts the rewrite.",
                   "Your details are never sold or shared with employers without your say-so.",
                 ].map((line) => (
@@ -444,7 +444,7 @@ export default function ProPage() {
               Your dream job is waiting. Don&apos;t keep it waiting.
             </h2>
             <p className="mt-1 text-[13px] text-white/85">
-              Join the members getting hired faster — start free, no payment required.
+              Join the members getting hired faster — one payment of {PRO.price}, nothing monthly.
             </p>
           </div>
           <a href="#start" className="btn w-full shrink-0 justify-center bg-white text-brand-800 hover:bg-brand-50 sm:w-auto">

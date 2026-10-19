@@ -16,19 +16,18 @@ import {
 
 export const PRO = {
   name: "Job Seeker Pro",
-  /** The one plan. */
-  price: "₦8,000",
-  cadence: "per month",
-  trialDays: 7,
+  /** The one plan: a single payment, no subscription. */
+  price: "₦15,300",
+  cadence: "one-time",
   /** Stored on the subscriber row, so the admin console can group signups. */
-  plan: "Job Seeker Pro · ₦8,000/month",
+  plan: "Job Seeker Pro · ₦15,300 one-time",
   /** The call to action, everywhere it appears. */
   cta: "Start Now",
   headline: "Stop applying without results.",
   headlineAccent: "Let employers start calling you.",
   promise:
-    "Everything you need to get hired faster — a professional CV rewrite, verified WhatsApp job alerts, direct referrals and interview coaching, for one monthly fee.",
-  priceLine: "Only ₦8,000/month — start with a 7-day free trial.",
+    "Everything you need to get hired faster — a professional CV rewrite, verified WhatsApp job alerts, direct referrals and interview coaching — for one payment of ₦15,300.",
+  priceLine: "₦15,300 once. No monthly fees, no renewals.",
 } as const;
 
 export interface ProFeature {
@@ -81,9 +80,9 @@ export const PRO_PAIN_POINTS = [
 
 export const PRO_STEPS = [
   {
-    title: "Sign up and start your free trial",
+    title: "Sign up and pay once",
     description:
-      "Fill in the form on this page. No payment for the first 7 days — you get access to everything immediately.",
+      "Fill in the form on this page and we send the payment details on WhatsApp. ₦15,300 once covers everything below.",
   },
   {
     title: "Submit your CV for a rewrite",
@@ -153,9 +152,9 @@ export const PRO_FAQS = [
       "Straight to your WhatsApp number, every day. You choose your state and field when you sign up, and you can change them any time by replying to the message.",
   },
   {
-    question: "Can I cancel anytime?",
+    question: "Is this a one-time payment?",
     answer:
-      "Yes. There are no long-term contracts. Reply on WhatsApp and the subscription stops at the end of the current month — no penalties.",
+      "Yes. You pay ₦15,300 once and that covers the full programme. There is no monthly charge, no renewal and no card kept on file.",
   },
   {
     question: "What types of jobs are included?",
@@ -168,8 +167,8 @@ export const PRO_FAQS = [
       "Pro members have a priority WhatsApp line to the career team. The same number answers general questions before you join.",
   },
   {
-    question: "How do I pay after the free trial?",
+    question: "How do I pay?",
     answer:
-      "By bank transfer. Our team sends the account details and instructions on WhatsApp before your trial ends, so you are never caught off guard — and nothing is collected automatically.",
+      "By bank transfer. Our team sends the account details and the ₦15,300 instruction on WhatsApp as soon as you sign up — nothing is collected automatically.",
   },
 ];
