@@ -100,7 +100,7 @@ export const CV_STEPS = [
   },
   {
     title: "Send us your current CV",
-    body: "Attach your current CV in the same WhatsApp chat — Word or PDF. Add your payment receipt and we can start straight away.",
+    body: "Attach your current CV in the WhatsApp chat — Word or PDF. Your proof of payment is already uploaded, so the writers can start straight away.",
   },
   {
     title: "A Nigerian CV writer reviews it",

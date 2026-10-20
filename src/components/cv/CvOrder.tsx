@@ -143,7 +143,11 @@ export function CvOrder() {
         </div>
 
         <div className="min-w-0">
-          <CheckoutFlow initialPlan={selected} controlledPlan={selected} compact />
+          <CheckoutFlow
+            initialPlan={`cv-${selected}`}
+            controlledPlan={`cv-${selected}`}
+            compact
+          />
         </div>
       </div>
     </div>
