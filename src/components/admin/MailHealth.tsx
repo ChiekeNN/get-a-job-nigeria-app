@@ -68,8 +68,8 @@ export function MailHealth({ configured, inbox }: { configured: boolean; inbox: 
       {!configured ? (
         <p className="mt-2 flex items-start gap-1.5 text-[10.5px] leading-relaxed text-amber-800">
           <AlertTriangle className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
-          SMTP_PASS is not set. Applications are saved without their CV until it is added and the
-          project is redeployed.
+          SMTP_PASS is not set. Applications — CV included — are still saved in the applications
+          console; only the email heads-up is skipped.
         </p>
       ) : null}
 

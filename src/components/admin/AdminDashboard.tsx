@@ -62,12 +62,14 @@ interface Stats {
   subscriptionPlans: Array<{ name: string; count: number }>;
   mail: { configured: boolean; inbox: string };
   recentApplications: Array<{
+    id: number;
     name: string;
     email: string;
     phone: string;
     role: string;
     company: string;
     cv: string | null;
+    hasCv: boolean;
     at: string;
   }>;
   quality: {
@@ -432,14 +434,21 @@ export function AdminDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10.5px] font-semibold text-white/65 sm:inline-flex">
               <span className="admin-live-dot size-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
               Live · {clock.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </span>
             <Link
-              href="/admin/analytics"
+              href="/admin/applications"
               className="inline-flex items-center gap-1.5 rounded-lg border border-brand-400/40 bg-brand-500/15 px-2.5 py-1.5 text-[11px] font-semibold text-brand-200 transition hover:bg-brand-500/25"
+            >
+              <FileText className="size-3.5" aria-hidden="true" />
+              Applications
+            </Link>
+            <Link
+              href="/admin/analytics"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1.5 text-[11px] font-semibold text-white/80 transition hover:bg-white/10"
             >
               <Activity className="size-3.5" aria-hidden="true" />
               Traffic
@@ -688,7 +697,7 @@ export function AdminDashboard() {
         <div className="grid items-start gap-3 lg:grid-cols-[1.35fr_1fr]">
           <Panel
             title="Latest applications"
-            hint="Newest first. These are the people you forward to employers."
+            hint="Newest first — open one to read it, download the CV, or delete it."
             icon={FileText}
             delay={240}
           >
@@ -699,31 +708,50 @@ export function AdminDashboard() {
               </p>
             ) : (
               <ul className="divide-y divide-ink-50">
-                {stats.recentApplications.map((row, index) => (
-                  <li key={`${row.email}-${index}`} className="flex flex-wrap items-start gap-x-3 gap-y-1 py-2.5">
-                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-50 text-[10px] font-bold text-brand-700">
-                      {row.name
-                        .split(" ")
-                        .slice(0, 2)
-                        .map((part) => part[0])
-                        .join("")}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[12px] font-semibold text-ink-900">{row.name}</p>
-                      <p className="truncate text-[10.5px] text-ink-400">
-                        {row.email} · {row.phone}
-                      </p>
-                      <p className="mt-0.5 truncate text-[10.5px] text-ink-600">
-                        <span className="font-medium text-ink-800">{row.role}</span> · {row.company}
-                      </p>
-                    </div>
-                    <span className="shrink-0 rounded-full bg-ink-50 px-2 py-0.5 text-[10px] font-semibold text-ink-500">
-                      {timeAgo(row.at)}
-                    </span>
+                {stats.recentApplications.map((row) => (
+                  <li key={row.id}>
+                    <Link
+                      href={`/admin/applications?focus=${row.id}`}
+                      className="flex flex-wrap items-start gap-x-3 gap-y-1 py-2.5 transition hover:bg-ink-50/60"
+                    >
+                      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-50 text-[10px] font-bold text-brand-700">
+                        {row.name
+                          .split(" ")
+                          .slice(0, 2)
+                          .map((part) => part[0])
+                          .join("")}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[12px] font-semibold text-ink-900">{row.name}</p>
+                        <p className="truncate text-[10.5px] text-ink-400">
+                          {row.email} · {row.phone}
+                        </p>
+                        <p className="mt-0.5 truncate text-[10.5px] text-ink-600">
+                          <span className="font-medium text-ink-800">{row.role}</span> · {row.company}
+                        </p>
+                      </div>
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        {row.hasCv ? (
+                          <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-700">
+                            CV
+                          </span>
+                        ) : null}
+                        <span className="rounded-full bg-ink-50 px-2 py-0.5 text-[10px] font-semibold text-ink-500">
+                          {timeAgo(row.at)}
+                        </span>
+                      </span>
+                    </Link>
                   </li>
                 ))}
               </ul>
             )}
+            <Link
+              href="/admin/applications"
+              className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 hover:underline"
+            >
+              Open all applications
+              <ArrowUpRight className="size-3" aria-hidden="true" />
+            </Link>
           </Panel>
 
           <div className="space-y-3">

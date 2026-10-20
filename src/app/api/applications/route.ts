@@ -5,11 +5,12 @@ import { PHONE } from "@/data/contact";
 import { applications, jobs } from "@/db/schema";
 import { applyToJob } from "@/lib/jobs-service";
 import {
-  APPLICATIONS_INBOX,
   describeMailError,
   isMailerConfigured,
+  notifyApplicationEmail,
   sendApplicationEmail,
   type ApplicationMailCv,
+  type ApplicationMailInput,
 } from "@/lib/mailer";
 import { cleanText, isEmail, isValidNigerianPhone, toNumber } from "@/lib/validation";
 
@@ -126,36 +127,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Mail first: if the mailbox never received it, nothing is recorded and the
-    // candidate can retry. A recorded application that nobody can open is worse
-    // than an error message.
-    let mailed = false;
-    try {
-      const result = await sendApplicationEmail({
-        job: {
-          id: job.id,
-          title: job.title,
-          company: job.company,
-          category: job.category,
-          state: job.state,
-          city: job.city,
-          jobType: job.jobType,
-          slug: job.slug,
-          employerEmail: job.employerEmail ?? null,
-        },
-        applicant: { fullName, email, phone, location, coverLetter },
-        cv,
-        submittedAt: new Date(),
-      });
-      mailed = result.attempted;
-    } catch (error) {
-      // The mailbox is the delivery, but a broken mailbox must not cost the
-      // candidate their application: record it and ask them to email the CV.
-      console.error("[applications] email delivery failed", describeMailError(error));
-    }
+    const mail: ApplicationMailInput = {
+      job: {
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        category: job.category,
+        state: job.state,
+        city: job.city,
+        jobType: job.jobType,
+        slug: job.slug,
+        employerEmail: job.employerEmail ?? null,
+      },
+      applicant: { fullName, email, phone, location, coverLetter },
+      cv,
+      submittedAt: new Date(),
+    };
 
+    // Save first. The console — not the mailbox — is the record of an
+    // application now, CV included, so the candidate is never turned away
+    // because SMTP is unhappy.
+    let savedId = 0;
     try {
-      await applyToJob({
+      savedId = await applyToJob({
         jobId,
         fullName,
         email,
@@ -163,22 +157,67 @@ export async function POST(request: Request) {
         location,
         coverLetter,
         cvFileName: cv.filename,
+        cv: {
+          filename: cv.filename,
+          mime: cv.contentType,
+          size: cv.content.length,
+          data: cv.content,
+        },
       });
     } catch (error) {
-      // The mailbox already has the application; a failed record must not tell
-      // the candidate their application failed.
-      console.error("[applications] email sent but the record failed to save", error);
+      console.error("[applications] could not save the application", describeMailError(error));
     }
 
-    const message = mailed
-      ? `Application delivered. Our placement team has your CV and forwards shortlists to ${job.company} — expect to hear from us within 7 working days.`
-      : `Your application was saved, but your CV did not reach us. Please email it to ${APPLICATIONS_INBOX} with the job title in the subject line — everything else is already on file.`;
+    if (savedId > 0) {
+      // The record is safe. The email is a heads-up, and a failed one is only
+      // worth a log line — never a message that worries the applicant.
+      try {
+        await notifyApplicationEmail(mail);
+      } catch (error) {
+        console.error(
+          "[applications] saved, but the notification email failed",
+          describeMailError(error),
+        );
+      }
 
-    if (!isMailerConfigured()) {
-      console.error("[applications] SMTP is not configured — application saved without an emailed CV");
+      console.log(`[applications] saved application #${savedId} for ${job.title}`);
+      return Response.json({
+        ok: true,
+        message: `Application received. Our placement team has your CV on file and will review it — expect to hear from us within 7 working days.`,
+      });
     }
 
-    return Response.json({ ok: true, message });
+    // The database write failed. Email the full record instead so one broken
+    // store does not lose the candidate.
+    let mailed = false;
+    try {
+      if (!isMailerConfigured()) {
+        console.error("[applications] database save failed and SMTP is not configured");
+      } else {
+        const result = await sendApplicationEmail(mail);
+        mailed = result.attempted;
+      }
+    } catch (error) {
+      console.error("[applications] save failed and email delivery failed", describeMailError(error));
+    }
+
+    if (mailed) {
+      console.log(`[applications] saved nothing, but emailed the application for ${job.title}`);
+      return Response.json({
+        ok: true,
+        message: `Application delivered. Our placement team has your CV and forwards shortlists to ${job.company} — expect to hear from us within 7 working days.`,
+      });
+    }
+
+    console.error("[applications] nothing stored — database and mailbox both failed");
+    return Response.json(
+      {
+        ok: false,
+        message:
+          "We could not save your application just now. Please try again in a moment — nothing was submitted.",
+      },
+      { status: 503 },
+    );
   } catch (error) {
     console.error("application failed", error);
     return Response.json(

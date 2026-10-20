@@ -1,5 +1,6 @@
 import {
   boolean,
+  customType,
   integer,
   jsonb,
   pgTable,
@@ -8,6 +9,20 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+
+/**
+ * Raw file bytes for a candidate's CV.
+ *
+ * Postgres stores these out-of-line (TOAST) and the pg driver hands back a
+ * Buffer, so a 4 MB CV costs one authenticated request on download and needs no
+ * object-store account. `bytea` is declared by hand because drizzle has no
+ * built-in helper for it.
+ */
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return "bytea";
+  },
+});
 
 export const jobs = pgTable(
   "jobs",
@@ -62,6 +77,12 @@ export const applications = pgTable("applications", {
   location: text("location"),
   coverLetter: text("cover_letter"),
   cvFileName: text("cv_file_name"),
+  // The CV itself. The admin console is the record of an application, so the
+  // file has to outlive the notification email — it is served only through an
+  // admin-gated route and deleted with the application.
+  cvData: bytea("cv_data"),
+  cvMime: text("cv_mime"),
+  cvSize: integer("cv_size"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

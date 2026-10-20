@@ -1,9 +1,10 @@
-import { desc } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { applications, importState, jobs, subscribers } from "@/db/schema";
 import { APPLICATIONS_INBOX, isMailerConfigured } from "@/lib/mailer";
 import { isAdmin } from "@/lib/admin";
+import { ensureApplicationsSchema } from "@/lib/applications";
 import { findDatabaseUrlVar } from "@/db";
 
 export const dynamic = "force-dynamic";
@@ -58,9 +59,29 @@ export async function GET() {
   }
 
   try {
+    // Adds the CV columns on a database that predates them; the console reads
+    // them on the same request.
+    await ensureApplicationsSchema();
+
     const [jobRows, applicationRows, subscriberRows, cursorRows] = await Promise.all([
       db.select().from(jobs),
-      db.select().from(applications).orderBy(desc(applications.createdAt)).limit(2000),
+      // Explicit columns: never pull the stored CV files into a stats request.
+      db
+        .select({
+          id: applications.id,
+          jobId: applications.jobId,
+          fullName: applications.fullName,
+          email: applications.email,
+          phone: applications.phone,
+          location: applications.location,
+          cvFileName: applications.cvFileName,
+          cvSize: applications.cvSize,
+          hasCv: sql<boolean>`${applications.cvData} is not null`,
+          createdAt: applications.createdAt,
+        })
+        .from(applications)
+        .orderBy(desc(applications.createdAt))
+        .limit(2000),
       db.select().from(subscribers).limit(2000),
       db.select().from(importState),
     ]);
@@ -106,12 +127,14 @@ export async function GET() {
     const recentApplications = applicationRows.slice(0, 12).map((row) => {
       const job = jobRows.find((item) => item.id === row.jobId);
       return {
+        id: row.id,
         name: row.fullName,
         email: row.email,
         phone: row.phone,
         role: job?.title ?? "Deleted listing",
         company: job?.company ?? "—",
         cv: row.cvFileName,
+        hasCv: Boolean(row.hasCv),
         at: row.createdAt,
       };
     });
