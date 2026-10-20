@@ -141,6 +141,7 @@ export function Footer() {
               {[
                 ["Home", "/"],
                 ["Find jobs", "/jobs"],
+                ["Career advice", "/blog"],
                 ["Browse categories", "/#categories"],
                 ["All states", "/states"],
                 ["CV writing service", "/cv-writing"],
@@ -165,6 +166,7 @@ export function Footer() {
               {[
                 ["Post a job", "/employers#post-job"],
                 ["Employer dashboard", "/employers"],
+                ["Hiring advice", "/blog/topic/hiring"],
                 ["Talent sourcing", "/employers#talent"],
                 ["Pricing in Naira", "/employers#pricing"],
                 ["Talk to sales", "/employers#contact"],
