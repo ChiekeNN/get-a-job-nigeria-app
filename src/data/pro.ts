@@ -106,31 +106,6 @@ export const PRO_STEPS = [
   },
 ];
 
-export const PRO_STORIES = [
-  {
-    quote:
-      "I never realised how much a professionally written CV could make a difference. Within weeks of joining Job Seeker Pro I was called for interviews at top companies, and I finally landed a role in a multinational firm.",
-    name: "Chioma Eze",
-    location: "Lagos",
-    initials: "CE",
-  },
-  {
-    quote:
-      "The daily WhatsApp alerts are a game changer. I applied to a job the same day it was posted and got the interview before anyone else. The interview coaching made sure I was fully prepared.",
-    name: "Tunde Akinyemi",
-    location: "Abuja",
-    initials: "TA",
-  },
-  {
-    quote:
-      "After struggling to get callbacks for months, I joined Job Seeker Pro. The CV rewrite alone was worth it — within 30 days I had three interviews and accepted an offer I'm very proud of.",
-    name: "David Nwachukwu",
-    location: "Port Harcourt",
-    initials: "DN",
-  },
-];
-
-/** The six lines on the pricing card. */
 export const PRO_INCLUDED = [
   "Professional CV rewrite (included once)",
   "Verified job alerts on WhatsApp",

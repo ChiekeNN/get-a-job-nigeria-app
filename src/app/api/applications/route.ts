@@ -12,6 +12,7 @@ import {
   type ApplicationMailCv,
   type ApplicationMailInput,
 } from "@/lib/mailer";
+import { guardApplication } from "@/lib/throttle";
 import { cleanText, isEmail, isValidNigerianPhone, toNumber } from "@/lib/validation";
 
 export const runtime = "nodejs";
@@ -49,7 +50,8 @@ async function parseRequest(request: Request): Promise<ParsedBody> {
 
   const form = await request.formData();
   const fields: Record<string, unknown> = {};
-  for (const key of ["jobId", "fullName", "email", "phone", "location", "coverLetter"]) {
+  // `website` is the honeypot: a real browser never fills it.
+  for (const key of ["jobId", "fullName", "email", "phone", "location", "coverLetter", "website"]) {
     const value = form.get(key);
     if (typeof value === "string") fields[key] = value;
   }
@@ -77,9 +79,40 @@ async function parseRequest(request: Request): Promise<ParsedBody> {
   };
 }
 
+/** What a bot is told when it is quietly discarded: nothing. */
+const ACCEPTED_MESSAGE =
+  "Application received. Our placement team has your CV on file and will review it — expect to hear from us within 7 working days.";
+
 export async function POST(request: Request) {
   try {
+    // Cheapest check first: refusing before reading a 4 MB body is the whole
+    // point of a rate limit.
+    const verdict = await guardApplication(request);
+    if (!verdict.allowed) {
+      console.warn(`[applications] throttled — ${verdict.scope}: ${verdict.reason}`);
+      return Response.json(
+        {
+          ok: false,
+          message:
+            verdict.scope === "global"
+              ? "We are receiving an unusually high number of applications right now. Please try again shortly — nothing was submitted."
+              : "You have submitted several applications in a short time. Please wait a few minutes and try again — nothing was submitted.",
+        },
+        {
+          status: verdict.scope === "global" ? 503 : 429,
+          headers: { "Retry-After": String(verdict.retryAfterSeconds) },
+        },
+      );
+    }
+
     const { fields, cv, cvError } = await parseRequest(request);
+
+    // Honeypot: a field no human sees. Filled means a script, so answer as if it
+    // worked and store nothing — a bot that gets an error learns what to change.
+    if (cleanText(fields.website, 200).length > 0) {
+      console.warn("[applications] honeypot filled — discarding silently");
+      return Response.json({ ok: true, message: ACCEPTED_MESSAGE });
+    }
 
     if (cvError) return Response.json({ ok: false, message: cvError }, { status: 400 });
 
@@ -181,10 +214,7 @@ export async function POST(request: Request) {
       }
 
       console.log(`[applications] saved application #${savedId} for ${job.title}`);
-      return Response.json({
-        ok: true,
-        message: `Application received. Our placement team has your CV on file and will review it — expect to hear from us within 7 working days.`,
-      });
+      return Response.json({ ok: true, message: ACCEPTED_MESSAGE });
     }
 
     // The database write failed. Email the full record instead so one broken

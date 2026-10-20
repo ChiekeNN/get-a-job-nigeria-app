@@ -187,7 +187,7 @@ export function Footer() {
             <ul className="mt-4 space-y-2.5 text-sm text-white/70">
               {[
                 [`About ${BRAND.name}`, "/#how-it-works"],
-                ["Success stories", "/#stories"],
+                ["What happens after you apply", "/#stories"],
                 ["Privacy policy", "/legal#privacy"],
                 ["Terms & conditions", "/terms"],
                 ["CV & data policy", "/legal#cv"],

@@ -154,15 +154,6 @@ export interface CategoryInfo {
   openings: number;
 }
 
-export interface Testimonial {
-  name: string;
-  role: string;
-  location: string;
-  quote: string;
-  initials: string;
-  tint: string;
-}
-
 export type ActionState = {
   ok: boolean;
   message: string;

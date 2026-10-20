@@ -5,6 +5,7 @@ import {
   ensureApplicationsSchema,
   listApplications,
 } from "@/lib/applications";
+import { throttleSummary } from "@/lib/throttle";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,8 +25,12 @@ export async function GET() {
 
   try {
     await ensureApplicationsSchema();
-    const [applications, totals] = await Promise.all([listApplications(), applicationTotals()]);
-    return Response.json({ ok: true, totals, applications });
+    const [applications, totals, throttle] = await Promise.all([
+      listApplications(),
+      applicationTotals(),
+      throttleSummary(),
+    ]);
+    return Response.json({ ok: true, totals, applications, throttle });
   } catch (error) {
     console.error("[admin/applications] could not read applications", error);
     return Response.json(

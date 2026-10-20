@@ -4,7 +4,6 @@ import {
   Check,
   CheckCircle2,
   MessageCircle,
-  Quote,
   ShieldCheck,
   Sparkles,
   X,
@@ -21,7 +20,6 @@ import {
   PRO_INCLUDED,
   PRO_PAIN_POINTS,
   PRO_STEPS,
-  PRO_STORIES,
 } from "@/data/pro";
 
 export const metadata: Metadata = {
@@ -47,7 +45,7 @@ export default function ProPage() {
         <div className="wrap relative py-9 sm:py-14">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-[10.5px] font-bold uppercase tracking-[0.12em] text-amber-200">
             <Sparkles className="size-3.5" aria-hidden="true" />
-            Nigeria&apos;s #1 job search service
+            Placement-first, not application-first
           </span>
 
           <h1 className="mt-4 max-w-3xl font-display text-[30px] font-extrabold leading-[1.06] tracking-tight sm:text-[46px]">
@@ -272,45 +270,6 @@ export default function ProPage() {
             </li>
           ))}
         </ol>
-      </section>
-
-      {/* ── Member stories ───────────────────────────────────────────── */}
-      <section className="wrap mt-12 sm:mt-16">
-        <div className="max-w-2xl">
-          <p className="eyebrow">
-            <Quote className="size-3.5 text-brand-600" aria-hidden="true" />
-            What members say
-          </p>
-          <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
-            Real people, real offers
-          </h2>
-        </div>
-
-        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-          {PRO_STORIES.map((story) => (
-            <figure key={story.name} className="card flex min-w-0 flex-col p-4 sm:p-5">
-              <div className="flex gap-0.5 text-amber-400" aria-hidden="true">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <span key={index} className="text-[13px] leading-none">
-                    ★
-                  </span>
-                ))}
-              </div>
-              <blockquote className="mt-2 flex-1 text-[12.5px] leading-relaxed text-ink-700">
-                “{story.quote}”
-              </blockquote>
-              <figcaption className="mt-3 flex items-center gap-2.5 border-t border-ink-50 pt-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-50 text-[10.5px] font-bold text-brand-700">
-                  {story.initials}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-[12px] font-semibold text-ink-900">{story.name}</p>
-                  <p className="truncate text-[10.5px] text-ink-400">{story.location}</p>
-                </div>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
       </section>
 
       {/* ── FAQ ──────────────────────────────────────────────────────── */}
