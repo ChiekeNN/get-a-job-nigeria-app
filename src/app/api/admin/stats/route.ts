@@ -5,6 +5,7 @@ import { applications, importState, jobs, subscribers } from "@/db/schema";
 import { APPLICATIONS_INBOX, isMailerConfigured } from "@/lib/mailer";
 import { isAdmin } from "@/lib/admin";
 import { ensureApplicationsSchema } from "@/lib/applications";
+import { ensurePaymentsSchema, paymentTotals } from "@/lib/payments";
 import { findDatabaseUrlVar } from "@/db";
 
 export const dynamic = "force-dynamic";
@@ -62,8 +63,9 @@ export async function GET() {
     // Adds the CV columns on a database that predates them; the console reads
     // them on the same request.
     await ensureApplicationsSchema();
+    await ensurePaymentsSchema();
 
-    const [jobRows, applicationRows, subscriberRows, cursorRows] = await Promise.all([
+    const [jobRows, applicationRows, subscriberRows, cursorRows, money] = await Promise.all([
       db.select().from(jobs),
       // Explicit columns: never pull the stored CV files into a stats request.
       db
@@ -84,6 +86,7 @@ export async function GET() {
         .limit(2000),
       db.select().from(subscribers).limit(2000),
       db.select().from(importState),
+      paymentTotals(),
     ]);
 
     const now = Date.now();
@@ -160,6 +163,7 @@ export async function GET() {
       ok: true,
       generatedAt: new Date().toISOString(),
       mail: { configured: isMailerConfigured(), inbox: APPLICATIONS_INBOX },
+      money,
       totals: {
         liveJobs: live.length,
         allJobs: jobRows.length,

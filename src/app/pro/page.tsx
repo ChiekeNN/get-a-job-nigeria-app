@@ -11,7 +11,8 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AlertsForm, ProSignupForm } from "@/components/pro/ProForms";
+import { AlertsForm } from "@/components/pro/ProForms";
+import { CheckoutFlow } from "@/components/payments/CheckoutFlow";
 import { CONTACT, PHONE, mailto, whatsappLink } from "@/data/contact";
 import {
   PRO,
@@ -332,14 +333,15 @@ export default function ProPage() {
                 Start with one payment
               </h2>
               <p className="mt-2 max-w-md text-[13px] leading-relaxed text-white/65">
-                Fill the form and our team is in touch within 24 hours with the bank details.{" "}
-                {PRO.price} once — no monthly fee, nothing renewing.
+                Transfer {PRO.price} to Jojuni Technologies Ltd at Fidelity Bank, then upload the
+                receipt on the right. We confirm it and the rewrite starts — no monthly fee, nothing
+                renewing.
               </p>
 
               <ul className="mt-4 space-y-2.5">
                 {[
                   `${PRO.price} once. No monthly fee, nothing renewing.`,
-                  "Send your CV once the form is in — that starts the rewrite.",
+                  "Upload your proof of payment and we confirm it the same working day.",
                   "Your details are never sold or shared with employers without your say-so.",
                 ].map((line) => (
                   <li key={line} className="flex items-start gap-2 text-[12px] leading-relaxed">
@@ -365,8 +367,8 @@ export default function ProPage() {
               </div>
             </div>
 
-            <div className="min-w-0">
-              <ProSignupForm />
+            <div className="min-w-0 rounded-[22px] bg-cream p-3 sm:p-4">
+              <CheckoutFlow initialPlan="pro" compact />
             </div>
           </div>
         </div>

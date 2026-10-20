@@ -355,6 +355,84 @@ export async function notifyApplicationEmail(
 }
 
 /**
+ * A payment has been claimed — tell the inbox, without the receipt.
+ *
+ * Same rule as applications: the console holds the evidence, so this message is
+ * a notification with a reference to look up, not an attachment.
+ */
+export async function notifyPaymentEmail(input: {
+  reference: string;
+  planName: string;
+  amount: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  note: string | null;
+}): Promise<ApplicationMailResult> {
+  if (!isMailerConfigured()) {
+    console.error("[mail] SMTP_PASS is not set — payment recorded, no notification sent");
+    return { attempted: false };
+  }
+
+  const consoleUrl = `${BRAND.url}/admin/payments`;
+  const subject = `[${BRAND.name}] Payment to verify: ${input.reference} — ₦${input.amount.toLocaleString("en-NG")}`;
+
+  const text = [
+    `Payment submitted for verification — ${input.reference}`,
+    `${input.planName} · ₦${input.amount.toLocaleString("en-NG")}`,
+    ``,
+    `${input.fullName} <${input.email}> · ${input.phone}`,
+    input.note ? `Note: ${input.note}` : "",
+    ``,
+    `The proof of payment is in the console:`,
+    consoleUrl,
+    ``,
+    `Match it against the Fidelity Bank account before marking it verified.`,
+  ]
+    .filter((line) => line !== "")
+    .join("\n");
+
+  const html = `<!doctype html>
+<html lang="en"><body style="margin:0;padding:24px;background:#f5f8f6;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e3ebe7;border-radius:14px;overflow:hidden;">
+    <div style="background:#0d1b16;padding:18px 22px;">
+      <p style="margin:0;color:#8fd6b4;font-size:11px;letter-spacing:.12em;text-transform:uppercase;">Payment to verify</p>
+      <h1 style="margin:6px 0 0;color:#ffffff;font-size:20px;line-height:1.3;">₦${input.amount.toLocaleString("en-NG")}</h1>
+      <p style="margin:4px 0 0;color:#c9d8d1;font-size:13px;">${escapeHtml(input.planName)} · ${escapeHtml(input.reference)}</p>
+    </div>
+    <div style="padding:18px 22px;">
+      <p style="margin:0 0 4px;color:#0d1b16;font-size:15px;font-weight:600;">${escapeHtml(input.fullName)}</p>
+      <p style="margin:0 0 14px;color:#5b6b64;font-size:13px;">
+        <a href="mailto:${escapeHtml(input.email)}" style="color:#0f766e;">${escapeHtml(input.email)}</a>
+        · ${escapeHtml(input.phone)}
+      </p>
+      <p style="margin:0 0 14px;color:#5b6b64;font-size:13px;line-height:1.6;">
+        The proof of payment is in the console. Match it against the Fidelity Bank account before
+        marking the payment verified.
+      </p>
+      <p style="margin:0;">
+        <a href="${escapeHtml(consoleUrl)}" style="display:inline-block;background:#078e58;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:10px 16px;border-radius:10px;">Open payments</a>
+      </p>
+    </div>
+    <div style="padding:12px 22px;background:#f5f8f6;border-top:1px solid #e3ebe7;color:#8a9992;font-size:11px;">
+      ${escapeHtml(BRAND.name)} · ${escapeHtml(BRAND.domain)} · No attachment — the receipt stays in the console.
+    </div>
+  </div>
+</body></html>`;
+
+  await sendViaPorts(() => ({
+    from: `"${BRAND.name} Payments" <${USER}>`,
+    to: APPLICATIONS_INBOX,
+    replyTo: input.email,
+    subject,
+    text,
+    html,
+  }));
+
+  return { attempted: true };
+}
+
+/**
  * Checks the mailbox without sending anything, trying each port in turn.
  * Used by the admin console so a broken password is visible in one click.
  */

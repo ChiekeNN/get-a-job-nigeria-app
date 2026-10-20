@@ -82,7 +82,7 @@ export const PRO_STEPS = [
   {
     title: "Sign up and pay once",
     description:
-      "Fill in the form on this page and we send the payment details on WhatsApp. ₦15,300 once covers everything below.",
+      "Transfer ₦15,300 to Jojuni Technologies Ltd at Fidelity Bank, then upload your proof of payment on this page. Once covers everything below.",
   },
   {
     title: "Submit your CV for a rewrite",
@@ -144,6 +144,6 @@ export const PRO_FAQS = [
   {
     question: "How do I pay?",
     answer:
-      "By bank transfer. Our team sends the account details and the ₦15,300 instruction on WhatsApp as soon as you sign up — nothing is collected automatically.",
+      "By bank transfer to Jojuni Technologies Ltd at Fidelity Bank — the account number is on the form, and you upload the receipt right there. Nothing is collected automatically, and we never ask for a card or a PIN.",
   },
 ];

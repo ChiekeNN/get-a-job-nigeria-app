@@ -1,6 +1,7 @@
 import { BRAND } from "@/data/site";
 import { CONTACT, PHONE } from "@/data/contact";
 import { CV_PACKAGES, CV_WRITING } from "@/data/cv-writing";
+import { BANK } from "@/data/payment";
 import { PRO } from "@/data/pro";
 
 /**
@@ -324,7 +325,11 @@ export const TERMS_SECTIONS: TermsSection[] = [
         blocks: [
           {
             kind: "p",
-            text: `Paid services are paid by bank transfer to ${company}. When you place an order our team sends the account details and the exact amount on WhatsApp. Send your proof of payment in the same chat, or upload it through the service form.`,
+            text: `Paid services are paid by bank transfer to ${company}. The account details and the exact amount are shown on the order form; upload a screenshot of your transfer receipt there and we confirm the payment before any work starts.`,
+          },
+          {
+            kind: "p",
+            text: `Our only account is ${BANK.accountName}, ${BANK.bank}, account number ${BANK.accountNumber}. Any other account number, however official it looks, is not ours.`,
           },
           {
             kind: "p",

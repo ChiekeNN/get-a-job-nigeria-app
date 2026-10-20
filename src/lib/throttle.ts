@@ -23,9 +23,21 @@ import { getPool } from "@/db";
 
 const SALT = process.env.APPLY_SALT?.trim() || process.env.ADMIN_SECRET || "getajob-apply";
 
-const PER_IP_HOUR = Number(process.env.APPLY_PER_IP_HOUR) || 5;
-const PER_IP_DAY = Number(process.env.APPLY_PER_IP_DAY) || 12;
-const GLOBAL_DAY = Number(process.env.APPLY_GLOBAL_DAY) || 250;
+/** Applications store a 4 MB CV each, so they are the tighter of the two. */
+export const LIMITS = {
+  apply: {
+    perHour: Number(process.env.APPLY_PER_IP_HOUR) || 5,
+    perDay: Number(process.env.APPLY_PER_IP_DAY) || 12,
+    globalDay: Number(process.env.APPLY_GLOBAL_DAY) || 250,
+  },
+  payment: {
+    perHour: Number(process.env.PAY_PER_IP_HOUR) || 5,
+    perDay: Number(process.env.PAY_PER_IP_DAY) || 10,
+    globalDay: Number(process.env.PAY_GLOBAL_DAY) || 200,
+  },
+} as const;
+
+export type ThrottleScope = keyof typeof LIMITS;
 
 let schemaReady: Promise<void> | null = null;
 
@@ -46,6 +58,13 @@ function ensureThrottleTable(): Promise<void> {
     );
     await pool.query(
       `create index if not exists apply_attempts_ip_idx on apply_attempts (ip_hash, created_at)`,
+    );
+    // Both public forms share one table; `scope` keeps their budgets apart.
+    await pool.query(
+      `alter table apply_attempts add column if not exists scope text not null default 'apply'`,
+    );
+    await pool.query(
+      `create index if not exists apply_attempts_scope_idx on apply_attempts (scope, created_at)`,
     );
   })().catch((error) => {
     schemaReady = null;
@@ -89,17 +108,18 @@ interface Counts {
   globalDay: number;
 }
 
-async function countsFor(fingerprint: string): Promise<Counts> {
+async function countsFor(fingerprint: string, scope: ThrottleScope): Promise<Counts> {
   const pool = getPool();
   const result = await pool.query<{ hour: number; day: number; global_day: number }>(
     `select
        count(*) filter (where created_at > now() - interval '1 hour')::int as hour,
        count(*) filter (where created_at > now() - interval '1 day')::int as day,
        (select count(*) from apply_attempts
-          where outcome = 'allowed' and created_at > now() - interval '1 day')::int as global_day
+          where scope = $2 and outcome = 'allowed'
+            and created_at > now() - interval '1 day')::int as global_day
      from apply_attempts
-     where ip_hash = $1`,
-    [fingerprint],
+     where ip_hash = $1 and scope = $2`,
+    [fingerprint, scope],
   );
   const row = result.rows[0];
   return { hour: row?.hour ?? 0, day: row?.day ?? 0, globalDay: row?.global_day ?? 0 };
@@ -111,12 +131,16 @@ async function countsFor(fingerprint: string): Promise<Counts> {
  * Every call leaves a row, so a blocked script cannot retry for free — and the
  * console can show how much noise is being turned away.
  */
-export async function guardApplication(request: Request): Promise<ThrottleVerdict> {
+export async function guardSubmission(
+  request: Request,
+  scope: ThrottleScope = "apply",
+): Promise<ThrottleVerdict> {
   const fingerprint = clientFingerprint(request);
+  const limits = LIMITS[scope];
 
   try {
     await ensureThrottleTable();
-    const counts = await countsFor(fingerprint);
+    const counts = await countsFor(fingerprint, scope);
     const pool = getPool();
 
     let verdict: ThrottleVerdict = {
@@ -125,34 +149,33 @@ export async function guardApplication(request: Request): Promise<ThrottleVerdic
       usedDay: counts.day,
     };
 
-    if (counts.globalDay >= GLOBAL_DAY) {
+    if (counts.globalDay >= limits.globalDay) {
       verdict = {
         allowed: false,
         scope: "global",
-        reason: `daily ceiling reached (${counts.globalDay}/${GLOBAL_DAY})`,
+        reason: `daily ceiling reached (${counts.globalDay}/${limits.globalDay})`,
         retryAfterSeconds: 3600,
       };
-    } else if (counts.hour >= PER_IP_HOUR) {
+    } else if (counts.hour >= limits.perHour) {
       verdict = {
         allowed: false,
         scope: "ip",
-        reason: `more than ${PER_IP_HOUR} attempts in an hour`,
+        reason: `more than ${limits.perHour} attempts in an hour`,
         retryAfterSeconds: 900,
       };
-    } else if (counts.day >= PER_IP_DAY) {
+    } else if (counts.day >= limits.perDay) {
       verdict = {
         allowed: false,
         scope: "ip",
-        reason: `more than ${PER_IP_DAY} attempts in a day`,
+        reason: `more than ${limits.perDay} attempts in a day`,
         retryAfterSeconds: 3600,
       };
     }
 
-    await pool.query(`insert into apply_attempts (ip_hash, outcome, reason) values ($1, $2, $3)`, [
-      fingerprint,
-      verdict.allowed ? "allowed" : "blocked",
-      verdict.allowed ? null : verdict.reason,
-    ]);
+    await pool.query(
+      `insert into apply_attempts (ip_hash, outcome, reason, scope) values ($1, $2, $3, $4)`,
+      [fingerprint, verdict.allowed ? "allowed" : "blocked", verdict.allowed ? null : verdict.reason, scope],
+    );
 
     // Keep the table small without needing a cron job.
     if (Math.random() < 0.02) {
@@ -166,6 +189,11 @@ export async function guardApplication(request: Request): Promise<ThrottleVerdic
     console.error("[apply] throttle check failed — allowing the attempt", error);
     return { allowed: true, usedHour: 0, usedDay: 0 };
   }
+}
+
+/** Kept for the application route, which only ever uses one scope. */
+export function guardApplication(request: Request): Promise<ThrottleVerdict> {
+  return guardSubmission(request, "apply");
 }
 
 export interface ThrottleSummary {
@@ -185,15 +213,15 @@ export async function throttleSummary(): Promise<ThrottleSummary | null> {
          count(*) filter (where outcome = 'allowed')::int as total,
          count(*) filter (where outcome = 'blocked')::int as blocked
        from apply_attempts
-       where created_at > now() - interval '1 day'`,
+       where scope = 'apply' and created_at > now() - interval '1 day'`,
     );
     const row = result.rows[0];
     return {
       last24h: row?.total ?? 0,
       blocked24h: row?.blocked ?? 0,
-      globalCeiling: GLOBAL_DAY,
-      perHour: PER_IP_HOUR,
-      perDay: PER_IP_DAY,
+      globalCeiling: LIMITS.apply.globalDay,
+      perHour: LIMITS.apply.perHour,
+      perDay: LIMITS.apply.perDay,
     };
   } catch (error) {
     console.error("[apply] could not read throttle counts", error);
