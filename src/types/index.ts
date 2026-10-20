@@ -133,7 +133,8 @@ export interface SubscriptionInput {
 export interface JobStats {
   liveJobs: number;
   hiringCompanies: number;
-  activeSeekers: number;
+  /** Listings published in the last seven days. */
+  newThisWeek: number;
   statesCovered: number;
 }
 

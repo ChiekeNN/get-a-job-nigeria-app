@@ -1,4 +1,4 @@
-import type { JobStats, Testimonial } from "@/types";
+import type { Testimonial } from "@/types";
 
 /**
  * Brand identity. Change a value here and the whole site follows — the wordmark,
@@ -78,13 +78,6 @@ export const SALARY_BRACKETS = [
   { label: "₦500,000+", value: 500000 },
   { label: "₦1,000,000+", value: 1000000 },
 ] as const;
-
-export const STATS: JobStats = {
-  liveJobs: 1842,
-  hiringCompanies: 326,
-  activeSeekers: 47820,
-  statesCovered: 37,
-};
 
 export const TESTIMONIALS: Testimonial[] = [
   {

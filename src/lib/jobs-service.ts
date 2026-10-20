@@ -367,23 +367,23 @@ export async function createSubscription(input: SubscriptionInput): Promise<void
   });
 }
 
+/**
+ * Headline numbers, measured from the live board.
+ *
+ * Every figure here is something the database can prove: the rows on the board,
+ * the distinct employers among them, how many were published in the last seven
+ * days, and how many states they sit in. Nothing is padded — a padded stat is
+ * a lie a visitor can catch by clicking "Find jobs" and counting.
+ */
 export async function getStats(jobList?: Job[]): Promise<JobStats> {
-  let list = jobList;
-  if (!list) list = await listJobs();
-  let applicationCount = 0;
-  try {
-    const rows = await db.select({ value: sql<number>`count(*)::int` }).from(applications);
-    applicationCount = rows[0]?.value ?? 0;
-  } catch {
-    applicationCount = 0;
-  }
-  const companies = new Set(list.map((job) => job.company));
-  const states = new Set(list.map((job) => job.state));
+  const list = jobList ?? (await listJobs());
+  const weekAgo = Date.now() - 7 * 86_400_000;
+
   return {
-    liveJobs: 1826 + list.length,
-    hiringCompanies: 302 + companies.size,
-    activeSeekers: 47184 + applicationCount * 3,
-    statesCovered: Math.max(states.size, 37),
+    liveJobs: list.length,
+    hiringCompanies: new Set(list.map((job) => job.company)).size,
+    newThisWeek: list.filter((job) => new Date(job.postedAt).getTime() >= weekAgo).length,
+    statesCovered: new Set(list.map((job) => job.state)).size,
   };
 }
 

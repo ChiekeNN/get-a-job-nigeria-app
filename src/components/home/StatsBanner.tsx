@@ -1,4 +1,4 @@
-import { Briefcase, Building2, Map, Users } from "lucide-react";
+import { Briefcase, Building2, Map, Sparkles } from "lucide-react";
 
 import type { JobStats } from "@/types";
 
@@ -7,25 +7,25 @@ const ITEMS = [
     key: "liveJobs" as const,
     label: "Live job listings",
     icon: Briefcase,
-    note: "Verified this week",
+    note: "Verified and open today",
   },
   {
     key: "hiringCompanies" as const,
     label: "Hiring companies",
     icon: Building2,
-    note: "Banks, telcos, oil & tech",
+    note: "Employers with open roles",
   },
   {
-    key: "activeSeekers" as const,
-    label: "Active job seekers",
-    icon: Users,
-    note: "Matched in the last 90 days",
+    key: "newThisWeek" as const,
+    label: "New this week",
+    icon: Sparkles,
+    note: "Posted in the last 7 days",
   },
   {
     key: "statesCovered" as const,
-    label: "States covered",
+    label: "States with live roles",
     icon: Map,
-    note: "All 36 states + FCT",
+    note: "Across the 36 states and FCT",
   },
 ];
 
@@ -45,7 +45,6 @@ export function StatsBanner({ stats }: { stats: JobStats }) {
             </div>
             <p className="mt-2.5 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[28px]">
               {stats[key].toLocaleString("en-NG")}
-              <span className="text-brand-600">+</span>
             </p>
             <p className="mt-0.5 text-[11px] text-ink-400">{note}</p>
           </div>
