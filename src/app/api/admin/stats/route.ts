@@ -2,6 +2,7 @@ import { desc } from "drizzle-orm";
 
 import { db } from "@/db";
 import { applications, importState, jobs, subscribers } from "@/db/schema";
+import { APPLICATIONS_INBOX, isMailerConfigured } from "@/lib/mailer";
 import { isAdmin } from "@/lib/admin";
 import { findDatabaseUrlVar } from "@/db";
 
@@ -135,6 +136,7 @@ export async function GET() {
     return Response.json({
       ok: true,
       generatedAt: new Date().toISOString(),
+      mail: { configured: isMailerConfigured(), inbox: APPLICATIONS_INBOX },
       totals: {
         liveJobs: live.length,
         allJobs: jobRows.length,
