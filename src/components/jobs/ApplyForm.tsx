@@ -11,6 +11,7 @@ export function ApplyForm({ job }: { job: Job }) {
   const { toast } = useToast();
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
+  const [doneMessage, setDoneMessage] = useState("");
   const [cvName, setCvName] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [status, setStatus] = useState<ActionState | null>(null);
@@ -33,6 +34,7 @@ export function ApplyForm({ job }: { job: Job }) {
       const payload = (await response.json()) as ActionState;
       if (!response.ok) throw new Error(payload.message || "Could not send application");
       setDone(true);
+      setDoneMessage(payload.message);
       toast({ title: "Application sent ✅", description: payload.message, variant: "success" });
       form.reset();
       setCvFile(null);
@@ -54,12 +56,15 @@ export function ApplyForm({ job }: { job: Job }) {
         </span>
         <h3 className="mt-3 font-display text-lg font-bold text-ink-900">Application received</h3>
         <p className="mt-1 text-sm leading-relaxed text-ink-500">
-          Your CV is with the GetAJob placement team. We review every application and forward
-          shortlists to {job.company} — expect to hear from us within 7 working days.
+          {doneMessage ||
+            `Your CV is with the GetAJob placement team. We review every application and forward shortlists to ${job.company} — expect to hear from us within 7 working days.`}
         </p>
         <button
           type="button"
-          onClick={() => setDone(false)}
+          onClick={() => {
+            setDone(false);
+            setDoneMessage("");
+          }}
           className="btn btn-outline btn-sm mt-4"
         >
           Apply again for someone else

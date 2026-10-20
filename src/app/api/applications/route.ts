@@ -6,6 +6,7 @@ import { applications, jobs } from "@/db/schema";
 import { applyToJob } from "@/lib/jobs-service";
 import {
   APPLICATIONS_INBOX,
+  describeMailError,
   isMailerConfigured,
   sendApplicationEmail,
   type ApplicationMailCv,
@@ -148,14 +149,9 @@ export async function POST(request: Request) {
       });
       mailed = result.attempted;
     } catch (error) {
-      console.error("[applications] email delivery failed", error);
-      return Response.json(
-        {
-          ok: false,
-          message: `We could not submit your application just now. Please email your CV to ${APPLICATIONS_INBOX} with the job title in the subject line.`,
-        },
-        { status: 502 },
-      );
+      // The mailbox is the delivery, but a broken mailbox must not cost the
+      // candidate their application: record it and ask them to email the CV.
+      console.error("[applications] email delivery failed", describeMailError(error));
     }
 
     try {
@@ -176,7 +172,7 @@ export async function POST(request: Request) {
 
     const message = mailed
       ? `Application delivered. Our placement team has your CV and forwards shortlists to ${job.company} — expect to hear from us within 7 working days.`
-      : `Application received. Our team will contact you within 7 working days.`;
+      : `Your application was saved, but your CV did not reach us. Please email it to ${APPLICATIONS_INBOX} with the job title in the subject line — everything else is already on file.`;
 
     if (!isMailerConfigured()) {
       console.error("[applications] SMTP is not configured — application saved without an emailed CV");

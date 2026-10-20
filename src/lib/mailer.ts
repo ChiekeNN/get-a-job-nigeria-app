@@ -21,26 +21,66 @@ const PASS = process.env.SMTP_PASS ?? "";
 /** Where applications land. Defaults to the authenticated mailbox. */
 export const APPLICATIONS_INBOX = process.env.APPLICATIONS_INBOX?.trim() || USER;
 
+/** Non-secret connection facts, for the admin diagnostics panel. */
+export function mailConfigSummary(): {
+  host: string;
+  port: number;
+  fallbackPort: number | null;
+  user: string;
+  inbox: string;
+} {
+  return { host: HOST, port: PORT, fallbackPort: FALLBACK_PORT, user: USER, inbox: APPLICATIONS_INBOX };
+}
+
 /** True once SMTP_PASS is set. Until then applications are recorded but not mailed. */
 export function isMailerConfigured(): boolean {
   return PASS.length > 0;
 }
 
-let transport: Transporter | null = null;
+/**
+ * Ports are tried in order. Shared hosts sometimes disable AUTH on one port
+ * while leaving the other open, so a failed 465 can still succeed on 587.
+ * Set SMTP_FALLBACK_PORT=off to disable the second attempt.
+ */
+const FALLBACK_PORT =
+  process.env.SMTP_FALLBACK_PORT === "off"
+    ? null
+    : Number(process.env.SMTP_FALLBACK_PORT ?? 587) || null;
 
-function mailer(): Transporter | null {
-  if (!isMailerConfigured()) return null;
-  transport ??= nodemailer.createTransport({
+/** Remember a port that has worked, so the next application skips the retry. */
+let workingPort: number | null = null;
+
+function portsToTry(): number[] {
+  const primary = workingPort ?? PORT;
+  const ports = [primary];
+  if (FALLBACK_PORT && !ports.includes(FALLBACK_PORT)) ports.push(FALLBACK_PORT);
+  return ports;
+}
+
+function transportFor(port: number): Transporter {
+  return nodemailer.createTransport({
     host: HOST,
-    port: PORT,
-    // 465 is implicit TLS; 587 upgrades with STARTTLS.
-    secure: PORT === 465,
+    port,
+    // 465 is implicit TLS; 587 (and 25) start plain and must upgrade with STARTTLS.
+    secure: port === 465,
+    requireTLS: port === 587 || port === 25,
     auth: { user: USER, pass: PASS },
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
+    connectionTimeout: 8_000,
+    greetingTimeout: 8_000,
     socketTimeout: 20_000,
+    tls: { servername: HOST },
   });
-  return transport;
+}
+
+/** A short, password-free description of a send failure. */
+export function describeMailError(error: unknown): string {
+  if (!error || typeof error !== "object") return String(error).slice(0, 200);
+  const mail = error as { code?: string; responseCode?: number; response?: string; message?: string };
+  const bits = [mail.code, mail.responseCode ? String(mail.responseCode) : null]
+    .filter(Boolean)
+    .join(" ");
+  const detail = (mail.response || mail.message || "Unknown error").replace(/\s+/g, " ").trim();
+  return `${bits ? `${bits}: ` : ""}${detail}`.slice(0, 240);
 }
 
 export interface ApplicationMailJob {
@@ -79,6 +119,14 @@ export interface ApplicationMailInput {
 export interface ApplicationMailResult {
   /** False when SMTP is not configured, so the caller can decide how to answer. */
   attempted: boolean;
+}
+
+/** One line per port attempted, for the admin diagnostics panel. */
+export interface MailAttempt {
+  port: number;
+  secure: boolean;
+  ok: boolean;
+  error?: string;
 }
 
 const LAGOS = new Intl.DateTimeFormat("en-NG", {
@@ -181,31 +229,94 @@ export function applicationEmail(input: ApplicationMailInput): {
  * turns that into a visible error so nobody is told "sent" when it was not.
  */
 export async function sendApplicationEmail(input: ApplicationMailInput): Promise<ApplicationMailResult> {
-  const client = mailer();
-  if (!client) {
+  if (!isMailerConfigured()) {
     console.error("[mail] SMTP_PASS is not set — application recorded but NOT emailed");
     return { attempted: false };
   }
 
   const { subject, text, html, replyTo } = applicationEmail(input);
 
-  await client.sendMail({
-    from: `"${BRAND.name} Applications" <${USER}>`,
-    to: APPLICATIONS_INBOX,
-    replyTo,
-    subject,
-    text,
-    html,
-    attachments: input.cv
-      ? [
-          {
-            filename: input.cv.filename,
-            content: input.cv.content,
-            contentType: input.cv.contentType,
-          },
-        ]
-      : [],
-  });
+  let lastError: unknown = null;
+  for (const port of portsToTry()) {
+    try {
+      await transportFor(port).sendMail({
+        from: `"${BRAND.name} Applications" <${USER}>`,
+        to: APPLICATIONS_INBOX,
+        replyTo,
+        subject,
+        text,
+        html,
+        attachments: input.cv
+          ? [
+              {
+                filename: input.cv.filename,
+                content: input.cv.content,
+                contentType: input.cv.contentType,
+              },
+            ]
+          : [],
+      });
+      workingPort = port;
+      return { attempted: true };
+    } catch (error) {
+      lastError = error;
+      console.error(`[mail] send failed on port ${port}:`, describeMailError(error));
+    }
+  }
 
-  return { attempted: true };
+  throw lastError ?? new Error("SMTP send failed");
+}
+
+/**
+ * Checks the mailbox without sending anything, trying each port in turn.
+ * Used by the admin console so a broken password is visible in one click.
+ */
+export async function verifyMailer(): Promise<{
+  configured: boolean;
+  ok: boolean;
+  attempts: MailAttempt[];
+}> {
+  if (!isMailerConfigured()) return { configured: false, ok: false, attempts: [] };
+
+  const attempts: MailAttempt[] = [];
+  for (const port of portsToTry()) {
+    try {
+      await transportFor(port).verify();
+      workingPort = port;
+      attempts.push({ port, secure: port === 465, ok: true });
+      return { configured: true, ok: true, attempts };
+    } catch (error) {
+      attempts.push({
+        port,
+        secure: port === 465,
+        ok: false,
+        error: describeMailError(error),
+      });
+    }
+  }
+
+  return { configured: true, ok: false, attempts };
+}
+
+/** Sends a one-line message to the applications inbox, end to end. */
+export async function sendTestEmail(): Promise<{ ok: boolean; error?: string }> {
+  if (!isMailerConfigured()) return { ok: false, error: "SMTP_PASS is not set" };
+
+  let lastError: unknown = null;
+  for (const port of portsToTry()) {
+    try {
+      await transportFor(port).sendMail({
+        from: `"${BRAND.name} Applications" <${USER}>`,
+        to: APPLICATIONS_INBOX,
+        subject: `[${BRAND.name}] Mail test — admin console`,
+        text: `SMTP is working. This message was sent from ${BRAND.domain} at ${new Date().toISOString()} on port ${port}.`,
+      });
+      workingPort = port;
+      return { ok: true };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  return { ok: false, error: describeMailError(lastError) };
 }
