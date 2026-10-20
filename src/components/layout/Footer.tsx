@@ -187,7 +187,7 @@ export function Footer() {
                 [`About ${BRAND.name}`, "/#how-it-works"],
                 ["Success stories", "/#stories"],
                 ["Privacy policy", "/legal#privacy"],
-                ["Terms of use", "/legal#terms"],
+                ["Terms & conditions", "/terms"],
                 ["CV & data policy", "/legal#cv"],
                 ["Contact us", "/contact"],
               ].map(([label, href]) => (
