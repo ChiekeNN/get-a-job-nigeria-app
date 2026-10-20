@@ -20,6 +20,7 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
   const [cvName, setCvName] = useState("");
+  const [cvFile, setCvFile] = useState<File | null>(null);
   const [status, setStatus] = useState<ActionState | null>(null);
 
   function handleClose() {
@@ -28,6 +29,7 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
       setDone(false);
       setStatus(null);
       setCvName("");
+      setCvFile(null);
     }, 250);
   }
 
@@ -39,26 +41,21 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
     setStatus(null);
 
     try {
-      const response = await fetch("/api/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobId: job.id,
-          fullName: data.get("fullName"),
-          email: data.get("email"),
-          phone: data.get("phone"),
-          location: data.get("location"),
-          coverLetter: data.get("coverLetter"),
-          cvFileName: cvName || "candidate-cv.pdf",
-        }),
-      });
+      const formData = new FormData();
+      formData.set("jobId", String(job.id));
+      for (const key of ["fullName", "email", "phone", "location", "coverLetter"]) {
+        formData.set(key, String(data.get(key) ?? ""));
+      }
+      if (cvFile) formData.set("cv", cvFile);
+
+      const response = await fetch("/api/applications", { method: "POST", body: formData });
       const payload = (await response.json()) as ActionState;
       if (!response.ok) throw new Error(payload.message || "Could not submit application");
       setDone(true);
       onApplied(job);
       toast({
         title: "Application sent ✅",
-        description: `Your profile is now with ${job.company}. Watch your inbox and WhatsApp.`,
+        description: `Your CV is with our placement team. Watch your inbox and WhatsApp.`,
         variant: "success",
       });
     } catch (error) {
@@ -77,8 +74,8 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
       title={done ? "You're in the queue 🎉" : `Quick apply — ${job?.title ?? ""}`}
       description={
         done
-          ? `${job?.company} has received your profile. Most employers respond within 7 working days.`
-          : `Apply in under 60 seconds. Recruiters at ${job?.company ?? "this company"} review every shortlisted profile.`
+          ? `Your CV is with the GetAJob placement team. We forward shortlists to ${job?.company ?? "the employer"} — expect to hear from us within 7 working days.`
+          : `Apply in under 60 seconds. Our team reviews every CV and forwards shortlists to ${job?.company ?? "this company"}.`
       }
     >
       {job && !done ? (
@@ -111,8 +108,8 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
             Application recorded successfully.
           </div>
           <ul className="space-y-2 text-sm text-ink-600">
-            <li>1. Your profile was forwarded to the hiring team.</li>
-            <li>2. You will get an email confirmation shortly.</li>
+            <li>1. Your CV reached the GetAJob placement team.</li>
+            <li>2. We forward shortlists to the employer — watch your inbox and WhatsApp.</li>
             <li>3. Turn on WhatsApp alerts so you never miss the next role.</li>
           </ul>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -201,7 +198,7 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
           >
             <span className="flex items-center gap-2 text-sm font-medium text-ink-700">
               <UploadCloud className="size-4 text-brand-600" aria-hidden="true" />
-              {cvName || "Attach CV (PDF or Word)"}
+              {cvName || "Attach CV (PDF or Word) *"}
             </span>
             <span className="text-xs font-semibold text-brand-700">
               {cvName ? "Change" : "Browse"}
@@ -211,7 +208,27 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
               type="file"
               accept=".pdf,.doc,.docx"
               className="sr-only"
-              onChange={(event) => setCvName(event.target.files?.[0]?.name ?? "")}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (!file) {
+                  setCvFile(null);
+                  setCvName("");
+                  return;
+                }
+                if (file.size > 4 * 1024 * 1024) {
+                  toast({
+                    title: "CV too large",
+                    description: "Keep it under 4 MB — compress the PDF or send a Word file.",
+                    variant: "error",
+                  });
+                  event.target.value = "";
+                  setCvFile(null);
+                  setCvName("");
+                  return;
+                }
+                setCvFile(file);
+                setCvName(file.name);
+              }}
             />
           </label>
 

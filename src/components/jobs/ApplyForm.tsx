@@ -12,6 +12,7 @@ export function ApplyForm({ job }: { job: Job }) {
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
   const [cvName, setCvName] = useState("");
+  const [cvFile, setCvFile] = useState<File | null>(null);
   const [status, setStatus] = useState<ActionState | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -21,24 +22,21 @@ export function ApplyForm({ job }: { job: Job }) {
     setPending(true);
     setStatus(null);
     try {
-      const response = await fetch("/api/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobId: job.id,
-          fullName: data.get("fullName"),
-          email: data.get("email"),
-          phone: data.get("phone"),
-          location: data.get("location"),
-          coverLetter: data.get("coverLetter"),
-          cvFileName: cvName || "candidate-cv.pdf",
-        }),
-      });
+      const formData = new FormData();
+      formData.set("jobId", String(job.id));
+      for (const key of ["fullName", "email", "phone", "location", "coverLetter"]) {
+        formData.set(key, String(data.get(key) ?? ""));
+      }
+      if (cvFile) formData.set("cv", cvFile);
+
+      const response = await fetch("/api/applications", { method: "POST", body: formData });
       const payload = (await response.json()) as ActionState;
       if (!response.ok) throw new Error(payload.message || "Could not send application");
       setDone(true);
       toast({ title: "Application sent ✅", description: payload.message, variant: "success" });
       form.reset();
+      setCvFile(null);
+      setCvName("");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Network error";
       setStatus({ ok: false, message });
@@ -56,8 +54,8 @@ export function ApplyForm({ job }: { job: Job }) {
         </span>
         <h3 className="mt-3 font-display text-lg font-bold text-ink-900">Application received</h3>
         <p className="mt-1 text-sm leading-relaxed text-ink-500">
-          {job.company} has your profile. A confirmation is on its way to your inbox — expect a
-          response within 7 working days.
+          Your CV is with the GetAJob placement team. We review every application and forward
+          shortlists to {job.company} — expect to hear from us within 7 working days.
         </p>
         <button
           type="button"
@@ -74,7 +72,8 @@ export function ApplyForm({ job }: { job: Job }) {
     <form onSubmit={handleSubmit} className="card p-5">
       <h3 className="font-display text-lg font-bold text-ink-900">Apply for this role</h3>
       <p className="mt-1 text-xs text-ink-500">
-        Takes under 60 seconds. Your CV goes straight to the hiring team.
+        Takes under 60 seconds. Your CV goes straight to the GetAJob placement team, who forward
+        shortlists to {job.company}.
       </p>
 
       <div className="mt-4 space-y-3">
@@ -136,7 +135,7 @@ export function ApplyForm({ job }: { job: Job }) {
         >
           <span className="flex min-w-0 items-center gap-2 font-medium text-ink-700">
             <UploadCloud className="size-4 shrink-0 text-brand-600" aria-hidden="true" />
-            <span className="truncate">{cvName || "Attach CV"}</span>
+            <span className="truncate">{cvName || "Attach CV (PDF or Word) *"}</span>
           </span>
           <span className="shrink-0 text-xs font-semibold text-brand-700">
             {cvName ? "Change" : "Browse"}
@@ -146,7 +145,27 @@ export function ApplyForm({ job }: { job: Job }) {
             type="file"
             accept=".pdf,.doc,.docx"
             className="sr-only"
-            onChange={(event) => setCvName(event.target.files?.[0]?.name ?? "")}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) {
+                setCvFile(null);
+                setCvName("");
+                return;
+              }
+              if (file.size > 4 * 1024 * 1024) {
+                toast({
+                  title: "CV too large",
+                  description: "Keep it under 4 MB — compress the PDF or send a Word file.",
+                  variant: "error",
+                });
+                event.target.value = "";
+                setCvFile(null);
+                setCvName("");
+                return;
+              }
+              setCvFile(file);
+              setCvName(file.name);
+            }}
           />
         </label>
       </div>
