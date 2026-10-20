@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Activity,
   AlertTriangle,
   ArrowUpRight,
   Briefcase,
@@ -20,6 +21,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BarList, Donut, TrendChart, useCountUp, useGrown } from "@/components/admin/charts";
@@ -434,6 +436,13 @@ export function AdminDashboard() {
               <span className="admin-live-dot size-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
               Live · {clock.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </span>
+            <Link
+              href="/admin/analytics"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-brand-400/40 bg-brand-500/15 px-2.5 py-1.5 text-[11px] font-semibold text-brand-200 transition hover:bg-brand-500/25"
+            >
+              <Activity className="size-3.5" aria-hidden="true" />
+              Traffic
+            </Link>
             <button
               type="button"
               onClick={() => void load(true)}
