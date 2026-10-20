@@ -11,7 +11,16 @@
  *   [label](/path)    -> link
  */
 
-export type HubId = "cv" | "interviews" | "search" | "sectors" | "hiring" | "adverts";
+import { INDUSTRY_POSTS } from "@/data/blog-industries";
+
+export type HubId =
+  | "cv"
+  | "interviews"
+  | "search"
+  | "sectors"
+  | "industries"
+  | "hiring"
+  | "adverts";
 
 export interface Hub {
   id: HubId;
@@ -52,6 +61,14 @@ export const BLOG_HUBS: Hub[] = [
     tagline: "Know the market",
     description:
       "What roles actually pay across Nigeria, and how living in Lagos, Abuja or Port Harcourt changes the money you keep.",
+    audience: "Job seekers",
+  },
+  {
+    id: "industries",
+    name: "Sector guides",
+    tagline: "How each industry hires",
+    description:
+      "Nursing, teaching, banking, driving, oil and gas, tech, customer service and government — what each one actually checks, and what it pays.",
     audience: "Job seekers",
   },
   {
@@ -101,7 +118,7 @@ export interface Post {
   blocks: Block[];
 }
 
-export const POSTS: Post[] = [
+const CORE_POSTS: Post[] = [
   /* ───────────────────────────── CV & ATS ───────────────────────────── */
   {
     slug: "cv-format-nigeria-ats",
@@ -1693,6 +1710,13 @@ export const POSTS: Post[] = [
 ];
 
 /* ─────────────────────────────── helpers ─────────────────────────────── */
+
+/**
+ * The published set: the original twelve, plus the sector guides in
+ * src/data/blog-industries.ts. Split only to keep this file readable —
+ * everything downstream sees one flat list.
+ */
+export const POSTS: Post[] = [...CORE_POSTS, ...INDUSTRY_POSTS];
 
 export function getPost(slug: string): Post | undefined {
   return POSTS.find((post) => post.slug === slug);

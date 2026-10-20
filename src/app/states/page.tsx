@@ -2,6 +2,7 @@ import { ArrowRight, BellRing, Map, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { statePageForName } from "@/data/state-pages";
 import { listJobs } from "@/lib/jobs-service";
 
 export const dynamic = "force-dynamic";
@@ -79,10 +80,11 @@ export default async function StatesPage() {
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {zone.states.map((state) => {
                 const count = counts[state] ?? 0;
+                const page = statePageForName(state);
                 return (
                   <Link
                     key={state}
-                    href={`/jobs?state=${encodeURIComponent(state)}`}
+                    href={page ? `/states/${page.slug}` : `/jobs?state=${encodeURIComponent(state)}`}
                     className="group flex items-center justify-between gap-2 rounded-xl border border-ink-100 bg-white px-3 py-2.5 transition hover:border-brand-300 hover:bg-brand-50/60"
                   >
                     <span className="flex min-w-0 items-center gap-2">

@@ -28,7 +28,9 @@ export const metadata: Metadata = {
   },
 };
 
-const SEEKER_HUBS: Hub[] = (["cv", "interviews", "search", "sectors"] as const).map(getHub);
+const SEEKER_HUBS: Hub[] = (
+  ["cv", "interviews", "search", "sectors", "industries"] as const
+).map(getHub);
 const EMPLOYER_HUBS: Hub[] = (["hiring", "adverts"] as const).map(getHub);
 
 function Section({

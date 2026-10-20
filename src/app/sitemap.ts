@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { ALL_POSTS, BLOG_HUBS } from "@/data/blog";
 import { BRAND } from "@/data/site";
+import { STATE_PAGES } from "@/data/state-pages";
 
 /**
  * Every public page, for search engines.
@@ -28,6 +29,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
+  const states: MetadataRoute.Sitemap = STATE_PAGES.map((state) => ({
+    url: `${base}/states/${state.slug}`,
+    lastModified: now,
+    changeFrequency: "daily",
+    priority: 0.6,
+  }));
+
   const hubs: MetadataRoute.Sitemap = BLOG_HUBS.map((hub) => ({
     url: `${base}/blog/topic/${hub.id}`,
     lastModified: now,
@@ -42,5 +50,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...fixed, ...hubs, ...posts];
+  return [...fixed, ...states, ...hubs, ...posts];
 }

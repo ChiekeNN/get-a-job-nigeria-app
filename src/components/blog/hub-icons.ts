@@ -1,4 +1,5 @@
 import {
+  Briefcase,
   Building2,
   FileText,
   MessagesSquare,
@@ -16,6 +17,7 @@ export const HUB_ICONS: Record<HubId, LucideIcon> = {
   interviews: MessagesSquare,
   search: Search,
   sectors: Wallet,
+  industries: Briefcase,
   hiring: Building2,
   adverts: PenLine,
 };
