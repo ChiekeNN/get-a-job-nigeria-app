@@ -23,6 +23,7 @@ const LINKS = [
   { label: "Home", href: "/" },
   { label: "Find Jobs", href: "/jobs" },
   { label: "CV Writing", href: "/cv-writing" },
+  { label: "Advice", href: "/blog" },
   { label: "For Employers", href: "/employers" },
 ];
 
@@ -84,7 +85,7 @@ export function Navbar() {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
+          <nav className="hidden items-center gap-0.5 lg:flex xl:gap-1" aria-label="Main navigation">
             {LINKS.map((link) => {
               // "/" only matches itself; the others stay lit on their own pages.
               const active =
@@ -93,7 +94,9 @@ export function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  // Five links plus the Pro pill have to fit in a 1200px bar:
+                  // tighter padding from lg, roomier again from xl.
+                  className={`whitespace-nowrap rounded-lg px-2 py-2 text-sm font-medium transition xl:px-3 ${
                     active
                       ? "bg-brand-50 text-brand-800"
                       : "text-ink-600 hover:bg-ink-50 hover:text-ink-900"

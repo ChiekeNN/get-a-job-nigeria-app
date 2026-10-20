@@ -1,3 +1,4 @@
+import { BlogTeaser } from "@/components/blog/BlogTeaser";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { EmployerCta, HowItWorks, StateStrip, Testimonials } from "@/components/home/Sections";
 import { FeaturedJobs } from "@/components/home/FeaturedJobs";
@@ -23,6 +24,7 @@ export default async function HomePage() {
       <CategoryGrid counts={categoryCounts} />
       <HowItWorks />
       <StateStrip jobs={jobs} />
+      <BlogTeaser />
       <Testimonials />
       <EmployerCta />
     </>
