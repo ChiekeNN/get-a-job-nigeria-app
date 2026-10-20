@@ -3,9 +3,9 @@
 import {
   BriefcaseBusiness,
   ChevronDown,
+  Lock,
   Menu,
   Sparkles,
-  Upload,
   UserRound,
   X,
 } from "lucide-react";
@@ -14,7 +14,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { CvUploadModal } from "@/components/forms/CvUploadModal";
 import { PHONE } from "@/data/contact";
 import { PRO } from "@/data/pro";
 import { BRAND } from "@/data/site";
@@ -31,7 +30,6 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [cvOpen, setCvOpen] = useState(false);
   const isEmployer = pathname.startsWith("/employers");
 
   // The admin console is private and carries its own header.
@@ -160,14 +158,17 @@ export function Navbar() {
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setCvOpen(true)}
-              className="btn btn-primary btn-sm hidden sm:inline-flex"
+            {/* The console's own door. It replaces the old "Upload CV" button,
+                which only ever collected a filename — the apply form is where a
+                CV is actually uploaded. */}
+            <Link
+              href="/admin"
+              className="btn btn-outline btn-sm hidden sm:inline-flex"
+              aria-label="Admin console"
             >
-              <Upload className="size-4" aria-hidden="true" />
-              Upload CV
-            </button>
+              <Lock className="size-4" aria-hidden="true" />
+              Admin
+            </Link>
 
             <button
               type="button"
@@ -233,17 +234,14 @@ export function Navbar() {
               ))}
             </nav>
             <div className="mt-4 grid grid-cols-1 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setCvOpen(true);
-                }}
-                className="btn btn-primary w-full"
+              <Link
+                href="/admin"
+                onClick={() => setMenuOpen(false)}
+                className="btn btn-outline w-full"
               >
-                <Upload className="size-4" aria-hidden="true" />
-                Upload CV
-              </button>
+                <Lock className="size-4" aria-hidden="true" />
+                Admin console
+              </Link>
               <Link href="/pro#start" className="btn btn-amber w-full" onClick={() => setMenuOpen(false)}>
                 <Sparkles className="size-4" aria-hidden="true" />
                 {PRO.cta}
@@ -253,7 +251,6 @@ export function Navbar() {
         ) : null}
       </header>
 
-      <CvUploadModal open={cvOpen} onClose={() => setCvOpen(false)} />
     </>
   );
 }

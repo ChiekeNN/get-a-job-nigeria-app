@@ -1,7 +1,8 @@
 "use client";
 
-import { Eye, EyeOff, KeyRound, Loader2, Lock } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, KeyRound, Loader2, Lock } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useId, useState, type FormEvent } from "react";
 
 import { BRAND } from "@/data/site";
@@ -37,6 +38,14 @@ export function AdminLogin({ configured }: { configured: boolean }) {
   return (
     <div className="grid min-h-screen place-items-center bg-ink-950 px-4 py-12">
       <div className="admin-rise w-full max-w-sm">
+        <Link
+          href="/"
+          className="mb-4 inline-flex items-center gap-1.5 rounded-lg px-1 py-1 text-[11.5px] font-semibold text-white/50 transition hover:text-white"
+        >
+          <ArrowLeft className="size-3.5" aria-hidden="true" />
+          Home
+        </Link>
+
         <div className="flex items-center justify-center gap-2.5">
           <span className="grid size-11 place-items-center rounded-2xl bg-white">
             <Image src="/brand/mark.png" alt="" width={34} height={34} className="size-8" aria-hidden="true" />
