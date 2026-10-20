@@ -137,7 +137,7 @@ export function Hero({ stats, topCompanies, topSalary }: HeroProps) {
             <div className="absolute -bottom-4 right-0 w-[205px] rounded-xl border border-ink-100 bg-white p-3 shadow-[0_18px_40px_-24px_rgba(5,20,15,0.4)] sm:-right-4">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
-                  Top salary on the board
+                  Highest salary on the board
                 </p>
                 <TrendingUp className="size-3.5 text-brand-600" aria-hidden="true" />
               </div>
@@ -149,7 +149,7 @@ export function Hero({ stats, topCompanies, topSalary }: HeroProps) {
               </p>
               <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-brand-700">
                 <Briefcase className="size-3" aria-hidden="true" />
-                Monthly, as advertised
+                As stated in the listing
               </div>
             </div>
           ) : null}

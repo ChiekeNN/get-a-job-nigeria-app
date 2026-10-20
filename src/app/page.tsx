@@ -19,7 +19,9 @@ function topCompanies(jobs: Job[], limit = 7): string[] {
   const counts = new Map<string, number>();
   for (const job of jobs) {
     const name = job.company.trim();
-    if (!name) continue;
+    // "Confidential Employer" is a real listing but not a name worth printing
+    // on the home page — it reads like a placeholder because it is one.
+    if (!name || /^(confidential|anonymous|private|undisclosed)/i.test(name)) continue;
     counts.set(name, (counts.get(name) ?? 0) + 1);
   }
   return [...counts.entries()]
