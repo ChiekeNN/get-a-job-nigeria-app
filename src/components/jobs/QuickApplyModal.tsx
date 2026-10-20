@@ -19,6 +19,7 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
   const { toast } = useToast();
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
+  const [doneMessage, setDoneMessage] = useState("");
   const [cvName, setCvName] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [status, setStatus] = useState<ActionState | null>(null);
@@ -27,6 +28,7 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
     onClose();
     window.setTimeout(() => {
       setDone(false);
+      setDoneMessage("");
       setStatus(null);
       setCvName("");
       setCvFile(null);
@@ -52,6 +54,7 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
       const payload = (await response.json()) as ActionState;
       if (!response.ok) throw new Error(payload.message || "Could not submit application");
       setDone(true);
+      setDoneMessage(payload.message);
       onApplied(job);
       toast({
         title: "Application sent ✅",
@@ -74,7 +77,8 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
       title={done ? "You're in the queue 🎉" : `Quick apply — ${job?.title ?? ""}`}
       description={
         done
-          ? `Your CV is with the GetAJob placement team. We forward shortlists to ${job?.company ?? "the employer"} — expect to hear from us within 7 working days.`
+          ? doneMessage ||
+            `Your CV is with the GetAJob placement team. We forward shortlists to ${job?.company ?? "the employer"} — expect to hear from us within 7 working days.`
           : `Apply in under 60 seconds. Our team reviews every CV and forwards shortlists to ${job?.company ?? "this company"}.`
       }
     >

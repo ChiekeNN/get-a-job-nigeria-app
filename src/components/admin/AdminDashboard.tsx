@@ -25,6 +25,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BarList, Donut, TrendChart, useCountUp, useGrown } from "@/components/admin/charts";
+import { MailHealth } from "@/components/admin/MailHealth";
 import { BRAND } from "@/data/site";
 
 interface Stats {
@@ -691,12 +692,7 @@ export function AdminDashboard() {
             icon={FileText}
             delay={240}
           >
-            {!stats.mail.configured ? (
-              <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
-                Application emails are not being sent. Set <code>SMTP_PASS</code> in Vercel and
-                redeploy — until then applications are saved here without their CV.
-              </p>
-            ) : null}
+            <MailHealth configured={stats.mail.configured} inbox={stats.mail.inbox} />
             {stats.recentApplications.length === 0 ? (
               <p className="rounded-xl border border-dashed border-ink-200 bg-cream p-6 text-center text-[12px] text-ink-400">
                 No applications yet.
