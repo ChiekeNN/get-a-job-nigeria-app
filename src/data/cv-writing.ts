@@ -96,7 +96,7 @@ export const CV_PROMISES = [
 export const CV_STEPS = [
   {
     title: "Choose a package and pay once",
-    body: "Pick Basic, Standard or Premium and send the one-time payment by bank transfer. Our team sends the account details on WhatsApp the moment your order lands.",
+    body: "Pick Basic, Standard or Premium and pay the one-time amount by bank transfer. The account details are on the order form, and you upload your receipt in the same place.",
   },
   {
     title: "Send us your current CV",
@@ -114,8 +114,9 @@ export const CV_STEPS = [
 
 export const CV_ORDER_NOTES = [
   "One payment. No subscription, nothing renewing.",
-  "Payment details arrive on WhatsApp within minutes of your order.",
-  "Your CV and receipt are attached in that same chat — no file uploads.",
+  "Pay by bank transfer to Jojuni Technologies Ltd — the account is on the form.",
+  "Upload your proof of payment in the same form; we confirm it the same working day.",
+  "Send your current CV on WhatsApp once the payment is in, and the rewrite starts.",
   "Delivered in 2–3 working days as PDF and Word.",
 ] as const;
 
@@ -128,7 +129,7 @@ export const CV_FAQS = [
   {
     question: "How do I pay?",
     answer:
-      "By bank transfer. Submit the order form and our team sends the account details on WhatsApp within minutes. Basic is ₦5,000, Standard ₦10,000 and Premium ₦15,000 — charged once, nothing recurring.",
+      "By bank transfer to Jojuni Technologies Ltd at Fidelity Bank. The account details and the exact amount are on the order form; upload your proof of payment there and we confirm it the same working day. Basic is ₦5,000, Standard ₦10,000 and Premium ₦15,000 — charged once, nothing recurring.",
   },
   {
     question: "What do I get back?",

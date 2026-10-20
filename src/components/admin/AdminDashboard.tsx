@@ -61,6 +61,14 @@ interface Stats {
   subscriptionsByKind: Array<{ name: string; count: number }>;
   subscriptionPlans: Array<{ name: string; count: number }>;
   mail: { configured: boolean; inbox: string };
+  money: {
+    collected: number;
+    paidCount: number;
+    awaitingCount: number;
+    awaitingValue: number;
+    thisMonth: number;
+    thisMonthCount: number;
+  };
   recentApplications: Array<{
     id: number;
     name: string;
@@ -93,6 +101,9 @@ const naira = (value: number) =>
     : value >= 1_000
       ? `₦${Math.round(value / 1_000)}k`
       : `₦${value}`;
+
+/** Exact naira — money totals are read to the naira, never rounded to "15k". */
+const exactNaira = (value: number) => `₦${value.toLocaleString("en-NG")}`;
 
 const shortBand = (label: string) =>
   label
@@ -440,6 +451,13 @@ export function AdminDashboard() {
               Live · {clock.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </span>
             <Link
+              href="/admin/payments"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1.5 text-[11px] font-semibold text-white/80 transition hover:bg-white/10"
+            >
+              <Wallet className="size-3.5" aria-hidden="true" />
+              Payments
+            </Link>
+            <Link
               href="/admin/applications"
               className="inline-flex items-center gap-1.5 rounded-lg border border-brand-400/40 bg-brand-500/15 px-2.5 py-1.5 text-[11px] font-semibold text-brand-200 transition hover:bg-brand-500/25"
             >
@@ -693,6 +711,66 @@ export function AdminDashboard() {
             </div>
           </Panel>
         </div>
+
+        <Panel
+          title="Money"
+          hint="Verified transfers only — nothing here is estimated"
+          icon={Wallet}
+          delay={160}
+        >
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border border-brand-100 bg-brand-50/60 px-3 py-2.5">
+              <p className="text-[9.5px] font-bold uppercase tracking-wide text-brand-700">
+                Collected
+              </p>
+              <p className="mt-0.5 font-display text-lg font-extrabold tabular-nums text-brand-900">
+                {exactNaira(stats.money.collected)}
+              </p>
+              <p className="text-[10px] text-brand-800/60">
+                {stats.money.paidCount} verified payment
+                {stats.money.paidCount === 1 ? "" : "s"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-ink-100 bg-cream px-3 py-2.5">
+              <p className="text-[9.5px] font-bold uppercase tracking-wide text-ink-400">
+                This month
+              </p>
+              <p className="mt-0.5 font-display text-lg font-extrabold tabular-nums text-ink-900">
+                {exactNaira(stats.money.thisMonth)}
+              </p>
+              <p className="text-[10px] text-ink-400">
+                {stats.money.thisMonthCount} payment
+                {stats.money.thisMonthCount === 1 ? "" : "s"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2.5">
+              <p className="text-[9.5px] font-bold uppercase tracking-wide text-amber-800">
+                Awaiting you
+              </p>
+              <p className="mt-0.5 font-display text-lg font-extrabold tabular-nums text-amber-900">
+                {stats.money.awaitingCount}
+              </p>
+              <p className="text-[10px] text-amber-800/70">
+                {exactNaira(stats.money.awaitingValue)} claimed
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-100 bg-white px-3 py-2">
+            <p className="min-w-0 text-[10.5px] leading-relaxed text-ink-500">
+              {stats.money.awaitingCount === 0
+                ? "Nothing waiting. New transfers appear here the moment a receipt is uploaded."
+                : "Open a payment to see its proof, then confirm it against the Fidelity Bank account."}
+            </p>
+            <Link
+              href="/admin/payments"
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-ink-950 px-2.5 py-1 text-[10.5px] font-semibold text-white transition hover:bg-ink-800"
+            >
+              Payments console
+              <ArrowUpRight className="size-3" aria-hidden="true" />
+            </Link>
+          </div>
+        </Panel>
 
         <div className="grid items-start gap-3 lg:grid-cols-[1.35fr_1fr]">
           <Panel

@@ -101,6 +101,39 @@ export const pageViews = pgTable("page_views", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * A payment someone says they have made.
+ *
+ * The bank transfer happens outside this app, so the row is the buyer's claim
+ * plus the evidence: the receipt they uploaded. Nothing is marked paid until a
+ * human in the console has matched it against the bank account.
+ */
+export const payments = pgTable(
+  "payments",
+  {
+    id: serial("id").primaryKey(),
+    /** Printed to the buyer and quoted in every message about this payment. */
+    reference: text("reference").notNull(),
+    planId: text("plan_id").notNull(),
+    planName: text("plan_name").notNull(),
+    amount: integer("amount").notNull(),
+    fullName: text("full_name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone").notNull(),
+    note: text("note"),
+    proofData: bytea("proof_data"),
+    proofMime: text("proof_mime"),
+    proofName: text("proof_name"),
+    proofSize: integer("proof_size"),
+    /** submitted → verified (paid) or cancelled. */
+    status: text("status").notNull().default("submitted"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+  },
+  (table) => [uniqueIndex("payments_reference_unique").on(table.reference)],
+);
+
 export const subscribers = pgTable("subscribers", {
   id: serial("id").primaryKey(),
   fullName: text("full_name").notNull(),
@@ -129,3 +162,4 @@ export type JobRow = typeof jobs.$inferSelect;
 export type NewJobRow = typeof jobs.$inferInsert;
 export type ApplicationRow = typeof applications.$inferSelect;
 export type SubscriberRow = typeof subscribers.$inferSelect;
+export type PaymentRow = typeof payments.$inferSelect;
