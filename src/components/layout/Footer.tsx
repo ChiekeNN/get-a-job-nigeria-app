@@ -143,8 +143,10 @@ export function Footer() {
                 ["Find jobs", "/jobs"],
                 ["Browse categories", "/#categories"],
                 ["All states", "/states"],
-                // The CV attach lives in the Pro signup form.
-                ["Upload your CV", "/pro#start"],
+                ["CV writing service", "/cv-writing"],
+                // Both CV paths end in a WhatsApp hand-off; the writing service
+                // is the one that is actually a rewrite.
+                ["Upload your CV", "/cv-writing#order"],
               ].map(([label, href]) => (
                 <li key={label}>
                   <Link href={href} className="transition hover:text-white">

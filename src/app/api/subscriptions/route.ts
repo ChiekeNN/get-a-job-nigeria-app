@@ -1,3 +1,4 @@
+import { CV_WRITING } from "@/data/cv-writing";
 import { createSubscription } from "@/lib/jobs-service";
 import { cleanText, isEmail, isValidNigerianPhone } from "@/lib/validation";
 
@@ -52,7 +53,15 @@ export async function POST(request: Request) {
       cv: "CV received. A recruiter will review it and send matching roles within 48 hours.",
     };
 
-    return Response.json({ ok: true, message: messages[kind] }, { status: 201 });
+    // A paid CV-writing order is a different promise from the free review:
+    // the writer needs the file and the receipt, and delivery is 2–3 days.
+    const cvWriting =
+      kind === "cv" && plan.startsWith(CV_WRITING.planPrefix);
+    const message = cvWriting
+      ? `Order received. Send your CV and payment receipt on WhatsApp to start the rewrite — delivery is ${CV_WRITING.turnaround}.`
+      : messages[kind];
+
+    return Response.json({ ok: true, message }, { status: 201 });
   } catch (error) {
     console.error("subscription failed", error);
     return Response.json(

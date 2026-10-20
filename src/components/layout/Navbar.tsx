@@ -22,8 +22,7 @@ import { BRAND } from "@/data/site";
 const LINKS = [
   { label: "Home", href: "/" },
   { label: "Find Jobs", href: "/jobs" },
-  { label: "Browse Categories", href: "/#categories" },
-  { label: "States", href: "/states" },
+  { label: "CV Writing", href: "/cv-writing" },
   { label: "For Employers", href: "/employers" },
 ];
 
@@ -87,19 +86,14 @@ export function Navbar() {
 
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
             {LINKS.map((link) => {
+              // "/" only matches itself; the others stay lit on their own pages.
               const active =
-                link.href === "/jobs"
-                  ? pathname === "/jobs"
-                  : pathname === link.href && link.href !== "/#categories";
+                link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
               return (
                 <Link
                   key={link.label}
                   href={link.href}
-                  // From lg the bar also carries the Pro pill and the mode switch;
-                  // the homepage section link is the one that can wait for xl.
                   className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    link.href === "/#categories" ? "hidden xl:inline-flex" : ""
-                  } ${
                     active
                       ? "bg-brand-50 text-brand-800"
                       : "text-ink-600 hover:bg-ink-50 hover:text-ink-900"
