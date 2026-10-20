@@ -65,6 +65,21 @@ export const applications = pgTable("applications", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * First-party page views. No cookies, no IP, no personal data — one anonymous
+ * session id per browser tab, so a visit can be counted without identifying
+ * the visitor. Rows are written by /api/track and read only by /admin.
+ */
+export const pageViews = pgTable("page_views", {
+  id: serial("id").primaryKey(),
+  path: text("path").notNull(),
+  referrer: text("referrer"),
+  device: text("device"),
+  country: text("country"),
+  sessionId: text("session_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const subscribers = pgTable("subscribers", {
   id: serial("id").primaryKey(),
   fullName: text("full_name").notNull(),

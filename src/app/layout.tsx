@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
+import { PageViewTracker } from "@/components/analytics/PageViewTracker";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Navbar } from "@/components/layout/Navbar";
 import { ToastProvider } from "@/components/providers/Toaster";
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <SiteFooter />
           <InstallPrompt />
           <ServiceWorkerRegistrar />
+          <PageViewTracker />
         </ToastProvider>
       </body>
     </html>

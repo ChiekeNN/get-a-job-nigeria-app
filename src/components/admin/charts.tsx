@@ -207,7 +207,7 @@ export function BarList({
           <div className="flex items-baseline justify-between gap-2 text-[12px]">
             <span className="min-w-0 truncate font-medium text-ink-700">{item.name}</span>
             <span className="shrink-0 font-bold tabular-nums text-ink-900">
-              {item.count}
+              {item.count.toLocaleString("en-NG")}
               {suffix ? <span className="font-medium text-ink-400"> {suffix}</span> : null}
             </span>
           </div>
@@ -233,10 +233,13 @@ export function Donut({
   items,
   size = 168,
   thickness = 18,
+  label = "LISTINGS",
 }: {
   items: Array<{ name: string; count: number; colour: string }>;
   size?: number;
   thickness?: number;
+  /** Caption under the centre total. */
+  label?: string;
 }) {
   const total = items.reduce((sum, item) => sum + item.count, 0);
   const radius = (size - thickness) / 2;
@@ -288,10 +291,10 @@ export function Donut({
           fontWeight="800"
           fill="var(--color-ink-900)"
         >
-          {total}
+          {total.toLocaleString("en-NG")}
         </text>
         <text x="50%" y="58%" textAnchor="middle" fontSize="9" fill="var(--color-ink-400)">
-          LISTINGS
+          {label}
         </text>
       </svg>
       <ul className="min-w-0 space-y-1.5">
@@ -299,7 +302,9 @@ export function Donut({
           <li key={item.name} className="flex items-center gap-2 text-[11.5px]">
             <span className="size-2 shrink-0 rounded-full" style={{ background: item.colour }} />
             <span className="min-w-0 truncate text-ink-600">{item.name}</span>
-            <span className="ml-auto shrink-0 font-semibold tabular-nums text-ink-900">{item.count}</span>
+            <span className="ml-auto shrink-0 font-semibold tabular-nums text-ink-900">
+              {item.count.toLocaleString("en-NG")}
+            </span>
           </li>
         ))}
       </ul>
