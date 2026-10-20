@@ -11,8 +11,8 @@ export default function NotFound() {
         This page has moved on
       </h1>
       <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-500">
-        The role you are looking for may have closed or been filled. Browse thousands of verified
-        Nigerian openings instead.
+        The role you are looking for may have closed or been filled. Browse the verified Nigerian
+        openings that are live right now instead.
       </p>
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
         <Link href="/jobs" className="btn btn-primary">

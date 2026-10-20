@@ -45,7 +45,7 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
     try {
       const formData = new FormData();
       formData.set("jobId", String(job.id));
-      for (const key of ["fullName", "email", "phone", "location", "coverLetter"]) {
+      for (const key of ["fullName", "email", "phone", "location", "coverLetter", "website"]) {
         formData.set(key, String(data.get(key) ?? ""));
       }
       if (cvFile) formData.set("cv", cvFile);
@@ -127,7 +127,14 @@ export function QuickApplyModal({ job, onClose, onApplied }: Props) {
           </div>
         </div>
       ) : (
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="relative space-y-4" onSubmit={handleSubmit}>
+      {/* Honeypot: hidden from people and from assistive tech, filled only by
+          scripts. See src/lib/throttle.ts for what happens when it is. */}
+      <div className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+        <label htmlFor="cv-website">Website</label>
+        <input id="cv-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
+
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="label" htmlFor="apply-name">

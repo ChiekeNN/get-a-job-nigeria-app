@@ -112,52 +112,6 @@ export const CV_STEPS = [
   },
 ] as const;
 
-export const CV_STORIES = [
-  {
-    quote:
-      "I never realised how much a professionally written CV could make a difference. I was called for interviews at top companies and finally landed a role in a multinational firm. Worth every kobo.",
-    name: "Chioma Eze",
-    detail: "Lagos",
-    initials: "CE",
-  },
-  {
-    quote:
-      "The CV and cover letter gave me the confidence and the edge I needed. Within a month I landed a position with a leading tech company.",
-    name: "Tunde Akinyemi",
-    detail: "Abuja, FCT",
-    initials: "TA",
-  },
-  {
-    quote:
-      "After months of no callbacks I paid for the CV package. The results were incredible — interviews with the best employers, and an offer I never thought possible.",
-    name: "David Nwachukwu",
-    detail: "Port Harcourt, Rivers",
-    initials: "DN",
-  },
-  {
-    quote:
-      "Several candidates we hired had their CVs prepared by GetAJob, and it made screening much easier. The clarity helped us spot top talent quickly.",
-    name: "Ebele Nwankwo",
-    detail: "Recruitment Manager",
-    initials: "EN",
-  },
-  {
-    quote:
-      "We now receive resumes that actually reflect a candidate's skills and experience. It lets us make confident hiring decisions and build a stronger team.",
-    name: "Ahmed Musa",
-    detail: "HR Business Partner",
-    initials: "AM",
-  },
-  {
-    quote:
-      "Candidates come well prepared, which lets us focus on fit and potential. It has improved the quality and speed of our recruitment.",
-    name: "Funke Oladipo",
-    detail: "Talent Acquisition Lead",
-    initials: "FO",
-  },
-];
-
-/** The lines on the order form's "what happens next" panel. */
 export const CV_ORDER_NOTES = [
   "One payment. No subscription, nothing renewing.",
   "Payment details arrive on WhatsApp within minutes of your order.",

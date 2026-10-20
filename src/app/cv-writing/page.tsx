@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   FileText,
   MessageCircle,
-  Quote,
   Sparkles,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -17,7 +16,6 @@ import {
   CV_FAQS,
   CV_PROMISES,
   CV_STEPS,
-  CV_STORIES,
   CV_WRITING,
 } from "@/data/cv-writing";
 
@@ -163,48 +161,6 @@ export default function CvWritingPage() {
             </li>
           ))}
         </ol>
-      </section>
-
-      {/* ── Client stories ───────────────────────────────────────────── */}
-      <section className="wrap mt-12 sm:mt-16">
-        <div className="max-w-2xl">
-          <p className="eyebrow">
-            <Quote className="size-3.5 text-brand-600" aria-hidden="true" />
-            What clients say
-          </p>
-          <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
-            From ignored to invited
-          </h2>
-          <p className="mt-2 text-[13.5px] leading-relaxed text-ink-500">
-            Job seekers — and the recruiters who read the result.
-          </p>
-        </div>
-
-        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {CV_STORIES.map((story) => (
-            <figure key={story.name} className="card flex min-w-0 flex-col p-4 sm:p-5">
-              <div className="flex gap-0.5 text-amber-400" aria-hidden="true">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <span key={index} className="text-[13px] leading-none">
-                    ★
-                  </span>
-                ))}
-              </div>
-              <blockquote className="mt-2 flex-1 text-[12.5px] leading-relaxed text-ink-700">
-                “{story.quote}”
-              </blockquote>
-              <figcaption className="mt-3 flex items-center gap-2.5 border-t border-ink-50 pt-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-50 text-[10.5px] font-bold text-brand-700">
-                  {story.initials}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-[12px] font-semibold text-ink-900">{story.name}</p>
-                  <p className="truncate text-[10.5px] text-ink-400">{story.detail}</p>
-                </div>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
       </section>
 
       {/* ── FAQ ──────────────────────────────────────────────────────── */}

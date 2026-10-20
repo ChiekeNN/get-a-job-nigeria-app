@@ -3,19 +3,19 @@ import {
   BadgeCheck,
   Building2,
   Check,
+  Clock,
   FileText,
+  Lock,
   MapPin,
-  MessageSquareQuote,
   Rocket,
   Search,
-  Star,
+  Trash2,
   Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { TESTIMONIALS } from "@/data/site";
-import type { Job } from "@/types";
+import type { Job, JobStats } from "@/types";
 
 const STEPS = [
   {
@@ -98,48 +98,62 @@ export function HowItWorks() {
   );
 }
 
-export function Testimonials() {
+/**
+ * What actually happens to an application.
+ *
+ * This replaced a wall of invented candidate testimonials. A visitor can verify
+ * every line of it by applying once, which is the only kind of proof a new
+ * platform honestly has.
+ */
+const APPLY_STEPS = [
+  {
+    icon: FileText,
+    title: "Your CV reaches a person",
+    body: "Every application lands in our placement desk with the CV attached to the role — not in a queue nobody opens.",
+  },
+  {
+    icon: Lock,
+    title: "It is never made public",
+    body: "Your CV is stored privately and shown only to the GetAJob team. It is never posted on a board, sold, or passed to a stranger.",
+  },
+  {
+    icon: Clock,
+    title: "You hear back within 7 working days",
+    body: "Shortlisted candidates are contacted directly. If a role closes without you, you can apply to the next one in a single click.",
+  },
+  {
+    icon: Trash2,
+    title: "You can have it deleted",
+    body: "Ask us to remove your application and CV and it is gone from our records — no forms, no waiting periods.",
+  },
+];
+
+export function AfterYouApply() {
   return (
     <section id="stories" className="wrap mt-16 scroll-mt-24">
       <div className="text-center">
         <p className="eyebrow mx-auto">
-          <MessageSquareQuote className="size-3.5 text-brand-600" aria-hidden="true" />
-          Real placement stories
+          <BadgeCheck className="size-3.5 text-brand-600" aria-hidden="true" />
+          Plain terms
         </p>
         <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
-          They stopped applying. Then employers called.
+          What happens after you apply
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-ink-500">
-          Candidates across Lagos, Port Harcourt and Enugu share what changed after using the
-          GetAJob playbook.
+          No recruiter fees, no CV sold to the highest bidder. These four things are true of every
+          application sent through GetAJob — apply once and check for yourself.
         </p>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {TESTIMONIALS.map((testimonial) => (
-          <figure key={testimonial.name} className="card flex flex-col p-5">
-            <div className="flex items-center gap-1 text-amber-500" aria-label="5 out of 5 stars">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Star key={index} className="size-3.5 fill-current" aria-hidden="true" />
-              ))}
-            </div>
-            <blockquote className="mt-3 flex-1 text-[13px] leading-relaxed text-ink-700">
-              “{testimonial.quote}”
-            </blockquote>
-            <figcaption className="mt-4 flex items-center gap-2.5 border-t border-ink-50 pt-3.5">
-              <span
-                className={`grid size-9 place-items-center rounded-full text-xs font-bold ${testimonial.tint}`}
-              >
-                {testimonial.initials}
-              </span>
-              <div>
-                <p className="text-xs font-bold text-ink-900">{testimonial.name}</p>
-                <p className="text-[11px] text-ink-500">
-                  {testimonial.role} · {testimonial.location}
-                </p>
-              </div>
-            </figcaption>
-          </figure>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {APPLY_STEPS.map((step) => (
+          <div key={step.title} className="card flex flex-col p-5">
+            <span className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
+              <step.icon className="size-5" aria-hidden="true" />
+            </span>
+            <h3 className="mt-3 text-[13px] font-bold leading-snug text-ink-900">{step.title}</h3>
+            <p className="mt-1.5 flex-1 text-[12px] leading-relaxed text-ink-500">{step.body}</p>
+          </div>
         ))}
       </div>
     </section>
@@ -190,7 +204,7 @@ export function StateStrip({ jobs }: { jobs: Job[] }) {
   );
 }
 
-export function EmployerCta() {
+export function EmployerCta({ stats }: { stats: JobStats }) {
   return (
     <section className="wrap mt-16">
       <div className="grid grid-cols-1 overflow-hidden rounded-[26px] border border-brand-100 bg-brand-50/70 lg:grid-cols-[1fr_0.9fr]">
@@ -203,8 +217,9 @@ export function EmployerCta() {
             Hire pre-screened Nigerian talent in 48 hours
           </h2>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-600">
-            Post a role free for 7 days and reach 47,000+ active candidates. Every shortlist comes
-            with verified contact details, salary expectations and availability.
+            Post a role free for 7 days and put it beside {stats.liveJobs.toLocaleString("en-NG")}{" "}
+            openings across {stats.statesCovered} states. Every shortlist comes with verified contact
+            details, salary expectations and availability.
           </p>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {[
@@ -242,10 +257,14 @@ export function EmployerCta() {
           />
           <div className="absolute bottom-3 left-3 right-3 rounded-xl bg-white/95 p-3 backdrop-blur">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-400">
-              Average time to hire
+              Live on the board today
             </p>
-            <p className="font-display text-lg font-extrabold text-ink-900">11 days</p>
-            <p className="text-[11px] text-ink-500">Across 326 employers on GetAJob</p>
+            <p className="font-display text-lg font-extrabold text-ink-900">
+              {stats.hiringCompanies.toLocaleString("en-NG")} employers
+            </p>
+            <p className="text-[11px] text-ink-500">
+              Hiring across {stats.liveJobs.toLocaleString("en-NG")} open roles
+            </p>
           </div>
         </div>
       </div>

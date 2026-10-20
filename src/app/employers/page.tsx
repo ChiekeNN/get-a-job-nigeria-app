@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "For employers — post jobs and hire verified Nigerian talent",
   description:
-    "Post a job free for 7 days, reach 47,000+ active Nigerian job seekers and receive screened shortlists in 48 hours.",
+    "Post a job free for 7 days and reach Nigerian job seekers across the 36 states and FCT. Screened shortlists in 48 hours.",
 };
 
 const PLANS = [
@@ -64,6 +64,10 @@ const PLANS = [
 
 export default async function EmployersPage() {
   const jobs = await listJobs();
+  // Everything the hero claims about the board is measured from the board.
+  const liveRoles = jobs.length;
+  const employers = new Set(jobs.map((job) => job.company)).size;
+  const locations = new Set(jobs.map((job) => job.state)).size;
   const applicantTotal = jobs.reduce((sum, job) => sum + job.applicants, 0);
 
   return (
@@ -82,9 +86,9 @@ export default async function EmployersPage() {
                 <span className="text-brand-300"> 48 hours.</span>
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70 sm:text-[15px]">
-                Post your role free, and reach {jobs.length}+ live candidates across the network.
-                Every applicant arrives with a CV, salary expectation and availability — priced in
-                Naira, not dollars.
+                Post your role free and put it beside {liveRoles.toLocaleString("en-NG")} live
+                openings across {locations} states. Every applicant arrives with a CV, salary
+                expectation and availability — priced in Naira, not dollars.
               </p>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                 <Link href="#post-job" className="btn btn-primary">
@@ -108,21 +112,41 @@ export default async function EmployersPage() {
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="size-4 text-brand-400" aria-hidden="true" />
-                  Avg. 11 days to hire
+                  Free for the first 7 days
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Users className="size-4 text-brand-400" aria-hidden="true" />
-                  {applicantTotal.toLocaleString("en-NG")} applications this week
+                  {applicantTotal.toLocaleString("en-NG")} applications recorded so far
                 </span>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               {[
-                { icon: Users, value: "47,820", label: "Active job seekers", note: "Screened profiles" },
-                { icon: Target, value: "68%", label: "Shortlist rate", note: "Roles filled in 30 days" },
-                { icon: BadgeCheck, value: "326", label: "Employers hiring", note: "Banks to startups" },
-                { icon: Sparkles, value: "37", label: "Locations covered", note: "All states + FCT" },
+                {
+                  icon: BriefcaseBusiness,
+                  value: liveRoles.toLocaleString("en-NG"),
+                  label: "Live roles today",
+                  note: "Open on the board",
+                },
+                {
+                  icon: BadgeCheck,
+                  value: employers.toLocaleString("en-NG"),
+                  label: "Employers hiring",
+                  note: "From banks to startups",
+                },
+                {
+                  icon: Users,
+                  value: applicantTotal.toLocaleString("en-NG"),
+                  label: "Applications recorded",
+                  note: "Since launch",
+                },
+                {
+                  icon: Sparkles,
+                  value: String(locations),
+                  label: "Locations covered",
+                  note: "States and the FCT",
+                },
               ].map((tile) => (
                 <div
                   key={tile.label}

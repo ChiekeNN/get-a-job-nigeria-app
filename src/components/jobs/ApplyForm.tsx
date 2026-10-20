@@ -25,7 +25,7 @@ export function ApplyForm({ job }: { job: Job }) {
     try {
       const formData = new FormData();
       formData.set("jobId", String(job.id));
-      for (const key of ["fullName", "email", "phone", "location", "coverLetter"]) {
+      for (const key of ["fullName", "email", "phone", "location", "coverLetter", "website"]) {
         formData.set(key, String(data.get(key) ?? ""));
       }
       if (cvFile) formData.set("cv", cvFile);
@@ -74,7 +74,13 @@ export function ApplyForm({ job }: { job: Job }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card p-5">
+    <form onSubmit={handleSubmit} className="card relative p-5">
+      {/* Honeypot: hidden from people and from assistive tech, filled only by
+          scripts. See src/lib/throttle.ts for what happens when it is. */}
+      <div className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+        <label htmlFor="cv-website">Website</label>
+        <input id="cv-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
       <h3 className="font-display text-lg font-bold text-ink-900">Apply for this role</h3>
       <p className="mt-1 text-xs text-ink-500">
         Takes under 60 seconds. Your CV goes straight to the GetAJob placement team, who forward

@@ -17,6 +17,7 @@ import {
   Phone,
   RefreshCw,
   Search,
+  ShieldCheck,
   Trash2,
   Users,
   X,
@@ -52,10 +53,19 @@ interface Totals {
   withCv: number;
 }
 
+interface Throttle {
+  last24h: number;
+  blocked24h: number;
+  globalCeiling: number;
+  perHour: number;
+  perDay: number;
+}
+
 interface Payload {
   ok: boolean;
   totals: Totals;
   applications: Application[];
+  throttle?: Throttle | null;
   message?: string;
 }
 
@@ -417,6 +427,20 @@ export function ApplicationsConsole({ focusId }: { focusId?: number }) {
               ))}
             </ul>
           )}
+
+          {data?.throttle ? (
+            <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-ink-50 pt-3 text-[10.5px] text-ink-400">
+              <ShieldCheck className="size-3 text-brand-600" aria-hidden="true" />
+              <span>
+                {data.throttle.last24h} accepted in the last 24 hours ·{" "}
+                {data.throttle.blocked24h} blocked as spam or over the limit
+              </span>
+              <span className="text-ink-300">
+                · limit {data.throttle.perHour}/hour per visitor, {data.throttle.perDay}/day,{" "}
+                {data.throttle.globalCeiling}/day overall
+              </span>
+            </p>
+          ) : null}
 
           {data && rows.length > 0 ? (
             <p className="mt-3 border-t border-ink-50 pt-3 text-[10.5px] text-ink-400">
