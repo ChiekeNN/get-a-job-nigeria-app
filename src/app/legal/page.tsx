@@ -1,5 +1,6 @@
-import { FileCheck2, Lock, Scale } from "lucide-react";
+import { ArrowRight, FileCheck2, Lock, Scale } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { CONTACT, PHONE } from "@/data/contact";
 import { BRAND } from "@/data/site";
@@ -23,7 +24,7 @@ export default function LegalPage() {
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-500">
         {BRAND.tradingName} is owned and operated by {BRAND.legalName}, registered in Nigeria (
         {BRAND.legalRegistration}). These policies explain how we handle candidate data, employer
-        listings and payments in Naira. Last updated January 2026.
+        listings and payments in Naira. Last updated October 2026.
       </p>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
@@ -52,7 +53,9 @@ export default function LegalPage() {
 
         <section id="terms" className="card p-5 scroll-mt-24">
           <FileCheck2 className="size-5 text-brand-600" aria-hidden="true" />
-          <h2 className="mt-2 font-display text-lg font-bold text-ink-900">Terms of use</h2>
+          <h2 className="mt-2 font-display text-lg font-bold text-ink-900">
+            Terms &amp; conditions
+          </h2>
           <div className="mt-2 space-y-2 text-xs leading-relaxed text-ink-600">
             <p>
               GetAJob is a job discovery platform, not an employer or recruitment agency. Hiring
@@ -71,6 +74,13 @@ export default function LegalPage() {
               unverified company details.
             </p>
           </div>
+          <Link
+            href="/terms"
+            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-900"
+          >
+            Read the full terms &amp; conditions
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
         </section>
 
         <section id="cv" className="card p-5 scroll-mt-24">
