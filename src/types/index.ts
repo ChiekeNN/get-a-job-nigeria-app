@@ -109,6 +109,14 @@ export interface NewJobInput {
   deadline?: string | null;
 }
 
+export interface ApplicationCvInput {
+  filename: string;
+  mime: string;
+  size: number;
+  /** The file itself, stored with the record so the console can serve it. */
+  data: Buffer;
+}
+
 export interface ApplicationInput {
   jobId: number;
   fullName: string;
@@ -117,6 +125,7 @@ export interface ApplicationInput {
   location?: string;
   coverLetter?: string;
   cvFileName?: string;
+  cv?: ApplicationCvInput;
 }
 
 export interface SubscriptionInput {

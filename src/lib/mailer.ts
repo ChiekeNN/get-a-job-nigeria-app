@@ -1,13 +1,18 @@
-import nodemailer, { type Transporter } from "nodemailer";
+import nodemailer, { type SendMailOptions, type Transporter } from "nodemailer";
 
 import { BRAND } from "@/data/site";
 
 /**
  * Outbound mail for job applications.
  *
- * Every application — details, cover note and the CV itself — is emailed to the
- * applications@ mailbox, which is the queue the team forwards from. The DB row
- * is a record of what happened; the mailbox is the delivery.
+ * The admin console is now the record: the application, its cover note and the
+ * CV file are stored in the database and read there. Email is a notification —
+ * a short heads-up that something new arrived, with a link to the console. That
+ * keeps a 4 MB CV out of the inbox and means a bounced mailbox no longer costs
+ * a candidate their application.
+ *
+ * `sendApplicationEmail` still sends the full record, and is used only as a
+ * fallback when the database write fails.
  *
  * Credentials live in env only: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS.
  * Nothing here reads a password from source, and nothing logs one.
@@ -223,10 +228,28 @@ export function applicationEmail(input: ApplicationMailInput): {
 }
 
 /**
- * Send one application to the applications@ inbox.
- *
- * Throws if SMTP is configured and the server rejects the message — the caller
- * turns that into a visible error so nobody is told "sent" when it was not.
+ * One message, tried on each port in turn. Throws the last failure, so callers
+ * can tell the difference between "not configured" and "the server said no".
+ */
+async function sendViaPorts(build: (port: number) => SendMailOptions): Promise<void> {
+  let lastError: unknown = null;
+  for (const port of portsToTry()) {
+    try {
+      await transportFor(port).sendMail(build(port));
+      workingPort = port;
+      return;
+    } catch (error) {
+      lastError = error;
+      console.error(`[mail] send failed on port ${port}:`, describeMailError(error));
+    }
+  }
+  throw lastError ?? new Error("SMTP send failed");
+}
+
+/**
+ * Send one application to the applications@ inbox — the full record, CV
+ * attached. Kept for the case where the database write failed: an applicant
+ * must never be turned away because one of the two stores is down.
  */
 export async function sendApplicationEmail(input: ApplicationMailInput): Promise<ApplicationMailResult> {
   if (!isMailerConfigured()) {
@@ -236,35 +259,99 @@ export async function sendApplicationEmail(input: ApplicationMailInput): Promise
 
   const { subject, text, html, replyTo } = applicationEmail(input);
 
-  let lastError: unknown = null;
-  for (const port of portsToTry()) {
-    try {
-      await transportFor(port).sendMail({
-        from: `"${BRAND.name} Applications" <${USER}>`,
-        to: APPLICATIONS_INBOX,
-        replyTo,
-        subject,
-        text,
-        html,
-        attachments: input.cv
-          ? [
-              {
-                filename: input.cv.filename,
-                content: input.cv.content,
-                contentType: input.cv.contentType,
-              },
-            ]
-          : [],
-      });
-      workingPort = port;
-      return { attempted: true };
-    } catch (error) {
-      lastError = error;
-      console.error(`[mail] send failed on port ${port}:`, describeMailError(error));
-    }
+  await sendViaPorts(() => ({
+    from: `"${BRAND.name} Applications" <${USER}>`,
+    to: APPLICATIONS_INBOX,
+    replyTo,
+    subject,
+    text,
+    html,
+    attachments: input.cv
+      ? [
+          {
+            filename: input.cv.filename,
+            content: input.cv.content,
+            contentType: input.cv.contentType,
+          },
+        ]
+      : [],
+  }));
+
+  return { attempted: true };
+}
+
+/**
+ * The heads-up: someone applied, here is who and for what, open the console.
+ *
+ * Deliberately short and attachment-free. The record — cover note, phone, the
+ * CV file — lives in the dashboard, so this message cannot leak a candidate's
+ * file into a mailbox or a spam folder.
+ */
+export async function notifyApplicationEmail(
+  input: ApplicationMailInput,
+): Promise<ApplicationMailResult> {
+  if (!isMailerConfigured()) {
+    console.error("[mail] SMTP_PASS is not set — application saved, no notification sent");
+    return { attempted: false };
   }
 
-  throw lastError ?? new Error("SMTP send failed");
+  const { job, applicant, submittedAt } = input;
+  const consoleUrl = `${BRAND.url}/admin/applications`;
+  const submitted = LAGOS.format(submittedAt);
+
+  const subject = `[${BRAND.name}] New application: ${job.title} — ${applicant.fullName}`;
+
+  const text = [
+    `New application — ${job.title}`,
+    `${job.company} · ${job.city || job.state}`,
+    ``,
+    `${applicant.fullName} <${applicant.email}>`,
+    `Received: ${submitted}`,
+    ``,
+    `The CV, phone number and cover note are in the admin console:`,
+    consoleUrl,
+    ``,
+    `Reply to this email to answer ${applicant.fullName} directly.`,
+  ].join("\n");
+
+  const html = `<!doctype html>
+<html lang="en"><body style="margin:0;padding:24px;background:#f5f8f6;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e3ebe7;border-radius:14px;overflow:hidden;">
+    <div style="background:#0d1b16;padding:18px 22px;">
+      <p style="margin:0;color:#8fd6b4;font-size:11px;letter-spacing:.12em;text-transform:uppercase;">New application</p>
+      <h1 style="margin:6px 0 0;color:#ffffff;font-size:18px;line-height:1.3;">${escapeHtml(job.title)}</h1>
+      <p style="margin:4px 0 0;color:#c9d8d1;font-size:13px;">${escapeHtml(job.company)} · ${escapeHtml(job.city || job.state)}</p>
+    </div>
+    <div style="padding:18px 22px;">
+      <p style="margin:0 0 4px;color:#0d1b16;font-size:15px;font-weight:600;">${escapeHtml(applicant.fullName)}</p>
+      <p style="margin:0 0 14px;color:#5b6b64;font-size:13px;">
+        <a href="mailto:${escapeHtml(applicant.email)}" style="color:#0f766e;">${escapeHtml(applicant.email)}</a>
+        · received ${escapeHtml(submitted)}
+      </p>
+      <p style="margin:0 0 14px;color:#5b6b64;font-size:13px;line-height:1.6;">
+        The CV, phone number and cover note are in the console — open the application to read it,
+        download the file, or delete it.
+      </p>
+      <p style="margin:0;">
+        <a href="${escapeHtml(consoleUrl)}" style="display:inline-block;background:#078e58;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:10px 16px;border-radius:10px;">Open applications</a>
+      </p>
+    </div>
+    <div style="padding:12px 22px;background:#f5f8f6;border-top:1px solid #e3ebe7;color:#8a9992;font-size:11px;">
+      ${escapeHtml(BRAND.name)} · ${escapeHtml(BRAND.domain)} · No attachment — the CV stays in the console.
+    </div>
+  </div>
+</body></html>`;
+
+  await sendViaPorts(() => ({
+    from: `"${BRAND.name} Applications" <${USER}>`,
+    to: APPLICATIONS_INBOX,
+    replyTo: applicant.email,
+    subject,
+    text,
+    html,
+  }));
+
+  return { attempted: true };
 }
 
 /**

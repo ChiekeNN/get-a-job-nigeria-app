@@ -3,6 +3,7 @@ import { desc, eq, inArray, like, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { applications, importState, jobs, subscribers } from "@/db/schema";
 import type { ApplicationInput, Job, JobStats, NewJobInput, SubscriptionInput } from "@/types";
+import { ensureApplicationsSchema } from "@/lib/applications";
 import { slugify } from "@/lib/format";
 import { findFirst, SALARY_PATTERNS } from "@/lib/importer/extract";
 import { classifyListing, parseSalary } from "@/lib/importer/normalize";
@@ -337,21 +338,39 @@ export async function createJob(input: NewJobInput): Promise<Job> {
   return mapRow(rows[0]);
 }
 
-export async function applyToJob(input: ApplicationInput): Promise<void> {
+/**
+ * Record an application, CV included, and return its row id.
+ *
+ * The console is the record now, not the mailbox: the CV has to be stored here
+ * or it exists only as an email attachment that can bounce. The row id lets the
+ * caller log exactly what was saved.
+ */
+export async function applyToJob(input: ApplicationInput): Promise<number> {
   await ensureCleanBoard();
-  await db.insert(applications).values({
-    jobId: input.jobId,
-    fullName: input.fullName,
-    email: input.email,
-    phone: input.phone,
-    location: input.location ?? null,
-    coverLetter: input.coverLetter ?? null,
-    cvFileName: input.cvFileName ?? null,
-  });
+  await ensureApplicationsSchema();
+
+  const inserted = await db
+    .insert(applications)
+    .values({
+      jobId: input.jobId,
+      fullName: input.fullName,
+      email: input.email,
+      phone: input.phone,
+      location: input.location ?? null,
+      coverLetter: input.coverLetter ?? null,
+      cvFileName: input.cvFileName ?? input.cv?.filename ?? null,
+      cvData: input.cv?.data ?? null,
+      cvMime: input.cv?.mime ?? null,
+      cvSize: input.cv?.size ?? null,
+    })
+    .returning({ id: applications.id });
+
   await db
     .update(jobs)
     .set({ applicants: sql`${jobs.applicants} + 1` })
     .where(eq(jobs.id, input.jobId));
+
+  return inserted[0]?.id ?? 0;
 }
 
 export async function createSubscription(input: SubscriptionInput): Promise<void> {

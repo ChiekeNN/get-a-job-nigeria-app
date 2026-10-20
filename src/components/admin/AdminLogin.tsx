@@ -1,15 +1,18 @@
 "use client";
 
-import { KeyRound, Loader2, Lock } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Loader2, Lock } from "lucide-react";
 import Image from "next/image";
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 
 import { BRAND } from "@/data/site";
 
 export function AdminLogin({ configured }: { configured: boolean }) {
   const [key, setKey] = useState("");
+  const [reveal, setReveal] = useState(false);
+  const [keep, setKeep] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const keepId = useId();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -19,7 +22,7 @@ export function AdminLogin({ configured }: { configured: boolean }) {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key }),
+        body: JSON.stringify({ key, keep }),
       });
       const payload = (await response.json()) as { ok: boolean; message?: string };
       if (!response.ok) throw new Error(payload.message ?? "Could not sign in");
@@ -61,14 +64,48 @@ export function AdminLogin({ configured }: { configured: boolean }) {
             <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/30" aria-hidden="true" />
             <input
               id="admin-key"
-              type="password"
+              type={reveal ? "text" : "password"}
               autoComplete="current-password"
               value={key}
               onChange={(event) => setKey(event.target.value)}
-              className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-9 pr-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-brand-400 focus:bg-white/10"
+              className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 pl-9 pr-11 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-brand-400 focus:bg-white/10"
               placeholder="Paste the key"
+              spellCheck={false}
+              autoCapitalize="off"
               required
             />
+            {/* Read the key back before submitting — the commonest reason a
+                correct key is rejected is a typo nobody can see. */}
+            <button
+              type="button"
+              onClick={() => setReveal((value) => !value)}
+              aria-label={reveal ? "Hide the key" : "Show the key"}
+              aria-pressed={reveal}
+              title={reveal ? "Hide the key" : "Show the key"}
+              className="absolute right-1.5 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-white/45 transition hover:bg-white/10 hover:text-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400"
+            >
+              {reveal ? (
+                <EyeOff className="size-4" aria-hidden="true" />
+              ) : (
+                <Eye className="size-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+
+          <div className="mt-3 flex items-start gap-2.5">
+            <input
+              id={keepId}
+              type="checkbox"
+              checked={keep}
+              onChange={(event) => setKeep(event.target.checked)}
+              className="mt-0.5 size-4 shrink-0 cursor-pointer rounded border-white/25 bg-white/10 accent-brand-500"
+            />
+            <label htmlFor={keepId} className="cursor-pointer text-[11.5px] leading-snug text-white/70">
+              Keep me signed in on this device
+              <span className="mt-0.5 block text-[10px] leading-snug text-white/35">
+                Stays signed in for 30 days instead of 12 hours. Leave it off on a shared computer.
+              </span>
+            </label>
           </div>
 
           {!configured ? (
@@ -92,7 +129,8 @@ export function AdminLogin({ configured }: { configured: boolean }) {
           </button>
 
           <p className="mt-3 text-center text-[10px] leading-relaxed text-white/30">
-            The key is exchanged for a 12-hour httpOnly cookie. Nothing is stored on this device.
+            The key is exchanged for a private cookie — nothing is stored on this device. Sign out
+            clears it.
           </p>
         </form>
       </div>
