@@ -94,10 +94,10 @@ export function CvOrder() {
         })}
       </div>
 
-      <div
-        id="order"
-        className="mt-8 grid scroll-mt-24 grid-cols-1 gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-8"
-      >
+      {/* Full width for the checkout: a package column beside it squeezed the
+          bank card and the upload form into ~250px each. */}
+      <div id="order" className="mt-8 grid scroll-mt-24 grid-cols-1 gap-6 lg:gap-8">
+        <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[1fr_16rem] lg:items-start">
         <div className="min-w-0">
           <p className="eyebrow">
             <CheckCircle2 className="size-3.5 text-brand-600" aria-hidden="true" />
@@ -113,7 +113,7 @@ export function CvOrder() {
             writers start.
           </p>
 
-          <ul className="mt-4 space-y-2.5">
+          <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
             {CV_ORDER_NOTES.map((note) => (
               <li
                 key={note}
@@ -125,21 +125,23 @@ export function CvOrder() {
             ))}
           </ul>
 
-          <div className="mt-5 rounded-xl border border-brand-100 bg-brand-50/70 p-3.5">
-            <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-brand-800">
-              <MessageCircle className="size-3.5" aria-hidden="true" />
-              Rather talk it through?
-            </p>
-            <a
-              href={whatsappLink("Hi GetAJob, I have a question about CV writing.")}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="mt-1.5 block text-[13px] font-semibold text-brand-800 hover:text-brand-900"
-            >
-              {PHONE.display}
-            </a>
-            <p className="mt-1 text-[11px] text-brand-900/60">Monday to Saturday, 9am – 6pm.</p>
-          </div>
+        </div>
+
+        <div className="rounded-xl border border-brand-100 bg-brand-50/70 p-3.5">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-brand-800">
+            <MessageCircle className="size-3.5" aria-hidden="true" />
+            Rather talk it through?
+          </p>
+          <a
+            href={whatsappLink("Hi GetAJob, I have a question about CV writing.")}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="mt-1.5 block text-[13px] font-semibold text-brand-800 hover:text-brand-900"
+          >
+            {PHONE.display}
+          </a>
+          <p className="mt-1 text-[11px] text-brand-900/60">Monday to Saturday, 9am – 6pm.</p>
+        </div>
         </div>
 
         <div className="min-w-0">
