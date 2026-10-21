@@ -324,7 +324,11 @@ export default function ProPage() {
             className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-brand-500/20 blur-3xl"
             aria-hidden="true"
           />
-          <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-[1fr_0.95fr] lg:items-start lg:gap-10">
+          {/* Copy first, then the checkout at full width: the bank card and
+              the form each need room, and a third column inside this card left
+              them too narrow to read. */}
+          <div className="relative grid grid-cols-1 gap-6 lg:gap-8">
+            <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[1fr_16rem] lg:items-start">
             <div className="min-w-0">
               <p className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-brand-300">
                 Start here
@@ -332,9 +336,9 @@ export default function ProPage() {
               <h2 className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-[32px]">
                 Start with one payment
               </h2>
-              <p className="mt-2 max-w-md text-[13px] leading-relaxed text-white/65">
+              <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-white/65">
                 Transfer {PRO.price} to Jojuni Technologies Ltd at Fidelity Bank, then upload the
-                receipt on the right. We confirm it and the rewrite starts — no monthly fee, nothing
+                receipt below. We confirm it and the rewrite starts — no monthly fee, nothing
                 renewing.
               </p>
 
@@ -351,20 +355,23 @@ export default function ProPage() {
                 ))}
               </ul>
 
-              <div className="mt-5 rounded-xl border border-white/12 bg-white/5 p-3.5">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/45">
-                  Prefer to talk first?
-                </p>
-                <a
-                  href={whatsappLink(`Hi GetAJob, I'd like to start ${PRO.name}.`)}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="mt-1.5 flex items-center gap-2 text-[13px] font-semibold text-brand-300 hover:text-brand-200"
-                >
-                  <MessageCircle className="size-4" aria-hidden="true" />
-                  {PHONE.display}
-                </a>
-              </div>
+            </div>
+
+            <div className="rounded-xl border border-white/12 bg-white/5 p-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                Prefer to talk first?
+              </p>
+              <a
+                href={whatsappLink(`Hi GetAJob, I'd like to start ${PRO.name}.`)}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="mt-1.5 flex items-center gap-2 text-[13px] font-semibold text-brand-300 hover:text-brand-200"
+              >
+                <MessageCircle className="size-4 shrink-0" aria-hidden="true" />
+                {PHONE.display}
+              </a>
+              <p className="mt-1 text-[11px] text-white/40">Monday to Saturday, 9am – 6pm.</p>
+            </div>
             </div>
 
             <div className="min-w-0 rounded-[22px] bg-cream p-3 sm:p-4">

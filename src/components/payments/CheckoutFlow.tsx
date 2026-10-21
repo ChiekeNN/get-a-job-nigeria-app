@@ -149,7 +149,7 @@ export function CheckoutFlow({
 
   if (receipt) {
     return (
-      <div className="rounded-2xl border border-brand-200 bg-white p-5 shadow-[0_24px_60px_-32px_rgba(5,20,15,0.35)] sm:p-6">
+      <div className="min-w-0 rounded-2xl border border-brand-200 bg-white p-5 shadow-[0_24px_60px_-32px_rgba(5,20,15,0.35)] sm:p-6">
         <span className="grid size-11 place-items-center rounded-xl bg-brand-50 text-brand-700">
           <CheckCircle2 className="size-5" aria-hidden="true" />
         </span>
@@ -211,9 +211,14 @@ export function CheckoutFlow({
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+    /**
+     * Bank card and form, side by side once there is room. The parent must give
+     * this full width: nested in a half-width column the two cards end up around
+     * 240px each and the form's fields overflow the section.
+     */
+    <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[0.95fr_1.05fr]">
       {/* ── The account ─────────────────────────────────────────────── */}
-      <section className="rounded-2xl border border-ink-900/10 bg-ink-950 p-5 text-white sm:p-6">
+      <section className="min-w-0 rounded-2xl border border-ink-900/10 bg-ink-950 p-5 text-white sm:p-6">
         <p className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-brand-300">
           <Landmark className="size-3.5" aria-hidden="true" />
           Pay by bank transfer
@@ -240,8 +245,8 @@ export function CheckoutFlow({
             <dt className="text-[10px] font-semibold uppercase tracking-wide text-white/40">
               Account number
             </dt>
-            <dd className="mt-0.5 flex items-center justify-between gap-2">
-              <span className="font-mono text-[16px] font-bold tracking-[0.06em]">
+            <dd className="mt-0.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+              <span className="min-w-0 break-all font-mono text-[16px] font-bold tracking-[0.06em]">
                 {BANK.accountNumber}
               </span>
               <button
@@ -262,8 +267,8 @@ export function CheckoutFlow({
             <dt className="text-[10px] font-semibold uppercase tracking-wide text-white/40">
               Amount
             </dt>
-            <dd className="mt-0.5 flex items-center justify-between gap-2">
-              <span className="font-mono text-[15px] font-bold">{naira(plan.amount)}</span>
+            <dd className="mt-0.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+              <span className="min-w-0 font-mono text-[15px] font-bold">{naira(plan.amount)}</span>
               <button
                 type="button"
                 onClick={() => void copy(String(plan.amount), "amount")}
@@ -305,7 +310,7 @@ export function CheckoutFlow({
       {/* ── The form ────────────────────────────────────────────────── */}
       <form
         onSubmit={submit}
-        className="relative rounded-2xl border border-ink-100 bg-white p-5 shadow-[0_24px_60px_-32px_rgba(5,20,15,0.3)] sm:p-6"
+        className="relative min-w-0 max-w-full rounded-2xl border border-ink-100 bg-white p-5 shadow-[0_24px_60px_-32px_rgba(5,20,15,0.3)] sm:p-6"
       >
         <div className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
           <label htmlFor="pay-website">Website</label>
@@ -362,8 +367,8 @@ export function CheckoutFlow({
           <input type="hidden" name="planId" value={plan.id} />
         )}
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="sm:col-span-2">
+        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
+          <div className="min-w-0 sm:col-span-2">
             <label className="label" htmlFor="pay-name">
               Full name
             </label>
@@ -376,7 +381,7 @@ export function CheckoutFlow({
               placeholder="As it appears on the transfer"
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="label" htmlFor="pay-email">
               Email
             </label>
@@ -390,7 +395,7 @@ export function CheckoutFlow({
               placeholder="you@example.com"
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="label" htmlFor="pay-phone">
               Phone
             </label>
@@ -404,7 +409,7 @@ export function CheckoutFlow({
               placeholder={PHONE.local}
             />
           </div>
-          <div className="sm:col-span-2">
+          <div className="min-w-0 sm:col-span-2">
             <label className="label" htmlFor="pay-note">
               Anything we should know? <span className="font-normal text-ink-400">(optional)</span>
             </label>
