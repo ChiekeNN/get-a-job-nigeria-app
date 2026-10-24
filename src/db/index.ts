@@ -54,10 +54,55 @@ function getDatabaseUrl(): string {
   return found.value;
 }
 
+/**
+ * Restore libpq's meaning of `sslmode=require`.
+ *
+ * libpq — and therefore every hosted provider that publishes `?sslmode=require`
+ * in its documentation, Supabase included — defines `require` as "the
+ * connection must be encrypted, but the certificate chain is not validated
+ * against a public root", unless `sslrootcert` is also supplied. node-postgres
+ * used to agree. Since pg-connection-string 2.13 it treats `require` as an
+ * alias for `verify-full`, so connecting to a provider that signs with its own
+ * CA aborts during the handshake with
+ * `self-signed certificate in certificate chain`, before a single query runs.
+ *
+ * The driver documents its own migration path for exactly this, and prints it
+ * as a deprecation warning: `uselibpqcompat=true`. Verified against
+ * pg-connection-string 2.14.1 —
+ *
+ *   sslmode=require                        -> ssl.rejectUnauthorized undefined
+ *   sslmode=require&uselibpqcompat=true    -> ssl.rejectUnauthorized false
+ *   sslmode=verify-full&uselibpqcompat=true-> ssl.rejectUnauthorized undefined
+ *
+ * — so appending the flag restores the old behaviour for `require`/`prefer`
+ * while leaving `verify-full` strict. Anything else is passed through untouched,
+ * including a connection string that already sets the flag or pins a CA with
+ * `sslrootcert`, so an operator who wants full verification keeps it.
+ *
+ * The flag is appended to the query string rather than the URL being rebuilt
+ * through `new URL()`, so the rest of the string — notably an encoded
+ * password — passes through byte for byte.
+ */
+export function applyLibpqSslSemantics(rawUrl: string): string {
+  if (/[?&]uselibpqcompat=/i.test(rawUrl)) return rawUrl;
+  // A pinned CA means the operator has opted into real verification; appending
+  // the flag would downgrade `require` from verify-full to verify-ca.
+  if (/[?&]sslrootcert=/i.test(rawUrl)) return rawUrl;
+
+  const mode = /[?&]sslmode=([^&#]*)/i.exec(rawUrl)?.[1]?.trim().toLowerCase();
+  if (mode !== "require" && mode !== "prefer") return rawUrl;
+
+  const hashAt = rawUrl.indexOf("#");
+  const head = hashAt === -1 ? rawUrl : rawUrl.slice(0, hashAt);
+  const tail = hashAt === -1 ? "" : rawUrl.slice(hashAt);
+
+  return `${head}${head.includes("?") ? "&" : "?"}uselibpqcompat=true${tail}`;
+}
+
 export function getPool(): Pool {
   if (!globalForDb.__arenaNextJsPostgresqlPool) {
     globalForDb.__arenaNextJsPostgresqlPool = new Pool({
-      connectionString: getDatabaseUrl(),
+      connectionString: applyLibpqSslSemantics(getDatabaseUrl()),
     });
   }
 

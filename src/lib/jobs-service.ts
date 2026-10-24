@@ -1,4 +1,4 @@
-import { desc, eq, inArray, like, sql } from "drizzle-orm";
+import { desc, eq, getTableColumns, inArray, like, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { applications, importState, jobs, subscribers } from "@/db/schema";
@@ -9,6 +9,9 @@ import { findFirst, SALARY_PATTERNS } from "@/lib/importer/extract";
 import { classifyListing, parseSalary } from "@/lib/importer/normalize";
 
 const DAY = 86_400_000;
+
+/** How much of a description the list query returns. See listJobs(). */
+const LIST_DESCRIPTION_CHARS = 400;
 
 /**
  * One-time clean-up, run once per server process on the first request after a
@@ -265,7 +268,18 @@ export async function listJobs(): Promise<Job[]> {
   try {
     await ensureCleanBoard();
     const rows = await db
-      .select()
+      .select({
+        ...getTableColumns(jobs),
+        // The board renders a two-line preview (JobCard clamps to `line-clamp-2`)
+        // and searches it client-side, but the whole row — full description
+        // included — is serialised into the RSC payload for every listing on
+        // every page view. With several hundred imported listings that is
+        // megabytes per visit, which is enough on its own to exhaust a hosted
+        // Postgres plan's monthly egress allowance. 400 characters covers what
+        // a card can show and what a search should reasonably match; the detail
+        // page still reads the full row through getJobBySlug().
+        description: sql<string>`left(${jobs.description}, ${LIST_DESCRIPTION_CHARS})`,
+      })
       .from(jobs)
       .where(eq(jobs.status, "published"))
       .orderBy(desc(jobs.isFeatured), desc(jobs.postedAt));
