@@ -92,12 +92,12 @@ export const PRO_STEPS = [
   {
     title: "Receive job alerts on WhatsApp",
     description:
-      "Every morning, verified openings that match your skills and location are sent directly to your WhatsApp.",
+      "Verified openings that match your skills and location are sent directly to your WhatsApp.",
   },
   {
     title: "Get referred and coached for interviews",
     description:
-      "When an interview comes, we prepare you specifically for that company and introduce you to the hiring manager.",
+      "When an interview comes, we prepare you specifically for that company.",
   },
   {
     title: "Get hired faster",
