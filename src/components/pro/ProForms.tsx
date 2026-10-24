@@ -52,7 +52,7 @@ export function AlertsForm() {
     <form onSubmit={submit} className="card min-w-0 p-4 sm:p-5">
       <p className="font-display text-base font-extrabold text-ink-900">Not ready for Pro?</p>
       <p className="mt-1 text-[12px] leading-relaxed text-ink-500">
-        Join the free daily digest and still get verified roles on WhatsApp every morning.
+        Join the free digest and still get verified roles on WhatsApp.
       </p>
 
       <div className="mt-3 space-y-2.5">

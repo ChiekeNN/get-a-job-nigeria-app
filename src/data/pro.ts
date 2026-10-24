@@ -46,7 +46,7 @@ export const PRO_FEATURES: ProFeature[] = [
   {
     title: "WhatsApp job alerts",
     description:
-      "Verified openings sent straight to your WhatsApp before they fill up. Every morning, matched to your skills and your state.",
+      "Verified openings sent straight to your WhatsApp before they fill up, matched to your skills and your state.",
     icon: BellRing,
   },
   {
@@ -92,12 +92,12 @@ export const PRO_STEPS = [
   {
     title: "Receive job alerts on WhatsApp",
     description:
-      "Every morning, verified openings that match your skills and location are sent directly to your WhatsApp.",
+      "Verified openings that match your skills and location are sent directly to your WhatsApp.",
   },
   {
     title: "Get referred and coached for interviews",
     description:
-      "When an interview comes, we prepare you specifically for that company and introduce you to the hiring manager.",
+      "When an interview comes, we prepare you specifically for that company.",
   },
   {
     title: "Get hired faster",
@@ -110,7 +110,7 @@ export const PRO_INCLUDED = [
   "Professional CV rewrite (included once)",
   "Verified job alerts on WhatsApp",
   "Interview prep before each interview",
-  "Referrals to hiring managers",
+  "Referral support for your applications",
   "Application tracking and follow-up reminders",
   "Priority WhatsApp support",
 ];
@@ -124,7 +124,7 @@ export const PRO_FAQS = [
   {
     question: "How are job alerts sent?",
     answer:
-      "Straight to your WhatsApp number, every day. You choose your state and field when you sign up, and you can change them any time by replying to the message.",
+      "Straight to your WhatsApp number when listed. You choose your state and field when you sign up, and you can change them any time by replying to the message.",
   },
   {
     question: "Is this a one-time payment?",

@@ -85,14 +85,14 @@ export const PRO_FEATURES = [
       "ATS-ready rewrite by a recruiter who has screened for Nigerian banks, telcos and oil majors.",
   },
   {
-    title: "Daily WhatsApp job alerts",
+    title: "WhatsApp job alerts",
     description:
       "Fresh shortlist-ready roles in your state and field, delivered before they trend publicly.",
   },
   {
-    title: "Direct referrals to hiring managers",
+    title: "Referral support for your applications",
     description:
-      "Warm introductions to vetted employers so a human actually sees your application.",
+      "We help your application reach a person rather than an inbox.",
   },
   {
     title: "Interview coaching in Nigerian context",

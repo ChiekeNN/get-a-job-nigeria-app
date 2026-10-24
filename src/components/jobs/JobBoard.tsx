@@ -201,7 +201,7 @@ export function JobBoard({ initialJobs, initialFilters }: Props) {
             <div className="card mt-4 hidden bg-ink-900 p-4 text-white lg:block">
               <p className="text-sm font-semibold">Get roles before everyone else</p>
               <p className="mt-1 text-xs leading-relaxed text-white/65">
-                Daily WhatsApp alerts for your field and state. No spam, unsubscribe anytime.
+                WhatsApp alerts for your field and state. No spam, unsubscribe anytime.
               </p>
               <a href="/pro" className="btn btn-primary btn-sm mt-3 w-full">
                 <Sparkles className="size-3.5" aria-hidden="true" />
