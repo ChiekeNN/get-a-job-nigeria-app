@@ -389,9 +389,8 @@ export default function ProPage() {
               Not ready for Pro? Start with the free digest.
             </h2>
             <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-ink-500">
-              Every morning we send verified openings that match your state and field. No cost, no
-              card, unsubscribe any time — and you can upgrade to Pro whenever you want the CV work
-              and the coaching.
+              We send verified openings that match your state and field. No cost, no card, unsubscribe
+              any time — and you can upgrade to Pro whenever you want the CV work and the coaching.
             </p>
             <Link href="/jobs" className="btn btn-outline mt-4 w-full justify-center sm:w-auto">
               Browse the job board

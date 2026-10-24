@@ -46,7 +46,7 @@ export const PRO_FEATURES: ProFeature[] = [
   {
     title: "WhatsApp job alerts",
     description:
-      "Verified openings sent straight to your WhatsApp before they fill up. Every morning, matched to your skills and your state.",
+      "Verified openings sent straight to your WhatsApp before they fill up, matched to your skills and your state.",
     icon: BellRing,
   },
   {
@@ -110,7 +110,7 @@ export const PRO_INCLUDED = [
   "Professional CV rewrite (included once)",
   "Verified job alerts on WhatsApp",
   "Interview prep before each interview",
-  "Referrals to hiring managers",
+  "Referral support for your applications",
   "Application tracking and follow-up reminders",
   "Priority WhatsApp support",
 ];
