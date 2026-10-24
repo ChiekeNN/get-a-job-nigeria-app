@@ -124,7 +124,7 @@ export const PRO_FAQS = [
   {
     question: "How are job alerts sent?",
     answer:
-      "Straight to your WhatsApp number, every day. You choose your state and field when you sign up, and you can change them any time by replying to the message.",
+      "Straight to your WhatsApp number when listed. You choose your state and field when you sign up, and you can change them any time by replying to the message.",
   },
   {
     question: "Is this a one-time payment?",
